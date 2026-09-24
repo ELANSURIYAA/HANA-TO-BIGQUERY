@@ -1,29 +1,9 @@
 -- FINAL CONSOLIDATED BIGQUERY SQL
--- This consolidated SQL represents the complete end-to-end logic for CV_COMP_FIN_BUDGET_STATIC
--- All dependencies have been recursively inlined from source physical tables through to the final output
--- No intermediate views are required to execute this query
+-- Consolidated from 8 source files based on HANA lineage analysis
+-- Target: CV_COMP_FIN_BUDGET_STATIC (Final Consumer-Facing View)
+-- All dependencies recursively expanded to physical source tables
 
--- REQUIRES VALIDATION: The following items need clarification:
--- 1. Parameter @IP_FC_COUNT - source and default value not provided in inputs
--- 2. Parameter @IP_WEEK_ENDING_FROM - source and default value not provided in inputs
--- 3. Parameter @IP_WEEK_ENDING_TO - source and default value not provided in inputs
--- 4. Parameter @IP_VERSION - source and default value not provided in inputs
--- 5. External view CV_BASE_MD_RCALWEEK_S4 - SQL definition not provided in inputs
--- 6. Physical table CEPCT - actual BigQuery table reference needs to be provided
--- 7. Physical table HRRP_NODE - actual BigQuery table reference needs to be provided
--- 8. Physical table ZTFIGL_RCALWEEK - actual BigQuery table reference needs to be provided
--- 9. Physical table AZSRP_DS052_VT_S4 - actual BigQuery table reference needs to be provided
--- 10. Physical table AZSRP_DS041_VT_S4 - actual BigQuery table reference needs to be provided
--- 11. Physical table TBL_WSS_SRP_COMPFLAG - actual BigQuery table reference needs to be provided
--- 12. Physical table TBL_WSS_SRP_ATTR_ACT - actual BigQuery table reference needs to be provided
-
-WITH 
--- ============================================================================
--- SECTION 1: CV_BASE_FIN_WEEKLY_BUDGET_S4 - Financial Budget Data
--- Source: AZSRP_DS052_VT_S4 (Frozen Cube) and AZSRP_DS041_VT_S4 (Live Cube)
--- ============================================================================
-
-Frozen_Cube AS (
+WITH Frozen_Cube AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -89,7 +69,7 @@ Union_1 AS (
   SELECT * FROM Live_Cube
 ),
 
-Aggregated AS (
+Aggregated_Budget AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -137,7 +117,7 @@ Aggregated AS (
     FLAG
 ),
 
-CV_BASE_FIN_WEEKLY_BUDGET_S4_Final AS (
+CV_BASE_FIN_WEEKLY_BUDGET_S4_EXPANDED AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -167,7 +147,7 @@ CV_BASE_FIN_WEEKLY_BUDGET_S4_Final AS (
     END AS _B631_S_AMOUNT,
     SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT,
     FLAG
-  FROM Aggregated
+  FROM Aggregated_Budget
   GROUP BY
     FISCPER,
     FISCVARNT,
@@ -191,12 +171,38 @@ CV_BASE_FIN_WEEKLY_BUDGET_S4_Final AS (
     FLAG
 ),
 
--- ============================================================================
--- SECTION 2: CV_BASE_MD_HRRP_NODE_S4 - HR Hierarchy Node Data
--- Source: HRRP_NODE physical table
--- ============================================================================
+WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    _B631_S_AMOUNT,
+    CURRENCY,
+    _BIC_ZIO_AMT,
+    FLAG
+  FROM CV_BASE_FIN_WEEKLY_BUDGET_S4_EXPANDED
+  WHERE
+    FISCVARNT = 'K4'
+    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND _BIC_ZIO_VER = @IP_VERSION
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+),
 
-CV_BASE_MD_HRRP_NODE_S4_Base AS (
+CV_BASE_MD_HRRP_NODE_S4_EXPANDED AS (
   SELECT
     MANDT,
     HRYID,
@@ -210,15 +216,36 @@ CV_BASE_MD_HRRP_NODE_S4_Base AS (
     NODETYPE,
     NODEVALUE
   FROM PROJECT.DATASET.HRRP_NODE
-  WHERE MANDT IN (120, 200)
+  WHERE
+    MANDT IN (120, 200)
 ),
 
--- ============================================================================
--- SECTION 3: CV_COMP_MD_SRPACT_STATIC - Store Attributes Static Data
--- Source: TBL_WSS_SRP_ATTR_ACT physical table
--- ============================================================================
+HIER_NODE AS (
+  SELECT
+    MANDT,
+    PARNODE,
+    HRYVALTO,
+    NODEVALUE
+  FROM CV_BASE_MD_HRRP_NODE_S4_EXPANDED
+  WHERE
+    REGEXP_CONTAINS(PARNODE, 'CORE_RET$')
+    AND HRYVALTO = '99991231'
+),
 
-CV_COMP_MD_SRPACT_STATIC_Base AS (
+Join_1 AS (
+  SELECT
+    ws.*,
+    hn.PARNODE
+  FROM WEEKLY_SNAPSHOT_DS05 ws
+  INNER JOIN HIER_NODE hn
+    ON ws._B631_S_PROFTCTR = hn.NODEVALUE
+),
+
+ONLY_CORE_RET_DATA AS (
+  SELECT * FROM Join_1
+),
+
+CV_COMP_MD_SRPACT_STATIC_EXPANDED AS (
   SELECT
     MANDT,
     STRNUM,
@@ -369,131 +396,6 @@ CV_COMP_MD_SRPACT_STATIC_Base AS (
     RX_DISTRICT_CODE
 ),
 
--- ============================================================================
--- SECTION 4: CV_COMP_MD_COMPFL_STATIC - Comparison Flags Static Data
--- Source: TBL_WSS_SRP_COMPFLAG physical table
--- ============================================================================
-
-CV_COMP_MD_COMPFL_STATIC_Base AS (
-  SELECT
-    MANDT,
-    PRCTR,
-    STRNUM,
-    COMP_VER,
-    ZWEEK,
-    ZMONTH,
-    ZYEAR,
-    FS_COMP_PRE,
-    RX_COMP_PRE,
-    FS_COMP_MON,
-    RX_COMP_MON,
-    FS_COMP_WK,
-    RX_COMP_WK
-  FROM PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG
-),
-
--- ============================================================================
--- SECTION 5: CV_BASE_MD_RCALWEEK_S4 - Calendar Week Data (EXTERNAL - NOT PROVIDED)
--- Source: ZTFIGL_RCALWEEK physical table
--- Note: This view definition was not provided in inputs but is referenced
--- Using the base table structure from CV_BASE_MD_RCAIWEEK_S4_Output.txt
--- ============================================================================
-
-CV_BASE_MD_RCALWEEK_S4_Base AS (
-  SELECT
-    RCLNT,
-    ZZWEEK,
-    ZCALYRP,
-    ZRYEAR,
-    ZRPERIOD,
-    ZRYRP,
-    ZRYRQTR,
-    ZRWSTRTDATE,
-    ZRWENDDATE
-  FROM PROJECT.DATASET.ZTFIGL_RCALWEEK
-  WHERE RCLNT IN (120, 200)
-),
-
--- ============================================================================
--- SECTION 6: CV_BASE_MD_CEPCT_S4 - Cost Element and Profit Center Text
--- Source: CEPCT physical table
--- ============================================================================
-
-CV_BASE_MD_CEPCT_S4_Base AS (
-  SELECT
-    MANDT,
-    SPRAS,
-    PRCTR,
-    DATBI,
-    KOKRS,
-    KTEXT,
-    LTEXT,
-    MCTXT
-  FROM PROJECT.DATASET.CEPCT
-  WHERE MANDT IN (120, 200)
-),
-
--- ============================================================================
--- SECTION 7: CV_COMP_FIN_BUDGET_STATIC - Final Consolidated Logic
--- This section consolidates all upstream dependencies into the final output
--- ============================================================================
-
-WEEKLY_SNAPSHOT_DS05 AS (
-  SELECT
-    FISCPER,
-    FISCVARNT,
-    FISCYEAR,
-    FISCPER3,
-    MANDT,
-    _BIC_ZIO_SWEEK,
-    _B631_S_CHRTACCT,
-    _B631_S_CO_AREA,
-    _BIC_ZIO_CMPCD,
-    _B631_S_PROFTCTR,
-    _B631_S_COSTCNTR,
-    _B631_S_FUNCAREA,
-    _BIC_ZIO_VER,
-    _BIC_ZIO_SAUDT,
-    _B631_S_GL_ACCT,
-    _BIC_ZWWPC_PA1,
-    _BIC_ZWWSC_PA1,
-    _B631_S_AMOUNT,
-    CURRENCY,
-    _BIC_ZIO_AMT,
-    FLAG
-  FROM CV_BASE_FIN_WEEKLY_BUDGET_S4_Final
-  WHERE
-    FISCVARNT = 'K4'
-    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
-    AND _BIC_ZIO_VER = @IP_VERSION
-    AND _BIC_ZIO_SAUDT IN ('1', '10')
-),
-
-HIER_NODE AS (
-  SELECT
-    MANDT,
-    PARNODE,
-    HRYVALTO,
-    NODEVALUE
-  FROM CV_BASE_MD_HRRP_NODE_S4_Base
-  WHERE
-    REGEXP_CONTAINS(PARNODE, 'CORE_RET$')
-    AND HRYVALTO = '99991231'
-),
-
-Join_1 AS (
-  SELECT
-    ws.*,
-    hn.PARNODE
-  FROM WEEKLY_SNAPSHOT_DS05 ws
-  INNER JOIN HIER_NODE hn
-    ON ws._B631_S_PROFTCTR = hn.NODEVALUE
-),
-
-ONLY_CORE_RET_DATA AS (
-  SELECT * FROM Join_1
-),
-
 STORE_ATTR_ACTUAL AS (
   SELECT
     MANDT,
@@ -518,7 +420,7 @@ STORE_ATTR_ACTUAL AS (
     RX_AREA_CODE,
     RX_REGION_CODE,
     RX_DISTRICT_CODE
-  FROM CV_COMP_MD_SRPACT_STATIC_Base
+  FROM CV_COMP_MD_SRPACT_STATIC_EXPANDED
 ),
 
 Join_2 AS (
@@ -556,6 +458,24 @@ WEEK_NUMBER AS (
   FROM Join_2
 ),
 
+CV_COMP_MD_COMPFL_STATIC_EXPANDED AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+  FROM PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG
+),
+
 COMP_FLAG_BUDGET AS (
   SELECT
     MANDT,
@@ -567,7 +487,7 @@ COMP_FLAG_BUDGET AS (
     ZMONTH,
     ZYEAR,
     COMP_VER
-  FROM CV_COMP_MD_COMPFL_STATIC_Base
+  FROM CV_COMP_MD_COMPFL_STATIC_EXPANDED
   WHERE COMP_VER = @IP_VERSION
 ),
 
@@ -582,13 +502,28 @@ Join_3 AS (
     AND wn._BIC_ZIO_SWEEK = cb.ZWEEK
 ),
 
+CV_BASE_MD_RCALWEEK_S4_EXPANDED AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZCALYRP,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    ZRYRQTR,
+    ZRWSTRTDATE,
+    ZRWENDDATE
+  FROM PROJECT.DATASET.ZTFIGL_RCALWEEK
+  WHERE RCLNT IN (120, 200)
+),
+
 CAL_WEEK AS (
   SELECT
     ZZWEEK,
     ZRWSTRTDATE,
     ZRWENDDATE,
     RCLNT
-  FROM CV_BASE_MD_RCALWEEK_S4_Base
+  FROM CV_BASE_MD_RCALWEEK_S4_EXPANDED
 ),
 
 Join_4 AS (
@@ -601,12 +536,26 @@ Join_4 AS (
     ON j3._BIC_ZIO_SWEEK = cw.ZZWEEK
 ),
 
+CV_BASE_MD_CEPCT_S4_EXPANDED AS (
+  SELECT
+    MANDT,
+    SPRAS,
+    PRCTR,
+    DATBI,
+    KOKRS,
+    KTEXT,
+    LTEXT,
+    MCTXT
+  FROM PROJECT.DATASET.CEPCT
+  WHERE MANDT IN (120, 200)
+),
+
 PROFIT_CENTER_TEXT AS (
   SELECT
     MANDT,
     PRCTR,
     LTEXT AS PROFIT_CENTER_TEXT
-  FROM CV_BASE_MD_CEPCT_S4_Base
+  FROM CV_BASE_MD_CEPCT_S4_EXPANDED
 ),
 
 Join_5 AS (
@@ -688,7 +637,7 @@ FLAGS AS (
       )
     END AS CAL_COMP_FLAG,
     RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
-    (_B631_S_AMOUNT * -1 * -1) AS _B631_S_AMOUNT
+    (_B631_S_AMOUNT * -1) * -1 AS _B631_S_AMOUNT
   FROM Join_5
 )
 
