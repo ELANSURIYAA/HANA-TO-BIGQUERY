@@ -1,278 +1,388 @@
-# DI HANA Lineage Summary Report
-## CVS FRIP Flash Sales Reporting System - Friendly Business Overview
-
----
+# DI HANA Lineage Summary - Friendly Business Overview
 
 ## Executive Summary
 
-### What This Lineage Represents
+### What Does This Lineage Represent?
 
-This lineage analysis maps the complete data journey for the **CVS FRIP Flash Sales Reporting System**. The system collects sales data from multiple sources—including Front Store transactions, Pharmacy prescriptions, COVID-related sales, and employee discounts—and processes them through a series of organized stages to produce a weekly flash sales report for business stakeholders.
+This lineage analysis covers the **CVS_FRIP Flash Sales Reporting System**, a comprehensive data pipeline built on SAP HANA that processes and consolidates weekly sales snapshots for CVS Financial Reporting and Planning. The system integrates sales data from multiple channels including Front Store retail sales, Pharmacy prescription sales, employee discounts, and COVID-related sales tracking.
 
-### Overall Data Flow in Simple Terms
+### Where Does the Data Originate?
 
-Think of this system as a data assembly line:
+The data originates from **11 primary source systems and configuration tables**:
 
-1. **Raw Data Collection**: Sales transactions, store information, and prescription data are collected from various operational systems
-2. **Data Preparation**: The raw data is cleaned, filtered, and organized into standardized formats
-3. **Data Consolidation**: All the prepared data streams merge into a central collection point
-4. **Business Processing**: Business rules and calendar information are applied to the consolidated data
-5. **Weekly Snapshot**: Every Monday at 5am, a snapshot of the processed data is captured and stored
-6. **Reporting Layer**: The stored data is made available through reporting views for business analysis
+1. **NAVIX System** - Core transaction data for retail operations
+2. **TLOGF Tables** - Transaction logs capturing Front Store sales, discounts, and employee transactions
+3. **TLOGF_X Tables** - Prescription script and pharmacy transaction logs
+4. **TLOGF_COVID Tables** - Dedicated COVID-19 sales tracking
+5. **S4 Master Data** - Retail calendar week definitions for time-based reporting
+6. **CAR System** - External flash sales data integration
+7. **Parameter Tables** - Business rules and filtering configurations for retail types, discount types, and COVID-specific parameters
 
-### Primary Purpose
+### What Are the Major Processing Stages?
 
-The system's main goal is to provide **weekly flash sales reporting** that combines:
-- Front Store (FS) sales and discounts
-- Pharmacy (RX) sales and prescription scripts
-- COVID-related sales
-- Employee discount impacts
-- Store hierarchy and calendar information
+The system processes data through **four distinct layers**:
 
-This enables business leaders to quickly understand sales performance across the CVS retail network on a weekly basis.
+**Stage 1: Data Extraction (Base Layer)**
+- Raw transaction data is extracted from source systems
+- Configuration parameters are loaded to control filtering and business logic
+- Master data (calendar weeks) is prepared for time-based analysis
 
-### Lineage Confidence
+**Stage 2: Data Transformation (Base Calculation Views)**
+- Front Store sales are filtered and calculated
+- Pharmacy prescription sales are processed
+- Employee discounts are identified and categorized
+- COVID sales are tracked separately
+- All data is filtered using parameter-driven business rules
 
-**Overall Confidence Score: 94/100** ✅
+**Stage 3: Data Aggregation (Composite Layer)**
+- All sales channels are combined into a unified flash sales view
+- Data from multiple sources is consolidated
+- Business metrics are calculated and aggregated
+- Calendar information is joined for weekly reporting
 
-This high confidence score means we have strong evidence for nearly all data flows in the system. The relationships are supported by:
-- Explicit references in SQL code (98% confidence)
-- Clear data source declarations in calculation views (90-96% confidence)
-- Well-documented parameter usage (87-93% confidence)
+**Stage 4: Data Persistence and Orchestration**
+- A stored procedure executes the weekly snapshot process
+- Aggregated data is written to a permanent table (TBL_WSS_FLASH_SALES)
+- The output table is wrapped for reporting consumption
 
-Only 2 out of 47 relationships have minor uncertainty, and these do not impact the overall understanding of the system.
+### Where Does the Data Ultimately Go?
+
+The final destination is **TBL_WSS_FLASH_SALES**, a persistent table that stores weekly flash sales snapshots. This table feeds:
+
+- **CV_CONS_WEEKLY_FLASH_REPORT_STATIC** - A consolidated weekly reporting view
+- **Business Intelligence Tools** - For executive dashboards and analytics
+- **Financial Planning Systems** - For budget comparison and forecasting
+
+### What Is the Primary Purpose of the Flow?
+
+The primary purpose is to provide **weekly flash sales reporting** that enables:
+
+- **Rapid financial visibility** - Quick snapshots of sales performance across all channels
+- **Multi-channel consolidation** - Unified view of Front Store, Pharmacy, and COVID sales
+- **Discount tracking** - Monitoring of employee discounts and promotional impacts
+- **Time-based analysis** - Weekly trending and calendar-based reporting
+- **Budget comparison** - Actual vs. budget and forecast analysis
+
+### How Confident Is the Identified Lineage?
+
+**Overall Confidence Score: 92/100**
+
+The lineage analysis demonstrates **high confidence** based on:
+
+- **98% confidence** for the core data flow from composite views through the stored procedure to the output table (explicit SQL references)
+- **95-96% confidence** for most base-to-composite relationships (explicit XML datasource references)
+- **92-95% confidence** for parameter-driven filtering and transformation logic
+- **75-85% confidence** for a few inferred relationships (CAR system integration, some static view wrappers)
+
+Only **3 relationships out of 67** could not be explicitly confirmed and were inferred based on naming conventions and architectural patterns.
 
 ---
 
 ## End-to-End Data Flow
 
-### Stage 1: Source Data Collection
-**What Happens**: Raw operational data is extracted from physical database tables
+The following diagram illustrates the logical flow of data through the system:
 
-**Key Components**:
-- **NAVIX Table**: Store location and navigation data
-- **TLOGF Table**: Front Store transaction logs
-- **TLOGF_X Table**: Pharmacy prescription transaction logs
-- **TLOGF_COVID Table**: COVID-related sales transactions
-- **PARAMETERS Table**: Configuration settings for retail types and discount categories
-- **S4 RCALWEEK Table**: Retail calendar information from SAP S4
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SOURCE DATA LAYER                         │
+│  • NAVIX Transactions                                        │
+│  • TLOGF Transaction Logs (FS Sales, Discounts)            │
+│  • TLOGF_X Prescription Scripts                             │
+│  • TLOGF_COVID COVID Sales                                  │
+│  • S4 Calendar Master Data                                  │
+│  • CAR System Flash Sales                                   │
+│  • Parameter Configuration Tables                           │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│              DATA PREPARATION LAYER                          │
+│  Base Calculation Views:                                     │
+│  • CV_BASE_NAVIX - Transaction data extraction              │
+│  • CV_BASE_TLOGF_X - Script data extraction                 │
+│  • CV_BASE_TLOGF_COVID - COVID sales extraction             │
+│  • CV_BASE_MD_RCALWEEK_S4 - Calendar data                   │
+│  • CV_BASE_PARAMETERS - Configuration consolidation         │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│           DATA TRANSFORMATION LAYER                          │
+│  Specialized Base Views:                                     │
+│  • CV_BASE_FS_SALES - Front Store sales processing          │
+│  • CV_BASE_TLOGF_RX_SALES - Pharmacy sales processing       │
+│  • CV_BASE_SCRIPTS - Prescription script processing         │
+│  • CV_BASE_TLOGF_FS_DISCOUNT - Discount processing          │
+│  • CV_BASE_TLOGF_EMP_DISCOUNT - Employee discount tracking  │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│              DATA AGGREGATION LAYER                          │
+│  Composite Views:                                            │
+│  • CV_COMP_FLASH_SALES - Unified sales aggregation          │
+│  • CV_COMP_FIN_FLASH_COMBINED_STATIC - Multi-source combo   │
+│  • CV_COMP_FIN_FLASH - Final composite with calendar join   │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│           ORCHESTRATION & PERSISTENCE LAYER                  │
+│  • STP_WSS_FLASH_SALES - Weekly snapshot procedure          │
+│  • TBL_WSS_FLASH_SALES - Persistent output table            │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  REPORTING LAYER                             │
+│  • CV_COMP_FIN_FLASH_STATIC - Table wrapper for reporting   │
+│  • CV_CONS_WEEKLY_FLASH_REPORT_STATIC - Weekly report view  │
+│  • Business Intelligence Tools & Dashboards                  │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**Why Important**: These are the foundational data sources. Without accurate source data, the entire reporting system would be unreliable.
+### Stage Descriptions
 
----
+#### Stage 1: Source Data (11 Base Components)
 
-### Stage 2: Data Preparation (Base Views)
-**What Happens**: Raw data is transformed into standardized, usable formats
+**What Happens:** Raw data is extracted from operational systems and configuration tables.
 
-**Key Components** (8 base calculation views):
-- `CV_BASE_NAVIX`: Prepares store master data
-- `CV_BASE_TLOGF_FS_SALES`: Extracts Front Store sales transactions
-- `CV_BASE_TLOGF_RX_SALES`: Extracts Pharmacy sales transactions
-- `CV_BASE_TLOGF_X_SCRIPTS`: Extracts prescription script data
-- `CV_BASE_TLOGF_COVID_SALES`: Extracts COVID-related sales
-- `CV_BASE_PARAMETERS_FS_RETAIL_TYPES`: Defines Front Store retail categories
-- `CV_BASE_PARAMETERS_RX_RETAIL_TYPES`: Defines Pharmacy retail categories
-- `CV_BASE_MD_RCALWEEK_S4`: Prepares retail calendar data
+**Components:**
+- NAVIX transaction system
+- TLOGF transaction logs (multiple variants)
+- S4 master data
+- CAR system
+- Parameter configuration tables
 
-**Why Important**: This stage ensures data quality and consistency. Each base view applies specific filters and transformations to make the raw data suitable for business analysis.
-
----
-
-### Stage 3: Data Consolidation (Central Hub)
-**What Happens**: All prepared data streams are merged into a single comprehensive view
-
-**Key Component**:
-- **`FLASH_SALES_VT_CAR`** (Central Aggregation Point)
-
-This view combines:
-- Front Store sales (regular and discounted)
-- Pharmacy sales
-- Prescription scripts
-- COVID sales
-- Employee discounts (3 different types)
-- Store navigation data
-- Retail type filters
-
-**Why Important**: This is the heart of the system. It brings together 15 different upstream data sources into one unified view, making it possible to see the complete sales picture in one place.
-
----
-
-### Stage 4: Business Processing (Composite View)
-**What Happens**: Business logic and master data enrichment are applied
-
-**Key Component**:
-- **`CV_COMP_FIN_FLASH`** (Composite Financial Flash View)
-
-This view:
-- Takes the consolidated flash sales data
-- Adds retail calendar information (week numbers, fiscal periods)
-- Applies financial business rules
-- Accepts input parameters for date range filtering
-- Prepares data for the weekly snapshot process
-
-**Why Important**: This stage transforms raw sales data into meaningful business information by adding context like "which fiscal week does this belong to?" and "which organizational hierarchy does this store belong to?"
-
----
-
-### Stage 5: Weekly Snapshot Execution (Stored Procedure)
-**What Happens**: A scheduled process captures a point-in-time snapshot of the data
-
-**Key Component**:
-- **`STP_WSS_FLASH_SALES`** (Stored Procedure)
-
-**Process Details**:
-- **Schedule**: Runs every Monday at 5:00 AM
-- **Method**: Full refresh (deletes old data, inserts new data)
-- **Input Parameters**: 
-  - Week ending date range (FROM and TO)
-  - Update timestamp range (FROM and TO)
-- **Output**: 54 columns of sales data written to physical table
-
-**Why Important**: This creates a stable, historical record of weekly sales performance. Even if source data changes later, the snapshot preserves what the data looked like at the time of the report.
+**Why Important:** This stage provides the foundation for all downstream processing. The quality and completeness of source data directly impacts reporting accuracy.
 
 ---
 
-### Stage 6: Data Storage (Physical Table)
-**What Happens**: Processed data is stored in a permanent database table
+#### Stage 2: Data Preparation (5 Base Views)
 
-**Key Component**:
-- **`TBL_WSS_FLASH_SALES`** (Physical Table)
+**What Happens:** Raw data is read from source tables and prepared for transformation. Configuration parameters are consolidated into a unified parameter view.
 
-**Why Important**: This table serves as the persistent storage layer. It holds the historical weekly snapshots that can be queried for trend analysis and reporting.
+**Components:**
+- `CV_BASE_NAVIX` - Extracts NAVIX transactions
+- `CV_BASE_TLOGF_X` - Extracts prescription scripts
+- `CV_BASE_TLOGF_COVID` - Extracts COVID sales
+- `CV_BASE_MD_RCALWEEK_S4` - Provides calendar structure
+- `CV_BASE_PARAMETERS` - Consolidates all configuration parameters
+
+**Why Important:** This layer standardizes data formats and provides a consistent interface for downstream transformations. Parameter consolidation ensures consistent business rules across all processing.
 
 ---
 
-### Stage 7: Reporting Layer (Static Views)
-**What Happens**: The stored data is exposed through stable reporting interfaces
+#### Stage 3: Data Transformation (10 Specialized Views)
 
-**Key Components** (3 static views):
-1. **`CV_COMP_FIN_FLASH_STATIC`**: Wraps the physical table in a view interface
-2. **`CV_COMP_FIN_FLASH_COMBINED_STATIC`**: Combines flash sales with budget, forecast, and actual data
-3. **`CV_CONS_WEEKLY_FLASH_REPORT_STATIC`**: Final consumer-facing weekly flash report
+**What Happens:** Business logic is applied to calculate sales metrics, apply filters, categorize discounts, and process prescriptions. Each view focuses on a specific business domain.
 
-**Why Important**: These views provide a stable interface for reporting tools and business users. Even if the underlying table structure changes, the view interface can remain consistent.
+**Components:**
+- **Front Store Sales:** `CV_BASE_FS_SALES`, `CV_BASE_TLOGF_FS_SALES`
+- **Pharmacy Sales:** `CV_BASE_TLOGF_RX_SALES`, `CV_BASE_SCRIPTS`
+- **Discounts:** `CV_BASE_TLOGF_FS_DISCOUNT`, `CV_BASE_TLOGF_EMP_DISCOUNT`, `CV_BASE_TLOGF_EMP_DISCOUNTS`, `CV_BASE_TLOGF_EMP_DISC_TYPES`
+
+**Why Important:** This is where business rules are enforced. Sales are categorized by channel, discounts are properly attributed, and data is filtered according to retail type and business requirements.
+
+---
+
+#### Stage 4: Data Aggregation (3 Composite Views)
+
+**What Happens:** All sales channels are combined into unified views. Data from Front Store, Pharmacy, COVID sales, and employee discounts are aggregated. Calendar information is joined for time-based reporting.
+
+**Components:**
+- `CV_COMP_FLASH_SALES` - Primary aggregation point combining all sales channels
+- `CV_COMP_FIN_FLASH_COMBINED_STATIC` - Combines flash sales with budget, forecast, and actual data
+- `CV_COMP_FIN_FLASH` - Final composite view with calendar joins
+
+**Why Important:** This layer provides a single, unified view of all sales activity. Business users can analyze performance across all channels without understanding the underlying complexity.
+
+---
+
+#### Stage 5: Orchestration & Persistence (1 Procedure + 1 Table)
+
+**What Happens:** The stored procedure `STP_WSS_FLASH_SALES` executes on a weekly schedule, reads data from `CV_COMP_FIN_FLASH`, and writes the snapshot to `TBL_WSS_FLASH_SALES`.
+
+**Components:**
+- `STP_WSS_FLASH_SALES` - Orchestration procedure
+- `TBL_WSS_FLASH_SALES` - Persistent output table
+
+**Why Important:** This stage creates a historical record of weekly performance. The persistent table enables trend analysis and provides a stable data source for reporting tools.
+
+---
+
+#### Stage 6: Reporting (2 Views + BI Tools)
+
+**What Happens:** The output table is wrapped by `CV_COMP_FIN_FLASH_STATIC` for reporting access. The consolidated weekly report view `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` combines flash sales with budget and forecast data for executive reporting.
+
+**Components:**
+- `CV_COMP_FIN_FLASH_STATIC` - Table wrapper
+- `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` - Consolidated weekly report
+- Business Intelligence tools and dashboards
+
+**Why Important:** This layer provides business users with easy access to flash sales data through familiar reporting tools. The consolidated view enables budget vs. actual analysis.
 
 ---
 
 ## Major Data Flows
 
 ### Flow 1: Front Store Sales Flow
-**Confidence Score: 93/100** ✅
 
-**Source**: TLOGF Table (Front Store transaction logs)
+**Source:** NAVIX transaction system + TLOGF transaction logs
 
-**Processing Stages**:
-1. `CV_BASE_TLOGF_FS_SALES` extracts FS sales transactions
-2. `CV_BASE_FS_SALES_TLOGF` combines with store data from NAVIX
-3. `FLASH_SALES_VT_CAR` aggregates with other sales types
-4. `CV_COMP_FIN_FLASH` applies business logic
-5. `STP_WSS_FLASH_SALES` captures weekly snapshot
-6. `TBL_WSS_FLASH_SALES` stores the data
-7. `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` exposes for reporting
+**Processing Stages:**
+1. **Data Extraction:** `CV_BASE_NAVIX` extracts transaction data
+2. **Parameter Application:** `CV_BASE_PARAMETERS` provides retail type and discount type filters
+3. **Sales Calculation:** `CV_BASE_FS_SALES` and `CV_BASE_TLOGF_FS_SALES` calculate Front Store sales metrics
+4. **Discount Processing:** `CV_BASE_TLOGF_FS_DISCOUNT` processes promotional discounts
+5. **Aggregation:** `CV_COMP_FLASH_SALES` combines all Front Store data
+6. **Consolidation:** `CV_COMP_FIN_FLASH_COMBINED_STATIC` merges with other data sources
+7. **Final Output:** `CV_COMP_FIN_FLASH` provides the final view
+8. **Persistence:** `STP_WSS_FLASH_SALES` writes to `TBL_WSS_FLASH_SALES`
 
-**Destination**: Weekly Flash Report
+**Destination:** TBL_WSS_FLASH_SALES → Weekly Flash Report → BI Tools
 
-**What This Flow Does**: Tracks all Front Store sales (non-pharmacy items) including regular sales and various discount types. This helps business leaders understand retail performance outside of pharmacy operations.
+**Confidence Score:** 94/100
 
----
-
-### Flow 2: Pharmacy Sales Flow
-**Confidence Score: 93/100** ✅
-
-**Source**: TLOGF Table (Pharmacy transaction logs)
-
-**Processing Stages**:
-1. `CV_BASE_TLOGF_RX_SALES` extracts RX sales transactions
-2. `FLASH_SALES_VT_CAR` aggregates with other sales types
-3. `CV_COMP_FIN_FLASH` applies business logic
-4. `STP_WSS_FLASH_SALES` captures weekly snapshot
-5. `TBL_WSS_FLASH_SALES` stores the data
-6. `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` exposes for reporting
-
-**Destination**: Weekly Flash Report
-
-**What This Flow Does**: Tracks pharmacy sales revenue separately from Front Store sales. This is critical because pharmacy operations have different business dynamics and regulatory requirements.
+**Explanation:** This flow tracks retail sales from CVS Front Store locations. It captures product sales, applies business rules to categorize retail types, and processes promotional discounts. The high confidence score reflects explicit datasource references throughout the flow.
 
 ---
 
-### Flow 3: Prescription Scripts Flow
-**Confidence Score: 93/100** ✅
+### Flow 2: Pharmacy (RX) Sales Flow
 
-**Source**: TLOGF_X Table (Prescription transaction logs)
+**Source:** TLOGF transaction logs + TLOGF_X prescription script logs
 
-**Processing Stages**:
-1. `CV_BASE_TLOGF_X_SCRIPTS` and `CV_BASE_SCRIPTS_TLOGF_X` extract script data
-2. `FLASH_SALES_VT_CAR` aggregates with other sales types
-3. `CV_COMP_FIN_FLASH` applies business logic
-4. `STP_WSS_FLASH_SALES` captures weekly snapshot
-5. `TBL_WSS_FLASH_SALES` stores the data
-6. `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` exposes for reporting
+**Processing Stages:**
+1. **Script Extraction:** `CV_BASE_TLOGF_X` extracts prescription data
+2. **Script Processing:** `CV_BASE_SCRIPTS` processes prescription scripts
+3. **Parameter Application:** `CV_BASE_PARAMETERS` provides RX retail type filters
+4. **Sales Calculation:** `CV_BASE_TLOGF_RX_SALES` calculates pharmacy sales metrics
+5. **Aggregation:** `CV_COMP_FLASH_SALES` combines RX data with other channels
+6. **Consolidation:** `CV_COMP_FIN_FLASH_COMBINED_STATIC` merges with other data sources
+7. **Final Output:** `CV_COMP_FIN_FLASH` provides the final view
+8. **Persistence:** `STP_WSS_FLASH_SALES` writes to `TBL_WSS_FLASH_SALES`
 
-**Destination**: Weekly Flash Report
+**Destination:** TBL_WSS_FLASH_SALES → Weekly Flash Report → BI Tools
 
-**What This Flow Does**: Tracks the number of prescriptions filled (scripts), not just the revenue. This is important for understanding pharmacy workload and operational efficiency.
+**Confidence Score:** 94/100
+
+**Explanation:** This flow tracks prescription sales and pharmacy operations. It processes both prescription scripts (TLOGF_X) and pharmacy sales transactions (TLOGF), applying RX-specific business rules. The flow is critical for understanding pharmacy performance separately from Front Store retail.
 
 ---
 
-### Flow 4: Employee Discount Flow
-**Confidence Score: 92/100** ✅
+### Flow 3: Employee Discount Flow
 
-**Source**: TLOGF Table (Employee discount transactions)
+**Source:** TLOGF transaction logs
 
-**Processing Stages**:
-1. Three base views extract different employee discount types:
+**Processing Stages:**
+1. **Parameter Application:** `CV_BASE_PARAMETERS` provides discount type definitions
+2. **Discount Extraction:** Three views process employee discounts:
    - `CV_BASE_TLOGF_EMP_DISCOUNT`
-   - `CV_BASE_TLOGF_EMP_DISCOUNTS`
+   - `CV_BASE_TLOGF_EMP_DISCOUNTS` (alternate implementation)
    - `CV_BASE_TLOGF_EMP_DISC_TYPES`
-2. `FLASH_SALES_VT_CAR` aggregates with other sales types
-3. `CV_COMP_FIN_FLASH` applies business logic
-4. `STP_WSS_FLASH_SALES` captures weekly snapshot
-5. `TBL_WSS_FLASH_SALES` stores the data
-6. `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` exposes for reporting
+3. **Aggregation:** `CV_COMP_FLASH_SALES` combines employee discount data
+4. **Consolidation:** `CV_COMP_FIN_FLASH_COMBINED_STATIC` merges with other data sources
+5. **Final Output:** `CV_COMP_FIN_FLASH` provides the final view
+6. **Persistence:** `STP_WSS_FLASH_SALES` writes to `TBL_WSS_FLASH_SALES`
 
-**Destination**: Weekly Flash Report
+**Destination:** TBL_WSS_FLASH_SALES → Weekly Flash Report → BI Tools
 
-**What This Flow Does**: Tracks employee discount usage separately. This helps understand the impact of employee benefits on overall sales and margins.
+**Confidence Score:** 92/100
 
----
-
-### Flow 5: COVID Sales Flow
-**Confidence Score: 91/100** ✅
-
-**Source**: TLOGF_COVID Table (COVID-related sales)
-
-**Processing Stages**:
-1. `CV_BASE_TLOGF_COVID_SALES` extracts COVID sales with special retail type filters
-2. `CV_BASE_PARAMETERS_RX_RETAIL_TYPES_COVID` provides COVID-specific filtering
-3. `FLASH_SALES_VT_CAR` aggregates with other sales types
-4. `CV_COMP_FIN_FLASH` applies business logic
-5. `STP_WSS_FLASH_SALES` captures weekly snapshot
-6. `TBL_WSS_FLASH_SALES` stores the data
-7. `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` exposes for reporting
-
-**Destination**: Weekly Flash Report
-
-**What This Flow Does**: Separately tracks COVID-related sales (testing kits, vaccines, etc.). This was critical during the pandemic and remains important for public health reporting.
+**Explanation:** This flow tracks employee discounts separately from regular promotional discounts. Multiple views exist (possibly representing different discount programs or a migration from one implementation to another). This tracking is important for understanding the impact of employee benefits on overall sales.
 
 ---
 
-### Flow 6: Parameter Configuration Flow
-**Confidence Score: 89/100** ✅
+### Flow 4: COVID Sales Flow
 
-**Source**: PARAMETERS Table (Configuration data)
+**Source:** TLOGF_COVID dedicated COVID sales tracking table
 
-**Processing Stages**:
-1. Five parameter views extract different configuration types:
-   - `CV_BASE_PARAMETERS_FS_RETAIL_TYPES`: Front Store retail categories
-   - `CV_BASE_PARAMETERS_RX_RETAIL_TYPES`: Pharmacy retail categories
-   - `CV_BASE_PARAMETERS_RX_RETAIL_TYPES_COVID`: COVID-specific categories
-   - `CV_BASE_PARAMETERS_FS_DISCOUNT_TYPES`: Discount categories
-   - `CV_BASE_PARAMETERS_FS_RETAIL_TYPE_ZTFIRP_FLASH_PRM`: Flash parameter settings
-2. These parameters are used to filter and categorize data in `FLASH_SALES_VT_CAR`
+**Processing Stages:**
+1. **Parameter Application:** `CV_BASE_PARAMETERS` provides COVID-specific RX retail type filters
+2. **COVID Data Extraction:** `CV_BASE_TLOGF_COVID` extracts COVID-related sales
+3. **Aggregation:** `CV_COMP_FLASH_SALES` combines COVID data with other channels
+4. **Consolidation:** `CV_COMP_FIN_FLASH_COMBINED_STATIC` merges with other data sources
+5. **Final Output:** `CV_COMP_FIN_FLASH` provides the final view
+6. **Persistence:** `STP_WSS_FLASH_SALES` writes to `TBL_WSS_FLASH_SALES`
 
-**Destination**: Used throughout the system for filtering and categorization
+**Destination:** TBL_WSS_FLASH_SALES → Weekly Flash Report → BI Tools
 
-**What This Flow Does**: Provides flexible configuration without code changes. Business users can adjust retail type definitions and discount categories through parameter tables, and the system automatically applies these changes.
+**Confidence Score:** 93/100
+
+**Explanation:** This flow tracks COVID-19 related sales (testing kits, vaccines, related products) separately from regular pharmacy sales. The dedicated table and parameter configuration suggest this was added to support pandemic-related reporting requirements.
+
+---
+
+### Flow 5: Calendar Master Data Flow
+
+**Source:** S4 master data system
+
+**Processing Stages:**
+1. **Master Data Extraction:** `CV_BASE_MD_RCALWEEK_S4` provides retail calendar week definitions
+2. **Calendar Join:** `CV_COMP_FIN_FLASH` joins calendar data to sales data
+3. **Persistence:** `STP_WSS_FLASH_SALES` writes to `TBL_WSS_FLASH_SALES`
+
+**Destination:** TBL_WSS_FLASH_SALES → Weekly Flash Report → BI Tools
+
+**Confidence Score:** 96/100
+
+**Explanation:** This flow provides the time dimension for weekly reporting. Retail calendar weeks may differ from standard calendar weeks, so this master data ensures consistent time-based reporting across the organization.
+
+---
+
+### Flow 6: CAR System Integration Flow
+
+**Source:** CAR (external system)
+
+**Processing Stages:**
+1. **External Data Access:** `FLASH_SALES_VT_CAR` provides a virtual table interface to CAR system data
+2. **Integration:** `CV_COMP_FIN_FLASH` integrates CAR data (inferred relationship)
+3. **Persistence:** `STP_WSS_FLASH_SALES` writes to `TBL_WSS_FLASH_SALES`
+
+**Destination:** TBL_WSS_FLASH_SALES → Weekly Flash Report → BI Tools
+
+**Confidence Score:** 75/100
+
+**Explanation:** This flow integrates flash sales data from an external CAR system. The relationship is inferred based on naming conventions and placeholder patterns rather than explicit references, resulting in lower confidence. The CAR system may provide additional sales data or alternate data sources for validation.
+
+---
+
+### Flow 7: Consolidated Weekly Reporting Flow
+
+**Source:** TBL_WSS_FLASH_SALES (output from previous flows)
+
+**Processing Stages:**
+1. **Table Wrapper:** `CV_COMP_FIN_FLASH_STATIC` wraps the output table for reporting access
+2. **Multi-Source Consolidation:** `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` combines:
+   - Flash sales data
+   - Budget data
+   - Forecast data
+   - Actual data
+   - Topside adjustments
+3. **Reporting Access:** BI tools and dashboards consume the consolidated view
+
+**Destination:** Business Intelligence tools, executive dashboards, financial planning systems
+
+**Confidence Score:** 88/100
+
+**Explanation:** This flow provides the final reporting layer. It combines flash sales with budget and forecast data to enable variance analysis. Business users can compare actual performance against plans and identify areas requiring attention.
+
+---
+
+### Flow 8: Parameter Configuration Flow
+
+**Source:** Parameter definition tables
+
+**Processing Stages:**
+1. **Parameter Consolidation:** Five parameter views are consolidated:
+   - `CV_BASE_PARAMETERS-FS_RETAIL_TYPES` - Front Store retail type definitions
+   - `CV_BASE_PARAMETERS-FS_DISCOUNT_TYPES` - Discount type definitions
+   - `CV_BASE_PARAMETERS-RX_RETAIL_TYPES` - Pharmacy retail type definitions
+   - `CV_BASE_PARAMETERS-RX_RETAIL_TYPES_COVID` - COVID-specific RX types
+   - `CV_BASE_PARAMETERS-FS_RETAIL_TYPE-ztfirp_flash_prm` - Flash parameter table
+2. **Unified Parameter View:** `CV_BASE_PARAMETERS` provides a single interface
+3. **Parameter Application:** All base transformation views use these parameters for filtering
+
+**Destination:** All base calculation views (FS_SALES, RX_SALES, DISCOUNTS, etc.)
+
+**Confidence Score:** 95/100
+
+**Explanation:** This flow provides configuration management for the entire system. Business rules for categorizing sales, filtering transactions, and applying discounts are centrally managed through parameter tables. Changes to business rules can be made in the parameter tables without modifying calculation views.
 
 ---
 
@@ -280,555 +390,759 @@ This view:
 
 ### Source/Base Components
 
-| Component | Business Purpose |
-|-----------|------------------|
-| **NAVIX Table** | Stores information about CVS store locations, organizational hierarchy (district, region, division), and store attributes. Essential for geographic and organizational reporting. |
-| **TLOGF Table** | Contains all Front Store transaction logs—every item sold, every discount applied, every employee purchase. This is the primary source for retail sales data. |
-| **TLOGF_X Table** | Contains all Pharmacy transaction logs, specifically prescription fills (scripts). Critical for pharmacy operations reporting. |
-| **TLOGF_COVID Table** | Separate tracking for COVID-related sales. Allows isolation of pandemic-related business impact. |
-| **PARAMETERS Table** | Configuration settings that define how transactions are categorized (retail types, discount types). Enables business flexibility without IT changes. |
-| **S4 RCALWEEK Table** | SAP S4 retail calendar that defines fiscal weeks, periods, and years. Ensures consistent time-based reporting across the enterprise. |
+| Component | Business Purpose | Why Important |
+|-----------|------------------|---------------|
+| **NAVIX** | Core transaction data system | Primary source for Front Store retail transactions. Contains detailed transaction-level data including products, quantities, prices, and timestamps. |
+| **TLOGF** | Transaction log for Front Store | Captures all Front Store sales, discounts, and employee transactions. Provides the foundation for sales reporting. |
+| **TLOGF_X** | Prescription script transaction log | Tracks pharmacy prescriptions and script fulfillment. Essential for pharmacy performance reporting. |
+| **TLOGF_COVID** | COVID-specific sales tracking | Dedicated tracking for COVID-related products and services. Enables pandemic-related reporting and analysis. |
+| **S4 Master Data** | Retail calendar definitions | Provides standardized retail calendar weeks for consistent time-based reporting across the organization. |
+| **CAR System** | External flash sales data | Alternate or supplementary flash sales data source. May provide validation or additional coverage. |
+| **Parameter Tables** | Business rule configuration | Centralized management of retail types, discount types, and filtering rules. Enables business rule changes without code modifications. |
 
 ---
 
 ### Processing Components
 
-| Component | Business Purpose |
-|-----------|------------------|
-| **FLASH_SALES_VT_CAR** | The central data hub that brings together all sales types (FS, RX, COVID, scripts, discounts) into one unified view. This is where the complete sales picture comes together. |
-| **CV_COMP_FIN_FLASH** | Applies financial business rules and adds calendar context. Transforms raw sales data into business-ready information with proper fiscal period attribution. |
-| **CV_BASE_FS_SALES_TLOGF** | Combines Front Store sales with store master data. Ensures every transaction is linked to the correct store location and organizational hierarchy. |
+| Component | Business Purpose | Why Important |
+|-----------|------------------|---------------|
+| **CV_BASE_NAVIX** | NAVIX data extraction | Provides a standardized interface to NAVIX transaction data. Isolates downstream views from source system changes. |
+| **CV_BASE_TLOGF_X** | Script data extraction | Extracts prescription script data in a format suitable for downstream processing. |
+| **CV_BASE_TLOGF_COVID** | COVID sales extraction | Isolates COVID-related sales for separate tracking and reporting. |
+| **CV_BASE_PARAMETERS** | Parameter consolidation | Provides a single, unified interface to all business rule parameters. Simplifies parameter management. |
+| **CV_BASE_FS_SALES** | Front Store sales processing | Applies business logic to calculate Front Store sales metrics. Filters transactions by retail type. |
+| **CV_BASE_TLOGF_RX_SALES** | Pharmacy sales processing | Calculates pharmacy sales metrics. Applies RX-specific business rules and filters. |
+| **CV_BASE_SCRIPTS** | Prescription script processing | Processes prescription scripts for pharmacy reporting. Tracks script counts and fulfillment. |
+| **CV_BASE_TLOGF_FS_DISCOUNT** | Discount processing | Identifies and categorizes promotional discounts. Tracks discount impact on sales. |
+| **CV_BASE_TLOGF_EMP_DISCOUNT** | Employee discount tracking | Tracks employee discounts separately from promotional discounts. Monitors employee benefit usage. |
 
 ---
 
 ### Transformation/Aggregation Components
 
-| Component | Business Purpose |
-|-----------|------------------|
-| **Base Calculation Views (8 views)** | Each base view focuses on one specific data type (FS sales, RX sales, scripts, COVID, parameters). This modular approach makes the system easier to maintain and troubleshoot. |
-| **Parameter Views (5 views)** | Provide flexible filtering based on business-defined categories. Allow business users to control what gets included in different sales categories without changing code. |
+| Component | Business Purpose | Why Important |
+|-----------|------------------|---------------|
+| **CV_COMP_FLASH_SALES** | Multi-channel sales aggregation | **Central aggregation point** that combines Front Store sales, Pharmacy sales, COVID sales, and all discount types into a unified view. This is the most critical component in the system. |
+| **CV_COMP_FIN_FLASH_COMBINED_STATIC** | Multi-source consolidation | Combines flash sales with budget, forecast, actual, and adjustment data. Enables variance analysis. |
+| **CV_COMP_FIN_FLASH** | Final composite with calendar | Adds calendar dimension to consolidated data. Provides the final view consumed by the orchestration procedure. |
 
 ---
 
 ### Procedures
 
-| Component | Business Purpose |
-|-----------|------------------|
-| **STP_WSS_FLASH_SALES** | The weekly execution engine. Runs every Monday at 5am to capture a snapshot of the previous week's sales. Accepts date range parameters to control which week's data is captured. Performs a full refresh to ensure data accuracy. |
+| Component | Business Purpose | Why Important |
+|-----------|------------------|---------------|
+| **STP_WSS_FLASH_SALES** | Weekly snapshot orchestration | **Orchestrates the entire flash sales process**. Executes on a weekly schedule, reads from `CV_COMP_FIN_FLASH`, and writes the snapshot to `TBL_WSS_FLASH_SALES`. This procedure is the execution engine for the entire system. |
 
 ---
 
 ### Target Components
 
-| Component | Business Purpose |
-|-----------|------------------|
-| **TBL_WSS_FLASH_SALES** | The permanent storage table for weekly sales snapshots. Contains 54 columns of sales data including amounts, units, timestamps, and organizational hierarchy. Serves as the historical record for trend analysis. |
+| Component | Business Purpose | Why Important |
+|-----------|------------------|---------------|
+| **TBL_WSS_FLASH_SALES** | Persistent flash sales storage | **Final destination for all flash sales data**. Stores weekly snapshots for historical analysis and trending. Provides a stable data source for reporting tools. |
 
 ---
 
 ### Reporting/Consumption Components
 
-| Component | Business Purpose |
-|-----------|------------------|
-| **CV_COMP_FIN_FLASH_STATIC** | Wraps the physical table in a stable view interface. Protects reporting tools from underlying table structure changes. |
-| **CV_COMP_FIN_FLASH_COMBINED_STATIC** | Combines flash sales with budget, forecast, and actual financial data. Enables variance analysis (actual vs. budget, actual vs. forecast). |
-| **CV_CONS_WEEKLY_FLASH_REPORT_STATIC** | The final consumer-facing report view. This is what business intelligence tools and end users query to get weekly flash sales information. |
+| Component | Business Purpose | Why Important |
+|-----------|------------------|---------------|
+| **CV_COMP_FIN_FLASH_STATIC** | Table wrapper for reporting | Provides a calculation view interface to the output table. Enables reporting tools to access data through standard HANA interfaces. |
+| **CV_CONS_WEEKLY_FLASH_REPORT_STATIC** | Consolidated weekly report | **Primary reporting view** for business users. Combines flash sales with budget and forecast for comprehensive weekly performance reporting. |
 
 ---
 
-## Dependencies Explained
+## Dependencies
 
 ### Major Upstream Dependencies
 
-**FLASH_SALES_VT_CAR depends on 15 upstream components**:
-- This central hub requires data from multiple sources to function
-- If any upstream base view fails, the consolidated view will be incomplete
-- **Business Impact**: A failure in any single data stream (FS, RX, COVID, scripts) would result in incomplete weekly reporting
+These components have significant dependencies on upstream data sources:
 
-**CV_COMP_FIN_FLASH depends on FLASH_SALES_VT_CAR and CV_BASE_MD_RCALWEEK_S4**:
-- Cannot process sales data without the consolidated sales view
-- Cannot assign fiscal periods without the retail calendar
-- **Business Impact**: Calendar data is critical—without it, sales cannot be properly attributed to fiscal weeks
+**CV_COMP_FLASH_SALES** (Central Aggregation Point)
+- **Depends on 10+ base calculation views** including:
+  - `CV_BASE_NAVIX` - Transaction data
+  - `CV_BASE_SCRIPTS` - Prescription scripts
+  - `CV_BASE_TLOGF_COVID` - COVID sales
+  - `CV_BASE_FS_SALES` - Front Store sales
+  - `CV_BASE_TLOGF_RX_SALES` - Pharmacy sales
+  - `CV_BASE_TLOGF_FS_DISCOUNT` - Discounts
+  - `CV_BASE_TLOGF_EMP_DISCOUNT` - Employee discounts
+  - `CV_BASE_PARAMETERS` - Configuration parameters
+
+**Why Important:** This component is the **central hub** of the system. Any issues with upstream base views will impact the entire downstream flow. This is the most critical dependency point in the architecture.
+
+---
+
+**CV_COMP_FIN_FLASH** (Final Composite View)
+- **Depends on:**
+  - `CV_COMP_FIN_FLASH_COMBINED_STATIC` - Consolidated data
+  - `CV_BASE_MD_RCALWEEK_S4` - Calendar master data
+  - `FLASH_SALES_VT_CAR` - CAR system data (inferred)
+
+**Why Important:** This is the **final view** consumed by the orchestration procedure. It must be available and accurate for the weekly snapshot process to succeed.
+
+---
+
+**All Base Transformation Views**
+- **Depend on:**
+  - `CV_BASE_PARAMETERS` - Business rule configuration
+
+**Why Important:** Parameter-driven filtering ensures consistent business logic across all processing. Changes to parameters affect all downstream calculations.
 
 ---
 
 ### Major Downstream Dependencies
 
-**TBL_WSS_FLASH_SALES is consumed by 3 downstream static views**:
-- The physical table feeds the entire reporting layer
-- Any data quality issues in the table will propagate to all reports
-- **Business Impact**: This table is the single source of truth for weekly flash reporting—its accuracy is paramount
+These components are consumed by many downstream processes:
 
-**CV_CONS_WEEKLY_FLASH_REPORT_STATIC is the final endpoint**:
-- All business intelligence tools and dashboards query this view
-- Changes to this view interface could break downstream reporting tools
-- **Business Impact**: This is what executives and business leaders see—stability and accuracy here are critical
+**TBL_WSS_FLASH_SALES** (Output Table)
+- **Consumed by:**
+  - `CV_COMP_FIN_FLASH_STATIC` - Table wrapper
+  - `CV_COMP_FIN_FLASH_COMBINED_STATIC` - Consolidation view (through static wrapper)
+  - `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` - Weekly report
+  - Business Intelligence tools
+  - Financial planning systems
+  - Executive dashboards
+
+**Why Important:** This table is the **primary data source** for all flash sales reporting. Any data quality issues in this table will impact all downstream reporting and analysis.
+
+---
+
+**CV_BASE_PARAMETERS** (Parameter Consolidation)
+- **Consumed by:**
+  - All base transformation views (FS_SALES, RX_SALES, DISCOUNTS, etc.)
+  - `CV_COMP_FLASH_SALES` - Aggregation view
+
+**Why Important:** This component controls **business logic** for the entire system. Changes to parameters affect all downstream processing and reporting.
+
+---
+
+**CV_COMP_FIN_FLASH_COMBINED_STATIC** (Consolidated View)
+- **Consumed by:**
+  - `CV_COMP_FIN_FLASH` - Final composite
+  - `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` - Weekly report
+
+**Why Important:** This view provides **multi-source consolidation**. It combines flash sales with budget, forecast, and actual data, enabling variance analysis.
 
 ---
 
 ### Central Processing Components
 
-**FLASH_SALES_VT_CAR is the most critical component**:
-- **Upstream Dependencies**: 15 components feed into it
-- **Downstream Dependencies**: 2 components consume from it
-- **Business Impact**: This is the single point of integration. If this view fails, the entire weekly flash process stops
+**CV_COMP_FLASH_SALES** - Central Aggregation Hub
+- **Upstream Dependencies:** 10+ base views
+- **Downstream Consumers:** Composite consolidation views
+- **Role:** Primary aggregation point for all sales channels
 
-**STP_WSS_FLASH_SALES is the execution bottleneck**:
-- Runs once per week on a fixed schedule
-- If the procedure fails, no weekly snapshot is captured
-- **Business Impact**: A missed execution means no flash report for that week—business leaders would lack critical performance visibility
+**Why Critical:** This component sits at the **center of the architecture**. It receives data from all sales channels and discount types, aggregates the data, and provides a unified view for downstream processing. Any performance issues or data quality problems in this component will cascade throughout the system.
+
+---
+
+**STP_WSS_FLASH_SALES** - Orchestration Procedure
+- **Upstream Dependencies:** `CV_COMP_FIN_FLASH`
+- **Downstream Consumers:** `TBL_WSS_FLASH_SALES`
+- **Role:** Execution engine for weekly snapshots
+
+**Why Critical:** This procedure is the **execution engine** for the entire system. It orchestrates the weekly snapshot process, ensuring data is captured at the right time with the right parameters. Failure of this procedure means no flash sales data is captured.
 
 ---
 
 ### Important Input/Output Relationships
 
-| Input | Process | Output | Business Meaning |
-|-------|---------|--------|------------------|
-| TLOGF + NAVIX | CV_BASE_FS_SALES_TLOGF | Enriched FS Sales | Every Front Store transaction is linked to its store location and organizational hierarchy |
-| Multiple Base Views | FLASH_SALES_VT_CAR | Consolidated Sales | All sales types are unified into a single comprehensive view |
-| FLASH_SALES_VT_CAR + Calendar | CV_COMP_FIN_FLASH | Business-Ready Data | Raw sales data is transformed into fiscally-attributed business information |
-| CV_COMP_FIN_FLASH | STP_WSS_FLASH_SALES | Weekly Snapshot | Point-in-time data is captured for historical reporting |
-| TBL_WSS_FLASH_SALES | CV_CONS_WEEKLY_FLASH_REPORT_STATIC | Business Report | Stored data is exposed through a stable reporting interface |
+**Input Relationship: NAVIX → CV_BASE_NAVIX → CV_BASE_FS_SALES → CV_COMP_FLASH_SALES**
+- **Confidence:** 95%
+- **Meaning:** Front Store transaction data flows from NAVIX through base extraction and transformation into the central aggregation point.
+
+**Input Relationship: TLOGF_X → CV_BASE_TLOGF_X → CV_BASE_SCRIPTS → CV_COMP_FLASH_SALES**
+- **Confidence:** 92%
+- **Meaning:** Prescription script data flows from TLOGF_X through base extraction and script processing into the central aggregation point.
+
+**Output Relationship: CV_COMP_FIN_FLASH → STP_WSS_FLASH_SALES → TBL_WSS_FLASH_SALES**
+- **Confidence:** 98%
+- **Meaning:** The final composite view is read by the orchestration procedure and written to the persistent output table. This is the most critical output relationship in the system.
+
+**Output Relationship: TBL_WSS_FLASH_SALES → CV_COMP_FIN_FLASH_STATIC → CV_CONS_WEEKLY_FLASH_REPORT_STATIC**
+- **Confidence:** 88%
+- **Meaning:** The output table is wrapped for reporting access and consumed by the consolidated weekly report view.
 
 ---
 
-## Confidence Explanation
+### Components with High Dependency Counts
 
-### Overall Confidence: 94/100 ✅
+| Component | Upstream Count | Downstream Count | Total Dependencies | Role |
+|-----------|----------------|------------------|-------------------|------|
+| **CV_COMP_FLASH_SALES** | 10+ | 2 | 12+ | Central aggregation hub |
+| **CV_BASE_PARAMETERS** | 5 | 10+ | 15+ | Parameter distribution hub |
+| **TBL_WSS_FLASH_SALES** | 1 | 5+ | 6+ | Output distribution hub |
+| **CV_COMP_FIN_FLASH_COMBINED_STATIC** | 7+ | 2 | 9+ | Consolidation hub |
 
-This high confidence score reflects strong evidence for the identified lineage. Here's what the score means:
-
----
-
-### Confidence Level Breakdown
-
-**CONFIRMED Relationships (38 relationships, scores 90-100)**:
-- These relationships are directly supported by explicit evidence in the code
-- Examples:
-  - SQL procedure explicitly references `CV_COMP_FIN_FLASH` in its FROM clause (Score: 98)
-  - Calculation views contain explicit data source references in their XML definitions (Scores: 90-96)
-  - Parameter views are referenced with specific parameter names (Scores: 87-93)
-
-**Why High Confidence**: We can see the actual code that creates these relationships. There's no guessing involved.
+**Interpretation:** These components are **architectural hubs** with high fan-in or fan-out. They represent critical points in the data flow where many dependencies converge or diverge. Special attention should be paid to monitoring and maintaining these components.
 
 ---
 
-**INFERRED Relationships (7 relationships, scores 75-89)**:
-- These relationships have supporting evidence but contain some uncertainty
-- Examples:
-  - `CV_COMP_FLASH_SALES_VT` to `CV_COMP_FIN_FLASH` (Score: 85)
-  - `FLASH_SALES_VT_CAR` to `CV_COMP_FLASH_SALES_VT` (Score: 83)
+## Confidence
 
-**Why Medium Confidence**: The relationships are logical and follow SAP HANA naming conventions, but the explicit references are not as clear in the XML. We're confident they exist, but the exact mechanism is inferred from patterns rather than explicit code.
+### Overall Confidence: 92/100
+
+The lineage analysis demonstrates **high confidence** with strong evidence supporting most relationships.
+
+### Confidence Breakdown
+
+**CONFIRMED Relationships: 64 out of 67 (96%)**
+
+These relationships are directly supported by evidence in the source files:
+
+- **Explicit SQL References (98% confidence):**
+  - `STP_WSS_FLASH_SALES` explicitly references `CV_COMP_FIN_FLASH` in SELECT statement
+  - `STP_WSS_FLASH_SALES` explicitly references `TBL_WSS_FLASH_SALES` in INSERT statement
+  - SQL procedure header documents source and target
+
+- **Explicit XML Datasource References (95-96% confidence):**
+  - Calculation views contain `<datasource>` elements pointing to upstream views
+  - Examples:
+    - `CV_COMP_FIN_FLASH` references `CV_COMP_FIN_FLASH_COMBINED_STATIC`
+    - `CV_COMP_FIN_FLASH` references `CV_BASE_MD_RCALWEEK_S4`
+    - `CV_COMP_FLASH_SALES` references `CV_BASE_NAVIX`, `CV_BASE_SCRIPTS`, `CV_BASE_TLOGF_COVID`
+
+- **Explicit Parameter References (95% confidence):**
+  - Base transformation views reference `CV_BASE_PARAMETERS` for filtering
+  - Parameter views are explicitly named in datasource references
+
+- **Strong Naming Convention Support (90-94% confidence):**
+  - Consistent naming patterns (CV_BASE_, CV_COMP_, TLOGF_) support relationship identification
+  - File names match view names referenced in XML
+
+**INFERRED Relationships: 3 out of 67 (4%)**
+
+These relationships have supporting evidence but contain some uncertainty:
+
+1. **FLASH_SALES_VT_CAR → CV_COMP_FIN_FLASH (75% confidence)**
+   - **Evidence:** Naming convention suggests CAR system integration, placeholder patterns (IP_UPD_TIMESTAMP_FROM/TO) match those in CV_COMP_FIN_FLASH
+   - **Uncertainty:** No explicit datasource reference found in CV_COMP_FIN_FLASH XML
+   - **Why Inferred:** Architectural pattern suggests external system integration, but explicit connection not confirmed
+
+2. **CV_COMP_FIN_FLASH_STATIC_TBL → CV_COMP_FIN_FLASH_COMBINED_STATIC (85% confidence)**
+   - **Evidence:** CV_COMP_FIN_FLASH_COMBINED_STATIC references CV_COMP_FIN_FLASH_STATIC, naming suggests table wrapper
+   - **Uncertainty:** Exact relationship to TBL_WSS_FLASH_SALES wrapper not explicitly confirmed
+   - **Why Inferred:** Naming convention and architectural pattern support relationship, but explicit datasource reference not found
+
+3. **CV_BASE_FS_SALES → CV_COMP_FLASH_SALES (90% confidence)**
+   - **Evidence:** CV_COMP_FLASH_SALES references multiple TLOGF-based views, CV_BASE_FS_SALES is a TLOGF-based view for FS sales
+   - **Uncertainty:** Specific inclusion of CV_BASE_FS_SALES not explicitly confirmed in analyzed content
+   - **Why Inferred:** Purpose and naming suggest inclusion, but explicit datasource reference not found
+
+**UNRESOLVED Relationships: 0 out of 67 (0%)**
+
+No relationships were completely unresolved. All identified relationships have at least moderate supporting evidence.
 
 ---
 
-**UNRESOLVED Relationships (2 relationships)**:
-1. **CV_COMP_FLASH_SALES_VT downstream usage beyond CV_COMP_FIN_FLASH**
-   - We know this virtual table view feeds into the composite financial view
-   - We're not certain if it has other downstream consumers
-   - **Business Impact**: Low—the main lineage path is clear
+### Why Confidence Is High
 
-2. **FS_DISCOUNT_TYPES parameter usage in FS_DISCOUNT view**
-   - Logically, the discount types parameter should control discount filtering
-   - The explicit reference is not clearly visible in the XML
-   - **Business Impact**: Low—the discount flow is still traceable through other relationships
+1. **Explicit SQL Evidence (98%):** The stored procedure contains clear SELECT and INSERT statements that explicitly name source and target components.
 
----
+2. **XML Datasource References (95-96%):** Calculation views contain structured XML with `<datasource>` elements that explicitly reference upstream views by name and path.
 
-### Why the Confidence is High
+3. **Consistent Architecture (90-94%):** The system follows a clear layered architecture with consistent naming conventions, making relationship identification straightforward.
 
-1. **Explicit SQL References**: The stored procedure contains clear, unambiguous references to its source view and target table
-2. **XML Data Source Declarations**: Calculation views explicitly declare their data sources with full path names
-3. **Consistent Naming Conventions**: SAP HANA follows predictable naming patterns that help confirm relationships
-4. **Parameter Usage Patterns**: Parameter views are referenced with specific parameter names, making the relationships clear
-5. **Layered Architecture**: The system follows a clear layered design, making the flow logical and traceable
+4. **Parameter-Driven Design (95%):** The use of a consolidated parameter view (CV_BASE_PARAMETERS) is explicitly referenced in multiple base views, confirming the parameter flow.
+
+5. **Documentation (94%):** The SQL procedure includes header comments that document the source and target, providing additional confirmation.
 
 ---
 
-### What the Confidence Score Means for Business Users
+### Why Confidence Is Not 100%
 
-- **94/100 is excellent**: You can trust this lineage analysis for impact assessment, troubleshooting, and documentation
-- **Only 2 minor uncertainties**: These don't affect the main data flow or weekly reporting process
-- **Strong traceability**: If a data quality issue occurs, we can trace it back through the lineage with confidence
-- **Reliable for compliance**: The lineage is well-documented enough for audit and regulatory purposes
+1. **CAR System Integration (75%):** The relationship between FLASH_SALES_VT_CAR and CV_COMP_FIN_FLASH is inferred based on naming conventions and placeholder patterns rather than explicit references.
+
+2. **Static Table Wrapper (85%):** The exact relationship between CV_COMP_FIN_FLASH_STATIC_TBL and CV_COMP_FIN_FLASH_COMBINED_STATIC is inferred through naming convention rather than explicit datasource reference.
+
+3. **Some Base View Inclusions (90%):** While CV_COMP_FLASH_SALES references multiple TLOGF-based views, the specific inclusion of CV_BASE_FS_SALES is inferred based on purpose and naming rather than explicit confirmation.
+
+---
+
+### Relationship Classification Summary
+
+| Classification | Count | Percentage | Confidence Range |
+|----------------|-------|------------|------------------|
+| **CONFIRMED** | 64 | 96% | 90-98% |
+| **INFERRED** | 3 | 4% | 75-90% |
+| **UNRESOLVED** | 0 | 0% | N/A |
+| **Total** | 67 | 100% | **Overall: 92%** |
 
 ---
 
 ## Important Findings
 
-### 1. Centralized Architecture with Single Aggregation Point
+### 1. Central Aggregation Point
 
-**Finding**: `FLASH_SALES_VT_CAR` serves as the sole consolidation point for all sales data types.
+**Finding:** `CV_COMP_FLASH_SALES` serves as the **central aggregation hub** for the entire system.
 
-**What This Means**: 
-- All 15 upstream data sources (FS sales, RX sales, scripts, COVID, discounts, parameters) flow into this one view
-- This creates a single point where the complete sales picture comes together
-- Any changes to this view affect all downstream reporting
+**Details:**
+- Receives data from 10+ base calculation views
+- Combines Front Store sales, Pharmacy sales, COVID sales, and all discount types
+- Provides a unified view of all sales activity
+- Feeds into downstream consolidation views
 
-**Business Impact**:
-- **Positive**: Simplifies maintenance—there's one place to look for consolidated sales logic
-- **Positive**: Ensures consistency—all reports use the same consolidated data
-- **Risk**: Single point of failure—if this view has issues, all reporting is affected
-- **Recommendation**: This component should be monitored closely and changes should be carefully tested
+**Business Impact:** This component is the **most critical** in the architecture. Any performance issues, data quality problems, or availability issues with this view will impact the entire downstream reporting chain. This should be a primary focus for monitoring and optimization.
 
 ---
 
-### 2. Weekly Snapshot Pattern with Full Refresh
+### 2. Multiple Source Systems Feeding Common Component
 
-**Finding**: The stored procedure `STP_WSS_FLASH_SALES` runs every Monday at 5am and performs a full refresh (delete + insert).
+**Finding:** `CV_COMP_FLASH_SALES` integrates data from **multiple source systems**:
 
-**What This Means**:
-- The procedure deletes all existing data for the target week
-- Then inserts fresh data from the source views
-- This ensures data accuracy but means historical snapshots are overwritten if the procedure runs multiple times for the same week
-
-**Business Impact**:
-- **Positive**: Ensures data accuracy—no risk of duplicate or stale data
-- **Positive**: Simple to understand and troubleshoot
-- **Risk**: If the procedure runs twice for the same week, the first snapshot is lost
-- **Risk**: If the procedure fails mid-execution, the week's data could be incomplete
-- **Recommendation**: Implement execution monitoring and alerting to catch failures immediately
-
----
-
-### 3. Multiple Source Systems Feeding Common Component
-
-**Finding**: `FLASH_SALES_VT_CAR` receives data from 4 different physical source systems:
-- NAVIX (store master data)
+**Source Systems:**
+- NAVIX (transaction data)
 - TLOGF (Front Store transactions)
-- TLOGF_X (Pharmacy transactions)
-- TLOGF_COVID (COVID transactions)
-- PARAMETERS (configuration)
-- S4 RCALWEEK (calendar)
+- TLOGF_X (prescription scripts)
+- TLOGF_COVID (COVID sales)
+- Parameter tables (business rules)
 
-**What This Means**:
-- The flash sales report depends on multiple upstream systems being available and accurate
-- Data quality issues in any source system will propagate to the final report
-- Timing of data availability across systems must be coordinated
-
-**Business Impact**:
-- **Positive**: Comprehensive view—the report includes all relevant sales data
-- **Risk**: Dependency on multiple systems—if any source is delayed or unavailable, reporting is affected
-- **Risk**: Data quality issues can come from multiple sources, making troubleshooting more complex
-- **Recommendation**: Implement data quality checks at each source and monitor data freshness
+**Business Impact:** The system provides a **unified view** across multiple operational systems. This enables comprehensive reporting but also means that issues in any source system can impact the consolidated view. Data quality monitoring should cover all source systems.
 
 ---
 
-### 4. Layered Design with Clear Separation of Concerns
+### 3. Weekly Snapshot Pattern
 
-**Finding**: The system follows a strict 7-layer architecture:
-1. Physical Tables
-2. Base Views
-3. Intermediate Views
-4. Composite Views
-5. Stored Procedure
-6. Physical Table (output)
-7. Static/Reporting Views
+**Finding:** The system implements a **weekly snapshot pattern** through the `STP_WSS_FLASH_SALES` procedure.
 
-**What This Means**:
-- Each layer has a specific purpose and responsibility
-- Changes can be isolated to specific layers without affecting others
-- The flow is unidirectional—no circular dependencies
+**Details:**
+- Procedure executes on a weekly schedule
+- Reads current data from `CV_COMP_FIN_FLASH`
+- Writes snapshot to `TBL_WSS_FLASH_SALES`
+- Creates historical record for trending
 
-**Business Impact**:
-- **Positive**: Maintainability—developers can work on one layer without affecting others
-- **Positive**: Testability—each layer can be tested independently
-- **Positive**: Scalability—new data sources can be added at the base layer without changing downstream logic
-- **Recommendation**: Maintain this layered approach when making enhancements
+**Business Impact:** This pattern enables **point-in-time analysis** and historical trending. Business users can compare current week performance to prior weeks. However, the snapshot is only as current as the last procedure execution. If the procedure fails, no data is captured for that week.
 
 ---
 
-### 5. Parameter-Driven Configuration for Business Flexibility
+### 4. Parameter-Driven Configuration
 
-**Finding**: The system uses 5 parameter views to control filtering and categorization:
-- FS retail types
-- RX retail types
-- RX COVID retail types
-- FS discount types
-- Flash parameter settings
+**Finding:** The system uses **centralized parameter management** through `CV_BASE_PARAMETERS`.
 
-**What This Means**:
-- Business users can change how transactions are categorized by updating parameter tables
-- No code changes are required to adjust retail type definitions or discount categories
-- The system automatically picks up parameter changes
+**Details:**
+- Five parameter views are consolidated into a single interface
+- Parameters control retail type filtering, discount type categorization, and COVID-specific rules
+- All base transformation views reference the consolidated parameter view
+- Business rules can be changed without modifying calculation views
 
-**Business Impact**:
-- **Positive**: Business agility—category definitions can be adjusted without IT involvement
-- **Positive**: Reduced development time—no code changes needed for business rule adjustments
-- **Risk**: Parameter changes affect historical reporting—must be carefully managed
-- **Recommendation**: Implement parameter change governance and testing procedures
+**Business Impact:** This design provides **flexibility and maintainability**. Business rule changes can be made by updating parameter tables rather than modifying code. However, parameter changes affect all downstream processing, so changes must be carefully tested.
 
 ---
 
-### 6. Master Data Enrichment with Retail Calendar
+### 5. Dual Sales Channel Processing
 
-**Finding**: `CV_BASE_MD_RCALWEEK_S4` provides retail calendar information from SAP S4, which is joined to sales data in `CV_COMP_FIN_FLASH`.
+**Finding:** The system processes **Front Store and Pharmacy sales separately** before consolidation.
 
-**What This Means**:
-- Every sales transaction is attributed to a specific fiscal week, period, and year
-- The retail calendar (not standard calendar) is used for fiscal reporting
-- Calendar data comes from the enterprise SAP S4 system
+**Details:**
+- Front Store sales flow through `CV_BASE_FS_SALES` and related views
+- Pharmacy sales flow through `CV_BASE_TLOGF_RX_SALES` and `CV_BASE_SCRIPTS`
+- Both channels converge in `CV_COMP_FLASH_SALES`
+- Separate parameter configurations for FS and RX retail types
 
-**Business Impact**:
-- **Positive**: Consistent fiscal reporting—all sales are attributed to the correct fiscal periods
-- **Positive**: Enterprise alignment—uses the same calendar as other SAP-based reports
-- **Risk**: Dependency on S4 system—if calendar data is unavailable, fiscal attribution fails
-- **Recommendation**: Ensure S4 calendar data is loaded before the weekly flash procedure runs
+**Business Impact:** This separation enables **channel-specific reporting** and analysis. Business users can understand Front Store and Pharmacy performance independently or in combination. The architecture supports different business rules for each channel.
 
 ---
 
-### 7. Static View Pattern for Reporting Stability
+### 6. COVID Sales Tracking
 
-**Finding**: After the stored procedure writes to `TBL_WSS_FLASH_SALES`, the data flows through 3 static views before reaching the final report.
+**Finding:** The system includes **dedicated COVID sales tracking** with separate tables and parameters.
 
-**What This Means**:
-- The physical table is wrapped in views rather than being queried directly
-- The final report view combines flash sales with budget, forecast, and actual data
-- Reporting tools query views, not tables
+**Details:**
+- Dedicated `TLOGF_COVID` table for COVID-related sales
+- Separate parameter view `CV_BASE_PARAMETERS-RX_RETAIL_TYPES_COVID`
+- COVID data flows through `CV_BASE_TLOGF_COVID` into the central aggregation
 
-**Business Impact**:
-- **Positive**: Interface stability—table structure can change without breaking reports
-- **Positive**: Flexibility—business logic can be added in views without changing the table
-- **Positive**: Security—access can be controlled at the view level
-- **Recommendation**: Maintain the view interface even if underlying table structure changes
+**Business Impact:** This indicates the system was **adapted to support pandemic-related reporting requirements**. The dedicated tracking enables analysis of COVID-related product sales (testing kits, vaccines, etc.) separately from regular pharmacy sales. This may represent a temporary addition that could be deprecated post-pandemic.
 
 ---
 
-### 8. Comprehensive Sales Coverage
+### 7. Multiple Employee Discount Implementations
 
-**Finding**: The system tracks 7 distinct sales categories:
-1. Front Store regular sales
-2. Front Store discounts
-3. Pharmacy sales
-4. Prescription scripts (count, not just revenue)
-5. COVID-related sales
-6. Employee discounts (3 types)
-7. Combined totals
+**Finding:** The system contains **three employee discount views**:
+- `CV_BASE_TLOGF_EMP_DISCOUNT`
+- `CV_BASE_TLOGF_EMP_DISCOUNTS` (alternate)
+- `CV_BASE_TLOGF_EMP_DISC_TYPES`
 
-**What This Means**:
-- Business leaders get a complete picture of sales performance
-- Different sales types can be analyzed separately or in combination
-- Both revenue (dollars) and volume (units/scripts) are tracked
+**Details:**
+- All three views feed into `CV_COMP_FLASH_SALES`
+- Similar naming suggests possible duplicate or alternate implementations
+- May represent different discount programs or migration from old to new implementation
 
-**Business Impact**:
-- **Positive**: Comprehensive reporting—no sales category is missing
-- **Positive**: Flexible analysis—can drill down into specific sales types
-- **Positive**: Operational insights—script counts help understand pharmacy workload
-- **Recommendation**: Ensure all sales types remain accurately categorized as business evolves
+**Business Impact:** This could indicate:
+- **Multiple discount programs** running in parallel
+- **Migration in progress** from one implementation to another
+- **Legacy code** that hasn't been cleaned up
+
+**Recommendation:** Investigate whether all three views are actively used or if some represent legacy implementations that can be deprecated.
+
+---
+
+### 8. Reporting Consolidation
+
+**Finding:** `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` consolidates **multiple data sources** for comprehensive reporting:
+
+**Data Sources:**
+- Flash sales data (`CV_COMP_FIN_FLASH_STATIC`)
+- Budget data (`CV_COMP_FIN_BUDGET_STATIC`)
+- Forecast data (`CV_COMP_FORECAST_MJE_STATIC`)
+- Actual data (`CV_COMP_FIN_ACTUAL_STATIC`, `CV_COMP_SKF_ACTUAL_STATIC`)
+- Topside adjustments (`CV_COMP_TOPSIDE_ADJUSTMENTS`)
+
+**Business Impact:** This view provides **comprehensive variance analysis** by combining flash sales with budget, forecast, and actual data. Business users can identify performance gaps and understand whether variances are due to sales performance or budget/forecast accuracy.
+
+---
+
+### 9. External System Integration
+
+**Finding:** The system integrates with an **external CAR system** through `FLASH_SALES_VT_CAR`.
+
+**Details:**
+- Virtual table provides interface to CAR system data
+- Relationship to `CV_COMP_FIN_FLASH` is inferred (75% confidence)
+- May provide alternate or supplementary flash sales data
+
+**Business Impact:** External system integration provides **additional data sources** but also introduces **dependency risk**. If the CAR system is unavailable or provides incorrect data, it could impact flash sales reporting. The lower confidence score (75%) suggests this relationship should be validated.
+
+---
+
+### 10. Static View Pattern
+
+**Finding:** The system uses **static calculation views** extensively:
+- `CV_COMP_FIN_FLASH_COMBINED_STATIC`
+- `CV_COMP_FIN_FLASH_STATIC`
+- `CV_CONS_WEEKLY_FLASH_REPORT_STATIC`
+
+**Details:**
+- Static views provide consistent reporting interfaces
+- May be optimized for query performance
+- Typically used for views that don't require real-time data
+
+**Business Impact:** Static views provide **stable reporting interfaces** and may offer **better query performance** than dynamic views. However, they may not reflect real-time changes. The weekly snapshot pattern suggests this is acceptable for flash sales reporting.
 
 ---
 
 ## Risks and Attention Areas
 
-### Risk 1: Single Point of Failure in FLASH_SALES_VT_CAR
+### 1. Central Aggregation Point Risk
 
-**Description**: All 15 upstream data sources converge into `FLASH_SALES_VT_CAR`. If this view fails or has performance issues, the entire weekly flash reporting process stops.
+**Component:** `CV_COMP_FLASH_SALES`
 
-**Evidence**: The lineage analysis shows 15 confirmed upstream dependencies and 2 downstream dependencies for this component.
+**Risk:** This component is a **single point of failure** for the entire system.
 
-**Business Impact**:
-- **Severity**: High
-- **Likelihood**: Medium (complex views with many joins can have performance or logic issues)
-- **Impact**: Complete loss of weekly flash reporting capability
+**Details:**
+- Receives data from 10+ upstream views
+- Feeds 2 downstream consolidation views
+- Any failure in this component stops the entire data flow
 
-**Mitigation Recommendations**:
-1. Implement monitoring and alerting specifically for this view
-2. Conduct regular performance testing, especially as data volumes grow
-3. Document the view logic thoroughly for troubleshooting
-4. Consider implementing a backup/alternate calculation path for critical sales types
-5. Test thoroughly before making any changes to this view
+**Impact:** If this view fails or produces incorrect results, the entire flash sales reporting system is affected. No downstream processing can occur.
 
----
-
-### Risk 2: Unresolved Downstream Usage of CV_COMP_FLASH_SALES_VT
-
-**Description**: While we know `CV_COMP_FLASH_SALES_VT` feeds into `CV_COMP_FIN_FLASH`, we cannot confirm if it has other downstream consumers.
-
-**Evidence**: The lineage analysis marks this as an unresolved relationship with a confidence score of 83/100.
-
-**Business Impact**:
-- **Severity**: Medium
-- **Likelihood**: Low (the main lineage path is clear)
-- **Impact**: Potential unknown dependencies could be affected by changes to this view
-
-**Mitigation Recommendations**:
-1. Conduct a comprehensive downstream dependency scan using SAP HANA tools
-2. Check if any reports, dashboards, or other views reference this component
-3. Document all confirmed consumers before making changes
-4. Implement a change notification process for this component
+**Recommendation:**
+- Implement comprehensive monitoring for this component
+- Set up alerts for data quality issues
+- Establish clear escalation procedures for failures
+- Consider implementing data validation checks before and after this aggregation
 
 ---
 
-### Risk 3: Weekly Execution Dependency on Multiple Source Systems
+### 2. Unresolved CAR System Relationship
 
-**Description**: The weekly flash procedure depends on data availability from 6 different source systems (NAVIX, TLOGF, TLOGF_X, TLOGF_COVID, PARAMETERS, S4).
+**Component:** `FLASH_SALES_VT_CAR` → `CV_COMP_FIN_FLASH`
 
-**Evidence**: The lineage shows 8 base files sourcing from different physical systems.
+**Risk:** The relationship is **inferred rather than confirmed** (75% confidence).
 
-**Business Impact**:
-- **Severity**: High
-- **Likelihood**: Medium (multi-system dependencies increase failure probability)
-- **Impact**: If any source system is delayed or unavailable on Monday morning, the weekly report cannot be produced
+**Details:**
+- No explicit datasource reference found in CV_COMP_FIN_FLASH
+- Relationship based on naming convention and placeholder patterns
+- Unclear whether CAR data is actually used in flash sales reporting
 
-**Mitigation Recommendations**:
-1. Implement data availability checks before running the weekly procedure
-2. Monitor data freshness for each source system
-3. Establish SLAs with source system owners for Monday morning data availability
-4. Create a contingency plan for running the procedure later if source data is delayed
-5. Implement alerting if any source system data is missing or stale
+**Impact:** If the CAR system relationship is incorrect, the lineage documentation may be incomplete. If the relationship is correct but not explicitly defined, it may be difficult to troubleshoot issues.
 
----
-
-### Risk 4: Full Refresh Pattern Could Lose Data on Failure
-
-**Description**: The stored procedure performs a full refresh (delete + insert). If the procedure fails after the delete but before the insert completes, data could be lost.
-
-**Evidence**: The SQL procedure analysis shows a DELETE statement followed by an INSERT statement.
-
-**Business Impact**:
-- **Severity**: High
-- **Likelihood**: Low (but consequences are severe)
-- **Impact**: Loss of weekly snapshot data, requiring manual recovery
-
-**Mitigation Recommendations**:
-1. Implement transaction management to ensure delete and insert are atomic
-2. Create a backup/archive of the previous week's data before deletion
-3. Implement procedure execution monitoring with immediate alerting on failure
-4. Document the recovery procedure for data loss scenarios
-5. Consider implementing a "load to staging table first" pattern for safer execution
+**Recommendation:**
+- Review CV_COMP_FIN_FLASH implementation to confirm CAR system usage
+- If CAR data is used, document the integration pattern explicitly
+- If CAR data is not used, remove FLASH_SALES_VT_CAR from the lineage or clarify its purpose
 
 ---
 
-### Risk 5: Parameter Changes Affect Historical Reporting
+### 3. Multiple Employee Discount Implementations
 
-**Description**: Business users can change parameter definitions (retail types, discount types) which could affect how historical data is interpreted.
+**Component:** Three employee discount views
 
-**Evidence**: The lineage shows 5 parameter views that control filtering and categorization.
+**Risk:** **Duplicate or legacy implementations** may cause confusion or data quality issues.
 
-**Business Impact**:
-- **Severity**: Medium
-- **Likelihood**: Medium (business needs change over time)
-- **Impact**: Historical trend analysis could be inconsistent if parameter definitions change
+**Details:**
+- `CV_BASE_TLOGF_EMP_DISCOUNT`
+- `CV_BASE_TLOGF_EMP_DISCOUNTS` (alternate)
+- `CV_BASE_TLOGF_EMP_DISC_TYPES`
 
-**Mitigation Recommendations**:
-1. Implement parameter change governance—require approval before changes
-2. Document all parameter changes with effective dates
-3. Consider implementing parameter versioning to maintain historical definitions
-4. Test parameter changes against historical data before implementing
-5. Communicate parameter changes to all report consumers
+**Impact:** 
+- Unclear which view is authoritative
+- Possible double-counting if multiple views process the same data
+- Maintenance burden of supporting multiple implementations
 
----
-
-### Risk 6: Ambiguous Relationship Between FS_DISCOUNT_TYPES Parameter and FS_DISCOUNT View
-
-**Description**: The parameter view for discount types should control discount filtering, but the explicit reference is not clearly visible in the XML.
-
-**Evidence**: The lineage analysis marks this as an unresolved relationship with a confidence score of 87/100.
-
-**Business Impact**:
-- **Severity**: Low
-- **Likelihood**: Low (the discount flow is still traceable through other relationships)
-- **Impact**: Uncertainty about how discount type changes affect discount calculations
-
-**Mitigation Recommendations**:
-1. Review the XML definition of `CV_BASE_TLOGF_FS_DISCOUNT` to confirm parameter usage
-2. Test discount type parameter changes to verify the relationship
-3. Document the confirmed relationship for future reference
-4. If the relationship doesn't exist, determine if it should be implemented
+**Recommendation:**
+- Investigate whether all three views are actively used
+- Determine if this represents multiple discount programs or migration in progress
+- Consolidate to a single implementation if possible
+- Document the purpose of each view if all are required
 
 ---
 
-### Risk 7: No Identified Downstream Consumers Beyond Weekly Report
+### 4. Parameter Change Impact
 
-**Description**: The lineage analysis identifies `CV_CONS_WEEKLY_FLASH_REPORT_STATIC` as the final endpoint, but there may be other consumers (reports, dashboards, extracts) that are not visible in the analyzed files.
+**Component:** `CV_BASE_PARAMETERS`
 
-**Evidence**: The lineage analysis shows no downstream dependencies for the final report view.
+**Risk:** Changes to parameters affect **all downstream processing**.
 
-**Business Impact**:
-- **Severity**: Medium
-- **Likelihood**: High (reporting views are typically consumed by multiple tools)
-- **Impact**: Unknown consumers could be affected by changes to the report view
+**Details:**
+- Parameter view is referenced by 10+ base transformation views
+- Controls retail type filtering, discount categorization, and COVID rules
+- Changes propagate throughout the entire system
 
-**Mitigation Recommendations**:
-1. Conduct a comprehensive consumer analysis using SAP HANA usage logs
-2. Survey business users to identify all reports and dashboards using this data
-3. Document all confirmed consumers
-4. Implement a change notification process for the final report view
-5. Consider implementing view versioning to support multiple consumer needs
+**Impact:** Incorrect parameter changes can cause:
+- Incorrect sales categorization
+- Missing or duplicate transactions
+- Incorrect discount calculations
+- Reporting errors across all channels
+
+**Recommendation:**
+- Implement change control procedures for parameter updates
+- Require thorough testing before parameter changes are promoted to production
+- Document the impact of each parameter on downstream processing
+- Consider implementing parameter versioning or audit trails
+
+---
+
+### 5. Weekly Snapshot Dependency
+
+**Component:** `STP_WSS_FLASH_SALES` procedure
+
+**Risk:** If the procedure fails, **no data is captured** for that week.
+
+**Details:**
+- Procedure executes on a weekly schedule
+- Writes snapshot to TBL_WSS_FLASH_SALES
+- No snapshot means no data for that week in historical reporting
+
+**Impact:**
+- Missing weeks create gaps in historical trending
+- Business users cannot analyze performance for missing weeks
+- Catching up after a failure may be difficult if source data has changed
+
+**Recommendation:**
+- Implement robust monitoring for procedure execution
+- Set up alerts for procedure failures
+- Establish procedures for manual execution if scheduled run fails
+- Consider implementing a recovery process to backfill missing weeks
+- Document the procedure execution schedule and dependencies
+
+---
+
+### 6. Multi-Source Data Quality
+
+**Component:** Multiple source systems feeding `CV_COMP_FLASH_SALES`
+
+**Risk:** Data quality issues in **any source system** can impact consolidated reporting.
+
+**Details:**
+- NAVIX, TLOGF, TLOGF_X, TLOGF_COVID all feed the central aggregation
+- No single source system owner
+- Data quality issues may be difficult to trace to source
+
+**Impact:**
+- Incorrect sales figures in consolidated reporting
+- Difficulty identifying root cause of data quality issues
+- Potential for conflicting data from different sources
+
+**Recommendation:**
+- Implement data quality checks at the source system level
+- Establish data quality metrics and monitoring for each source
+- Create clear ownership and escalation paths for each source system
+- Consider implementing reconciliation processes to validate data consistency
+
+---
+
+### 7. Static View Wrapper Ambiguity
+
+**Component:** `CV_COMP_FIN_FLASH_STATIC_TBL` → `CV_COMP_FIN_FLASH_COMBINED_STATIC`
+
+**Risk:** The relationship is **inferred rather than confirmed** (85% confidence).
+
+**Details:**
+- CV_COMP_FIN_FLASH_COMBINED_STATIC references CV_COMP_FIN_FLASH_STATIC
+- Exact relationship to TBL_WSS_FLASH_SALES wrapper not explicitly confirmed
+- May represent a circular dependency pattern
+
+**Impact:** If the relationship is incorrect, the lineage documentation may show an incorrect flow. If the relationship represents a circular dependency, it could cause refresh issues.
+
+**Recommendation:**
+- Review the implementation to confirm the relationship
+- Document the purpose of the static table wrapper
+- If a circular dependency exists, document the refresh pattern and timing
+
+---
+
+### 8. Missing Upstream Information
+
+**Component:** Base TLOGF table
+
+**Risk:** The base TLOGF table is **referenced but not provided** as a file.
+
+**Details:**
+- Multiple views reference TLOGF as a datasource
+- The actual table structure and content are not documented in the analysis
+- Unclear what data is available in TLOGF
+
+**Impact:**
+- Incomplete understanding of data sources
+- Difficulty troubleshooting issues that originate in TLOGF
+- Potential for undocumented dependencies
+
+**Recommendation:**
+- Include TLOGF table definition in the lineage documentation
+- Document the structure, content, and refresh pattern for TLOGF
+- Identify the system of record for TLOGF data
+
+---
+
+### 9. COVID Implementation Longevity
+
+**Component:** COVID-specific views and parameters
+
+**Risk:** COVID tracking may be **temporary** and require deprecation.
+
+**Details:**
+- Dedicated TLOGF_COVID table
+- Separate COVID-specific parameters
+- May no longer be needed post-pandemic
+
+**Impact:**
+- Unnecessary complexity if COVID tracking is no longer required
+- Maintenance burden for unused components
+- Potential for confusion if COVID views are deprecated but not removed
+
+**Recommendation:**
+- Assess whether COVID tracking is still required
+- If no longer needed, plan for deprecation and removal
+- If still needed, document the long-term strategy for COVID tracking
+- Consider whether COVID data should be integrated into regular pharmacy sales
+
+---
+
+### 10. Reporting Layer Consolidation Complexity
+
+**Component:** `CV_CONS_WEEKLY_FLASH_REPORT_STATIC`
+
+**Risk:** The view consolidates **7+ data sources**, creating complexity.
+
+**Details:**
+- Combines flash sales, budget, forecast, actual, and adjustment data
+- Multiple source views must be available and consistent
+- Complex join logic may impact performance
+
+**Impact:**
+- Performance issues if any source view is slow
+- Data quality issues if sources are inconsistent
+- Difficulty troubleshooting issues due to complexity
+
+**Recommendation:**
+- Document the join logic and business rules for consolidation
+- Implement monitoring for query performance
+- Consider breaking down the consolidation into smaller, more manageable views
+- Establish data quality checks to ensure source consistency
 
 ---
 
 ## Simplified Lineage Diagram
 
+The following diagram shows the major logical stages of the flash sales reporting system:
+
 ```mermaid
 flowchart TD
-    %% Define Styles
-    classDef sourceStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
-    classDef prepStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
-    classDef hubStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
-    classDef processStyle fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
-    classDef storageStyle fill:#f8bbd0,stroke:#c2185b,stroke-width:2px,color:#000
-    classDef reportStyle fill:#d1c4e9,stroke:#512da8,stroke-width:2px,color:#000
-
     %% Source Layer
-    SOURCE["📊 SOURCE DATA<br/>━━━━━━━━━━━━━━<br/>• NAVIX (Stores)<br/>• TLOGF (FS Sales)<br/>• TLOGF_X (RX Scripts)<br/>• TLOGF_COVID<br/>• PARAMETERS<br/>• S4 Calendar"]
+    A["Source Data Layer<br/>━━━━━━━━━━━━━━━<br/>• NAVIX Transactions<br/>• TLOGF Transaction Logs<br/>• TLOGF_X Prescription Scripts<br/>• TLOGF_COVID COVID Sales<br/>• S4 Calendar Master Data<br/>• CAR System Flash Sales<br/>• Parameter Configuration"]
     
-    %% Preparation Layer
-    PREP["🔧 DATA PREPARATION<br/>━━━━━━━━━━━━━━<br/>8 Base Views<br/>Clean & Filter Data"]
+    %% Base Layer
+    B["Data Preparation Layer<br/>━━━━━━━━━━━━━━━<br/>Base Calculation Views<br/>• CV_BASE_NAVIX<br/>• CV_BASE_TLOGF_X<br/>• CV_BASE_TLOGF_COVID<br/>• CV_BASE_MD_RCALWEEK_S4<br/>• CV_BASE_PARAMETERS"]
+    
+    %% Transformation Layer
+    C["Data Transformation Layer<br/>━━━━━━━━━━━━━━━<br/>Specialized Processing<br/>• Front Store Sales (CV_BASE_FS_SALES)<br/>• Pharmacy Sales (CV_BASE_TLOGF_RX_SALES)<br/>• Prescription Scripts (CV_BASE_SCRIPTS)<br/>• Discounts (CV_BASE_TLOGF_FS_DISCOUNT)<br/>• Employee Discounts (CV_BASE_TLOGF_EMP_DISCOUNT)"]
+    
+    %% Aggregation Layer
+    D["Data Aggregation Layer<br/>━━━━━━━━━━━━━━━<br/>Central Aggregation Hub<br/>• CV_COMP_FLASH_SALES<br/>(Combines all sales channels)"]
     
     %% Consolidation Layer
-    HUB["🎯 CENTRAL HUB<br/>━━━━━━━━━━━━━━<br/>FLASH_SALES_VT_CAR<br/>Consolidates All Sales Types<br/>(15 upstream sources)"]
+    E["Data Consolidation Layer<br/>━━━━━━━━━━━━━━━<br/>Multi-Source Consolidation<br/>• CV_COMP_FIN_FLASH_COMBINED_STATIC<br/>(Combines flash, budget, forecast)<br/>• CV_COMP_FIN_FLASH<br/>(Final composite with calendar)"]
     
-    %% Business Logic Layer
-    BUSINESS["💼 BUSINESS PROCESSING<br/>━━━━━━━━━━━━━━<br/>CV_COMP_FIN_FLASH<br/>Apply Business Rules<br/>Add Calendar Context"]
-    
-    %% Execution Layer
-    PROC["⚙️ WEEKLY SNAPSHOT<br/>━━━━━━━━━━━━━━<br/>STP_WSS_FLASH_SALES<br/>Runs Every Monday 5am<br/>Captures Point-in-Time Data"]
-    
-    %% Storage Layer
-    TABLE["💾 DATA STORAGE<br/>━━━━━━━━━━━━━━<br/>TBL_WSS_FLASH_SALES<br/>Permanent Storage<br/>54 Columns of Sales Data"]
+    %% Orchestration Layer
+    F["Orchestration & Persistence<br/>━━━━━━━━━━━━━━━<br/>Weekly Snapshot Process<br/>• STP_WSS_FLASH_SALES Procedure<br/>• TBL_WSS_FLASH_SALES Table"]
     
     %% Reporting Layer
-    STATIC["📈 REPORTING LAYER<br/>━━━━━━━━━━━━━━<br/>3 Static Views<br/>Stable Interface"]
+    G["Reporting Layer<br/>━━━━━━━━━━━━━━━<br/>Business Consumption<br/>• CV_COMP_FIN_FLASH_STATIC<br/>• CV_CONS_WEEKLY_FLASH_REPORT_STATIC<br/>• BI Tools & Dashboards"]
     
-    %% Final Output
-    REPORT["📋 WEEKLY FLASH REPORT<br/>━━━━━━━━━━━━━━<br/>CV_CONS_WEEKLY_FLASH_REPORT_STATIC<br/>Business User Consumption"]
+    %% Flow
+    A -->|"Extract & Configure"| B
+    B -->|"Transform & Filter"| C
+    C -->|"Aggregate All Channels"| D
+    D -->|"Consolidate Multi-Source"| E
+    E -->|"Execute Weekly Snapshot"| F
+    F -->|"Provide Reporting Access"| G
     
-    %% Relationships
-    SOURCE -->|"Extract Raw Data"| PREP
-    PREP -->|"15 Data Streams"| HUB
-    HUB -->|"Consolidated Sales"| BUSINESS
-    BUSINESS -->|"Business-Ready Data"| PROC
-    PROC -->|"Weekly Insert"| TABLE
-    TABLE -->|"Wrap in Views"| STATIC
-    STATIC -->|"Final Interface"| REPORT
+    %% Styling
+    classDef sourceStyle fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    classDef baseStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    classDef transformStyle fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    classDef aggStyle fill:#ffccbc,stroke:#d84315,stroke-width:3px,color:#000
+    classDef consStyle fill:#f8bbd0,stroke:#c2185b,stroke-width:3px,color:#000
+    classDef orchStyle fill:#b39ddb,stroke:#4527a0,stroke-width:3px,color:#000
+    classDef reportStyle fill:#ffab91,stroke:#bf360c,stroke-width:3px,color:#000
     
-    %% Apply Styles
-    class SOURCE sourceStyle
-    class PREP prepStyle
-    class HUB hubStyle
-    class BUSINESS processStyle
-    class PROC processStyle
-    class TABLE storageStyle
-    class STATIC reportStyle
-    class REPORT reportStyle
+    class A sourceStyle
+    class B baseStyle
+    class C transformStyle
+    class D aggStyle
+    class E consStyle
+    class F orchStyle
+    class G reportStyle
 ```
 
 ### Diagram Explanation
 
-This simplified diagram shows the major logical stages of the flash sales reporting system:
+**Source Data Layer (Blue)**
+- Starting point for all data
+- Includes operational systems (NAVIX, TLOGF), master data (S4), external systems (CAR), and configuration (parameters)
 
-1. **📊 Source Data**: Six physical source systems provide raw operational data
-2. **🔧 Data Preparation**: Eight base views clean and filter the raw data into standardized formats
-3. **🎯 Central Hub**: All prepared data streams merge into one consolidated view (15 upstream sources)
-4. **💼 Business Processing**: Business rules and calendar information are applied
-5. **⚙️ Weekly Snapshot**: A stored procedure runs every Monday at 5am to capture the data
-6. **💾 Data Storage**: The snapshot is stored in a permanent table with 54 columns
-7. **📈 Reporting Layer**: Three static views provide a stable interface
-8. **📋 Weekly Flash Report**: The final report view consumed by business users
+**Data Preparation Layer (Green)**
+- Base calculation views extract data from source systems
+- Provides standardized interfaces for downstream processing
+- Consolidates configuration parameters
 
-**Key Insight**: The flow is strictly unidirectional (left to right, top to bottom) with no circular dependencies, making it easy to understand and maintain.
+**Data Transformation Layer (Yellow)**
+- Applies business logic to calculate sales metrics
+- Filters data by retail type, discount type, and other parameters
+- Separates processing by sales channel (Front Store, Pharmacy)
+
+**Data Aggregation Layer (Orange)**
+- **CV_COMP_FLASH_SALES** is the central hub
+- Combines all sales channels into a unified view
+- Primary aggregation point for the entire system
+
+**Data Consolidation Layer (Pink)**
+- Combines flash sales with budget, forecast, and actual data
+- Adds calendar dimension for time-based reporting
+- Provides final composite view for orchestration
+
+**Orchestration & Persistence Layer (Purple)**
+- **STP_WSS_FLASH_SALES** procedure executes weekly
+- Reads from final composite view
+- Writes snapshot to **TBL_WSS_FLASH_SALES** table
+
+**Reporting Layer (Red)**
+- Wraps output table for reporting access
+- Provides consolidated weekly report view
+- Feeds BI tools and executive dashboards
 
 ---
 
@@ -836,243 +1150,232 @@ This simplified diagram shows the major logical stages of the flash sales report
 
 ### Overall Lineage Structure
 
-The CVS FRIP Flash Sales Reporting System follows a **well-organized, layered architecture** that processes sales data through seven distinct stages. The system demonstrates strong design principles with clear separation of concerns, making it maintainable and scalable.
+The CVS_FRIP Flash Sales Reporting System is a **well-architected, multi-layered data pipeline** that processes weekly sales snapshots for financial reporting and planning. The system demonstrates clear separation of concerns with distinct layers for data extraction, transformation, aggregation, and reporting.
 
-**Architecture Highlights**:
-- ✅ Unidirectional data flow (no circular dependencies)
-- ✅ Modular design (each component has a specific purpose)
-- ✅ Single point of consolidation (FLASH_SALES_VT_CAR)
-- ✅ Parameter-driven configuration (business flexibility)
-- ✅ Stable reporting interface (static views)
+The architecture follows a **hub-and-spoke pattern** with `CV_COMP_FLASH_SALES` serving as the central aggregation hub. Data flows from multiple source systems through base calculation views, converges at the central hub, and then flows through consolidation views to a persistent output table.
 
 ---
 
 ### Main Data Sources
 
-The system integrates data from **six primary source systems**:
+The system integrates data from **seven primary sources**:
 
-1. **NAVIX**: Store master data (locations, organizational hierarchy)
-2. **TLOGF**: Front Store transaction logs (retail sales, discounts, employee purchases)
-3. **TLOGF_X**: Pharmacy transaction logs (prescription scripts)
-4. **TLOGF_COVID**: COVID-related sales tracking
-5. **PARAMETERS**: Business configuration (retail types, discount categories)
-6. **S4 RCALWEEK**: Enterprise retail calendar (fiscal weeks, periods, years)
+1. **NAVIX** - Core transaction data for Front Store retail operations
+2. **TLOGF** - Transaction logs capturing Front Store sales, discounts, and employee transactions
+3. **TLOGF_X** - Prescription script and pharmacy transaction logs
+4. **TLOGF_COVID** - Dedicated COVID-19 sales tracking
+5. **S4 Master Data** - Retail calendar week definitions
+6. **CAR System** - External flash sales data (inferred relationship)
+7. **Parameter Tables** - Business rule configuration for filtering and categorization
 
-**Data Coverage**: The system provides comprehensive sales visibility across all CVS retail channels—Front Store, Pharmacy, COVID services, and employee benefits.
+These sources provide comprehensive coverage of CVS retail and pharmacy operations, enabling unified reporting across all sales channels.
 
 ---
 
 ### Main Processing Stages
 
-The data flows through **five key processing stages**:
+The system processes data through **six distinct stages**:
 
-1. **Data Preparation (8 Base Views)**
-   - Extract and filter raw data from source tables
-   - Apply initial data quality rules
-   - Standardize data formats
+**Stage 1: Data Extraction**
+- Base calculation views extract data from source systems
+- Configuration parameters are consolidated
+- Master data is prepared
 
-2. **Data Consolidation (FLASH_SALES_VT_CAR)**
-   - Merge 15 upstream data streams
-   - Combine all sales types into unified view
-   - Apply parameter-based filtering
+**Stage 2: Data Transformation**
+- Business logic is applied to calculate sales metrics
+- Data is filtered by retail type, discount type, and other parameters
+- Sales channels are processed separately (Front Store, Pharmacy, COVID)
 
-3. **Business Logic (CV_COMP_FIN_FLASH)**
-   - Add retail calendar context
-   - Apply financial business rules
-   - Prepare data for snapshot
+**Stage 3: Data Aggregation**
+- All sales channels converge at `CV_COMP_FLASH_SALES`
+- Unified view of all sales activity is created
+- Central aggregation point for the entire system
 
-4. **Weekly Execution (STP_WSS_FLASH_SALES)**
-   - Run every Monday at 5am
-   - Capture point-in-time snapshot
-   - Full refresh of target table
+**Stage 4: Data Consolidation**
+- Flash sales are combined with budget, forecast, and actual data
+- Calendar dimension is added for time-based reporting
+- Final composite view is prepared for orchestration
 
-5. **Reporting Interface (3 Static Views)**
-   - Wrap physical table in stable views
-   - Combine with budget/forecast data
-   - Expose final report interface
+**Stage 5: Orchestration & Persistence**
+- `STP_WSS_FLASH_SALES` procedure executes weekly
+- Snapshot is written to `TBL_WSS_FLASH_SALES` table
+- Historical record is created for trending
+
+**Stage 6: Reporting**
+- Output table is wrapped for reporting access
+- Consolidated weekly report combines flash sales with budget and forecast
+- BI tools and dashboards consume the data
 
 ---
 
 ### Final Destination
 
-The processed data ultimately reaches **two final destinations**:
+The final destination is **TBL_WSS_FLASH_SALES**, a persistent table that stores weekly flash sales snapshots. This table serves as the **single source of truth** for flash sales reporting and feeds:
 
-1. **TBL_WSS_FLASH_SALES** (Physical Table)
-   - Permanent storage for weekly snapshots
-   - Contains 54 columns of sales data
-   - Serves as historical record for trend analysis
+- **CV_CONS_WEEKLY_FLASH_REPORT_STATIC** - Consolidated weekly report for executive dashboards
+- **Business Intelligence Tools** - For ad-hoc analysis and custom reporting
+- **Financial Planning Systems** - For budget vs. actual analysis and forecasting
 
-2. **CV_CONS_WEEKLY_FLASH_REPORT_STATIC** (Report View)
-   - Consumer-facing weekly flash report
-   - Queried by business intelligence tools
-   - Accessed by business leaders for performance visibility
-
-**Business Value**: These destinations enable both historical trend analysis (via the table) and current performance reporting (via the view).
+The table provides a **stable, historical record** of weekly performance that enables trending, variance analysis, and performance monitoring.
 
 ---
 
 ### Reporting/Consumption
 
-The system supports **multiple reporting and consumption patterns**:
+The system provides **two primary reporting interfaces**:
 
-**Weekly Flash Reporting**:
-- Primary use case: Monday morning flash sales report
-- Provides previous week's sales performance
-- Includes all sales types (FS, RX, COVID, scripts, discounts)
+**1. CV_COMP_FIN_FLASH_STATIC**
+- Wraps the output table for direct reporting access
+- Provides a calculation view interface to the persistent data
+- Used by BI tools that need access to raw flash sales data
 
-**Trend Analysis**:
-- Historical snapshots enable week-over-week comparisons
-- Fiscal period aggregations for monthly/quarterly reporting
-- Year-over-year performance analysis
+**2. CV_CONS_WEEKLY_FLASH_REPORT_STATIC**
+- Consolidates flash sales with budget, forecast, actual, and adjustment data
+- Provides comprehensive variance analysis
+- Primary view for executive dashboards and weekly performance reviews
 
-**Variance Analysis**:
-- Combined static view includes budget and forecast data
-- Enables actual vs. budget comparisons
-- Supports forecast accuracy analysis
-
-**Organizational Reporting**:
-- Store-level detail available
-- Aggregations by district, region, division
-- Supports both operational and executive reporting needs
+Both interfaces provide **business-friendly access** to flash sales data without requiring users to understand the underlying complexity of the data pipeline.
 
 ---
 
 ### Overall Confidence
 
-**Lineage Confidence Score: 94/100** ✅
+**Confidence Score: 92/100**
 
-This high confidence score reflects:
-- **38 confirmed relationships** with explicit code evidence (scores 90-100)
-- **7 inferred relationships** with strong supporting evidence (scores 75-89)
-- **Only 2 unresolved relationships** that don't impact the main flow
+The lineage analysis demonstrates **high confidence** with strong evidence supporting the vast majority of relationships:
 
-**What This Means**:
-- ✅ The lineage is reliable for impact analysis
-- ✅ Data flow is well-documented and traceable
-- ✅ Suitable for audit and compliance purposes
-- ✅ Can be used confidently for troubleshooting
-- ✅ Provides solid foundation for system enhancements
+- **64 out of 67 relationships (96%) are CONFIRMED** with explicit references in SQL or XML
+- **3 out of 67 relationships (4%) are INFERRED** based on naming conventions and architectural patterns
+- **0 relationships are UNRESOLVED** - all identified relationships have at least moderate supporting evidence
+
+The high confidence score reflects:
+- Explicit SQL references in the orchestration procedure (98% confidence)
+- Explicit XML datasource references in calculation views (95-96% confidence)
+- Consistent naming conventions and architectural patterns (90-94% confidence)
+- Comprehensive documentation in procedure headers (94% confidence)
+
+The few inferred relationships (CAR system integration, static table wrapper, some base view inclusions) represent minor gaps that do not significantly impact the overall understanding of the data flow.
 
 ---
 
 ### Important Observations
 
-**Strengths**:
-1. ✅ **Centralized Architecture**: Single consolidation point simplifies maintenance
-2. ✅ **Layered Design**: Clear separation of concerns enables independent testing
-3. ✅ **Parameter-Driven**: Business flexibility without code changes
-4. ✅ **Comprehensive Coverage**: All sales types tracked (FS, RX, COVID, scripts, discounts)
-5. ✅ **Stable Interface**: Static views protect reports from underlying changes
-6. ✅ **Enterprise Integration**: Uses SAP S4 calendar for consistent fiscal reporting
+**1. Central Aggregation Hub**
+- `CV_COMP_FLASH_SALES` is the **most critical component** in the system
+- Receives data from 10+ upstream views and feeds all downstream processing
+- Should be a primary focus for monitoring and optimization
 
-**Areas Requiring Attention**:
-1. ⚠️ **Single Point of Failure**: FLASH_SALES_VT_CAR is critical—monitor closely
-2. ⚠️ **Multi-System Dependency**: Relies on 6 source systems—coordinate data availability
-3. ⚠️ **Full Refresh Pattern**: Data loss risk if procedure fails—implement safeguards
-4. ⚠️ **Parameter Change Impact**: Changes affect historical reporting—implement governance
-5. ⚠️ **Unknown Consumers**: May have downstream dependencies not visible in analysis
+**2. Parameter-Driven Design**
+- Business rules are centrally managed through `CV_BASE_PARAMETERS`
+- Provides flexibility but requires careful change control
+- Parameter changes affect all downstream processing
+
+**3. Weekly Snapshot Pattern**
+- System captures point-in-time snapshots on a weekly schedule
+- Enables historical trending and variance analysis
+- Procedure failure means missing data for that week
+
+**4. Multi-Channel Integration**
+- Separate processing for Front Store, Pharmacy, and COVID sales
+- All channels converge at the central aggregation point
+- Enables both channel-specific and consolidated reporting
+
+**5. Multiple Employee Discount Implementations**
+- Three employee discount views exist (possible duplicate or migration)
+- Should be investigated to determine if all are required
+- May represent legacy code that can be cleaned up
+
+**6. External System Integration**
+- CAR system integration provides additional data sources
+- Relationship is inferred (75% confidence) and should be validated
+- Introduces dependency on external system availability
 
 ---
 
 ### Unresolved Areas
 
-**Two minor unresolved relationships** (do not impact main lineage):
+**1. CAR System Integration (75% confidence)**
+- Relationship between `FLASH_SALES_VT_CAR` and `CV_COMP_FIN_FLASH` is inferred
+- No explicit datasource reference found
+- Should be validated to confirm whether CAR data is actually used
 
-1. **CV_COMP_FLASH_SALES_VT Downstream Usage**
-   - **Status**: Partially unconfirmed
-   - **Known**: Feeds into CV_COMP_FIN_FLASH
-   - **Unknown**: Whether it has other downstream consumers
-   - **Impact**: Low—main lineage path is clear
-   - **Recommendation**: Conduct comprehensive downstream scan
+**2. Static Table Wrapper (85% confidence)**
+- Exact relationship between `CV_COMP_FIN_FLASH_STATIC_TBL` and `CV_COMP_FIN_FLASH_COMBINED_STATIC` is inferred
+- May represent a circular dependency pattern
+- Should be reviewed to confirm the relationship and document the refresh pattern
 
-2. **FS_DISCOUNT_TYPES Parameter Usage**
-   - **Status**: Partially unconfirmed
-   - **Known**: Should control discount filtering
-   - **Unknown**: Explicit reference not clearly visible
-   - **Impact**: Low—discount flow traceable through other relationships
-   - **Recommendation**: Review XML definition to confirm relationship
+**3. Base FS Sales Inclusion (90% confidence)**
+- Specific inclusion of `CV_BASE_FS_SALES` in `CV_COMP_FLASH_SALES` is inferred
+- Multiple TLOGF-based views are referenced, but explicit confirmation not found
+- Should be validated to ensure complete lineage documentation
 
-**Overall Assessment**: These unresolved areas represent less than 5% of the total lineage and do not affect the system's core functionality or reporting capability.
-
----
-
-### Final Recommendation
-
-The CVS FRIP Flash Sales Reporting System demonstrates **strong data lineage with high traceability**. The system is well-designed for its purpose and provides comprehensive sales visibility to business stakeholders.
-
-**For Business Users**:
-- ✅ Trust the weekly flash report—it's built on a solid, traceable foundation
-- ✅ Understand that the report depends on multiple source systems—delays can occur
-- ✅ Be aware that parameter changes affect reporting—coordinate with IT before making changes
-
-**For Technical Teams**:
-- ✅ Maintain the layered architecture—it's a strength of the system
-- ✅ Monitor FLASH_SALES_VT_CAR closely—it's the critical consolidation point
-- ✅ Implement safeguards for the weekly procedure—data loss risk exists
-- ✅ Document downstream consumers—unknown dependencies may exist
-- ✅ Resolve the 2 unresolved relationships—complete the lineage picture
-
-**For Data Governance**:
-- ✅ Use this lineage for impact analysis—it's reliable
-- ✅ Implement change management processes—especially for central components
-- ✅ Establish data quality monitoring—multiple source systems require coordination
-- ✅ Document parameter governance—changes affect historical reporting
+These unresolved areas represent **minor gaps** that do not significantly impact the overall understanding of the system. However, they should be investigated to ensure complete and accurate lineage documentation.
 
 ---
 
-## Summary Statistics
+### Recommendations for Business Stakeholders
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| **Total Files Analyzed** | 24 | ✅ Complete |
-| **Total Relationships Identified** | 47 | ✅ Comprehensive |
-| **Total Lineage Paths** | 3 Major Paths | ✅ Well-Defined |
-| **Base/Source Files** | 8 | ✅ Identified |
-| **Final Output Files** | 2 (1 table + 1 view) | ✅ Confirmed |
-| **High Confidence Relationships** | 38 (81%) | ✅ Excellent |
-| **Medium Confidence Relationships** | 7 (15%) | ✅ Good |
-| **Unresolved Relationships** | 2 (4%) | ⚠️ Minor |
-| **Overall Lineage Confidence** | 94/100 | ✅ Excellent |
-| **Standalone Files** | 0 | ✅ All Connected |
-| **Circular Dependencies** | 0 | ✅ Clean Design |
+**1. Monitor Critical Components**
+- Focus monitoring efforts on `CV_COMP_FLASH_SALES` (central hub) and `STP_WSS_FLASH_SALES` (orchestration procedure)
+- Implement alerts for failures or data quality issues
+- Establish clear escalation procedures
 
----
+**2. Implement Change Control**
+- Require thorough testing before parameter changes are promoted to production
+- Document the impact of parameter changes on downstream processing
+- Consider implementing parameter versioning or audit trails
 
-## Document Information
+**3. Validate Unresolved Relationships**
+- Confirm CAR system integration and document the integration pattern
+- Review static table wrapper relationship and document refresh pattern
+- Validate base view inclusions to ensure complete lineage documentation
 
-| Attribute | Value |
-|-----------|-------|
-| **Document Title** | DI HANA Lineage Summary Report |
-| **System** | CVS FRIP Flash Sales Reporting System |
-| **Platform** | SAP HANA |
-| **Report Type** | Friendly Business Overview |
-| **Analysis Confidence** | 94/100 |
-| **Document Version** | 1.0 |
-| **Generated By** | Senior Data Lineage and Technical Documentation Analyst |
-| **Based On** | DI HANA LINEAGE DEPENDENCY ANALYSIS EVALUATION |
-| **Target Audience** | Business Stakeholders, Technical Teams, Data Governance |
-| **Purpose** | Transform technical lineage into business-friendly summary |
+**4. Investigate Employee Discount Implementations**
+- Determine if all three employee discount views are required
+- Consolidate to a single implementation if possible
+- Document the purpose of each view if all are required
 
----
+**5. Plan for COVID Tracking**
+- Assess whether COVID tracking is still required
+- If no longer needed, plan for deprecation and removal
+- If still needed, document the long-term strategy
 
-## Appendix: Key Terms Explained
-
-| Term | Business-Friendly Explanation |
-|------|------------------------------|
-| **Calculation View** | A virtual view in SAP HANA that combines and transforms data from multiple sources without storing the data physically. Think of it as a "live query" that runs when you need the data. |
-| **Base View** | A calculation view that directly reads from a physical table with minimal transformation. It's the first layer of data preparation. |
-| **Composite View** | A calculation view that combines multiple base views and applies business logic. It's a higher-level aggregation. |
-| **Static View** | A calculation view that wraps a physical table to provide a stable interface. Even if the table structure changes, the view interface can remain the same. |
-| **Stored Procedure** | A pre-written SQL program that executes a series of database operations. In this case, it captures the weekly sales snapshot. |
-| **Lineage** | The complete path that data takes from its source to its final destination, including all transformations along the way. |
-| **Dependency** | A relationship where one component relies on another. If component A uses data from component B, then A depends on B. |
-| **Confidence Score** | A measure (0-100) of how certain we are about a relationship. Higher scores mean stronger evidence. |
-| **Full Refresh** | A data loading pattern where all existing data is deleted and replaced with fresh data. Ensures accuracy but has data loss risk if it fails. |
-| **Snapshot** | A point-in-time copy of data. Once captured, it doesn't change even if the source data changes later. |
-| **Parameter View** | A calculation view that provides configuration values (like retail type definitions) that control how other views filter and categorize data. |
-| **Fiscal Week** | A week defined by the company's fiscal calendar, which may not align with standard calendar weeks. Used for consistent financial reporting. |
-| **Retail Calendar** | A specialized calendar used by retail companies that aligns weeks, months, and quarters with business cycles (e.g., ensuring comparable periods year-over-year). |
+**6. Establish Data Quality Monitoring**
+- Implement data quality checks at the source system level
+- Create clear ownership and escalation paths for each source system
+- Consider implementing reconciliation processes to validate data consistency
 
 ---
 
-**End of Report**
+### Summary
+
+The CVS_FRIP Flash Sales Reporting System is a **robust, well-designed data pipeline** that successfully integrates data from multiple source systems to provide comprehensive weekly sales reporting. The system demonstrates strong architectural patterns with clear separation of concerns, parameter-driven configuration, and centralized aggregation.
+
+With an overall confidence score of **92/100**, the lineage analysis provides a **reliable and accurate** understanding of the data flow from source systems through transformation and aggregation to final reporting. The few unresolved areas represent minor gaps that should be investigated but do not significantly impact the overall understanding.
+
+Business stakeholders can rely on this system to provide **accurate, timely, and comprehensive** flash sales reporting that enables effective performance monitoring, variance analysis, and decision-making. The system's architecture supports both channel-specific and consolidated reporting, providing flexibility for different business needs.
+
+The primary areas requiring attention are:
+- **Monitoring of critical components** (central aggregation hub and orchestration procedure)
+- **Change control for parameter updates** (to prevent unintended impacts)
+- **Validation of inferred relationships** (to ensure complete documentation)
+- **Investigation of duplicate implementations** (to reduce complexity and maintenance burden)
+
+With proper monitoring, change control, and ongoing maintenance, this system will continue to provide valuable flash sales reporting for CVS Financial Reporting and Planning.
+
+---
+
+**Document Generated:** 2024  
+**Analysis Scope:** 24 Files - CVS_FRIP Flash Sales Reporting System  
+**Total Files Analyzed:** 24  
+**Total Relationships Identified:** 67  
+**Total Lineage Paths:** 8  
+**Base/Source Files:** 11  
+**Overall Confidence Score:** 92/100  
+**Confirmed Relationships:** 64 (96%)  
+**Inferred Relationships:** 3 (4%)  
+**Unresolved Relationships:** 0 (0%)
+
+---
+
+*This summary provides a business-friendly overview of the technical lineage analysis. For detailed technical information including XML structures, SQL code, and explicit datasource references, please refer to the complete DI HANA Lineage Dependency Analysis Evaluation report.*
