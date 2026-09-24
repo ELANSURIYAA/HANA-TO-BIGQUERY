@@ -1,0 +1,746 @@
+-- FINAL CONSOLIDATED BIGQUERY SQL
+-- This consolidated SQL represents the complete end-to-end logic for CV_COMP_FIN_BUDGET_STATIC
+-- All dependencies have been recursively inlined from source physical tables through to the final output
+-- No intermediate views are required to execute this query
+
+-- REQUIRES VALIDATION: The following items need clarification:
+-- 1. Parameter @IP_FC_COUNT - source and default value not provided in inputs
+-- 2. Parameter @IP_WEEK_ENDING_FROM - source and default value not provided in inputs
+-- 3. Parameter @IP_WEEK_ENDING_TO - source and default value not provided in inputs
+-- 4. Parameter @IP_VERSION - source and default value not provided in inputs
+-- 5. External view CV_BASE_MD_RCALWEEK_S4 - SQL definition not provided in inputs
+-- 6. Physical table CEPCT - actual BigQuery table reference needs to be provided
+-- 7. Physical table HRRP_NODE - actual BigQuery table reference needs to be provided
+-- 8. Physical table ZTFIGL_RCALWEEK - actual BigQuery table reference needs to be provided
+-- 9. Physical table AZSRP_DS052_VT_S4 - actual BigQuery table reference needs to be provided
+-- 10. Physical table AZSRP_DS041_VT_S4 - actual BigQuery table reference needs to be provided
+-- 11. Physical table TBL_WSS_SRP_COMPFLAG - actual BigQuery table reference needs to be provided
+-- 12. Physical table TBL_WSS_SRP_ATTR_ACT - actual BigQuery table reference needs to be provided
+
+WITH 
+-- ============================================================================
+-- SECTION 1: CV_BASE_FIN_WEEKLY_BUDGET_S4 - Financial Budget Data
+-- Source: AZSRP_DS052_VT_S4 (Frozen Cube) and AZSRP_DS041_VT_S4 (Live Cube)
+-- ============================================================================
+
+Frozen_Cube AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_GL_ACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    RECORDMODE,
+    CURRENCY,
+    _B631_S_AMOUNT,
+    _BIC_ZIO_AMT,
+    'FC' AS FLAG
+  FROM PROJECT.DATASET.AZSRP_DS052_VT_S4
+  WHERE
+    MANDT IN ('110', '200')
+    AND @IP_FC_COUNT != '0'
+),
+
+Live_Cube AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_GL_ACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_PCTR AS _B631_S_PROFTCTR,
+    _BIC_ZIO_CCTR AS _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    RECORDMODE,
+    CURRENCY,
+    _B631_S_AMOUNT,
+    _BIC_ZIO_AMT,
+    'LC' AS FLAG
+  FROM PROJECT.DATASET.AZSRP_DS041_VT_S4
+  WHERE
+    MANDT IN ('110', '200')
+    AND @IP_FC_COUNT = '0'
+),
+
+Union_1 AS (
+  SELECT * FROM Frozen_Cube
+  UNION ALL
+  SELECT * FROM Live_Cube
+),
+
+Aggregated AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_GL_ACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    RECORDMODE,
+    CURRENCY,
+    FLAG,
+    SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT_DUMMY,
+    SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT
+  FROM Union_1
+  GROUP BY
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_GL_ACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    RECORDMODE,
+    CURRENCY,
+    FLAG
+),
+
+CV_BASE_FIN_WEEKLY_BUDGET_S4_Final AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_GL_ACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    RECORDMODE,
+    CURRENCY,
+    SUM(CASE WHEN FLAG = 'LC' THEN _B631_S_AMOUNT_DUMMY ELSE 0 END) AS RES_AMOUNT_LC,
+    SUM(CASE WHEN FLAG = 'FC' THEN _B631_S_AMOUNT_DUMMY ELSE 0 END) AS RES_AMOUNT_FC,
+    CASE
+      WHEN SUM(CASE WHEN FLAG = 'FC' THEN _B631_S_AMOUNT_DUMMY ELSE NULL END) IS NULL
+        THEN SUM(CASE WHEN FLAG = 'LC' THEN _B631_S_AMOUNT_DUMMY ELSE NULL END)
+      ELSE SUM(CASE WHEN FLAG = 'FC' THEN _B631_S_AMOUNT_DUMMY ELSE NULL END)
+    END AS _B631_S_AMOUNT,
+    SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT,
+    FLAG
+  FROM Aggregated
+  GROUP BY
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_GL_ACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    RECORDMODE,
+    CURRENCY,
+    FLAG
+),
+
+-- ============================================================================
+-- SECTION 2: CV_BASE_MD_HRRP_NODE_S4 - HR Hierarchy Node Data
+-- Source: HRRP_NODE physical table
+-- ============================================================================
+
+CV_BASE_MD_HRRP_NODE_S4_Base AS (
+  SELECT
+    MANDT,
+    HRYID,
+    HRYVER,
+    NODECLS,
+    HRYNODE,
+    PARNODE,
+    HRYVALTO,
+    HRYVALFROM,
+    BALIND,
+    NODETYPE,
+    NODEVALUE
+  FROM PROJECT.DATASET.HRRP_NODE
+  WHERE MANDT IN (120, 200)
+),
+
+-- ============================================================================
+-- SECTION 3: CV_COMP_MD_SRPACT_STATIC - Store Attributes Static Data
+-- Source: TBL_WSS_SRP_ATTR_ACT physical table
+-- ============================================================================
+
+CV_COMP_MD_SRPACT_STATIC_Base AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    KOKRS,
+    KOSTL,
+    RX_OPEN_DAT,
+    RX_CLOSE_DAT,
+    FS_OPEN_DAT,
+    FS_CLOSE_DAT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    ADDRESS,
+    CITY,
+    STATE,
+    ZIPCODE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    DIVISION_MGR,
+    AREA_CODE,
+    AREA_DESC,
+    AREA_MGR,
+    REGION_CODE,
+    REGION_DESC,
+    REGION_MGR,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZONE_CODE,
+    DISTRICT_MGR,
+    ZONE_DESC,
+    MAJOR_REGION_CODE,
+    MAJOR_REGION,
+    STORE_TYPE,
+    STORE_TYPE_DESC,
+    RX_STORE_DESC,
+    DISTRIBUTION_CNTR,
+    DISTRIBUTION_CNTR_DESC,
+    STORE_24_HR,
+    BUDGET_OPEN_DAT,
+    BUDGET_CLOSED_DAT,
+    BUDGET_RELOC_DAT,
+    CONST_OPEN_DAT,
+    CONST_CLOSE_DAT,
+    CONST_RELO_DAT,
+    RELOCATION_DAT,
+    EMERG_MKT_IND,
+    BUDGET_EMERG_MKT_IND,
+    COMPANY_CODE,
+    COMPANY_CODE_DESC,
+    ORIGINAL_FS_OPEN_DAT,
+    ORIGINAL_RX_OPEN_DAT,
+    GROUP_ONE,
+    GROUP_TWO,
+    ARD_SORT_KEY,
+    AREA_COST_CENTER,
+    REGIION_COST_CENTER,
+    COUNTY_CODE,
+    COUNTY_DESC,
+    SQFT_BRACKET_DESC,
+    SQFT_SORT_KEY,
+    ACQUISITION_CODE,
+    ACQUISITION_DESC,
+    PHOTO_LAB_ADD_DAT,
+    PHOTO_LAB_CLOSE_DAT,
+    MIN_HRS_IND,
+    CREATEDBY,
+    CREATED_ON,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+    SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+    SUM(RX_STORE) AS RX_STORE,
+    SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+    SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+  FROM PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT
+  GROUP BY
+    MANDT,
+    STRNUM,
+    PRCTR,
+    KOKRS,
+    KOSTL,
+    RX_OPEN_DAT,
+    RX_CLOSE_DAT,
+    FS_OPEN_DAT,
+    FS_CLOSE_DAT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    ADDRESS,
+    CITY,
+    STATE,
+    ZIPCODE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    DIVISION_MGR,
+    AREA_CODE,
+    AREA_DESC,
+    AREA_MGR,
+    REGION_CODE,
+    REGION_DESC,
+    REGION_MGR,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZONE_CODE,
+    DISTRICT_MGR,
+    ZONE_DESC,
+    MAJOR_REGION_CODE,
+    MAJOR_REGION,
+    STORE_TYPE,
+    STORE_TYPE_DESC,
+    RX_STORE_DESC,
+    DISTRIBUTION_CNTR,
+    DISTRIBUTION_CNTR_DESC,
+    STORE_24_HR,
+    BUDGET_OPEN_DAT,
+    BUDGET_CLOSED_DAT,
+    BUDGET_RELOC_DAT,
+    CONST_OPEN_DAT,
+    CONST_CLOSE_DAT,
+    CONST_RELO_DAT,
+    RELOCATION_DAT,
+    EMERG_MKT_IND,
+    BUDGET_EMERG_MKT_IND,
+    COMPANY_CODE,
+    COMPANY_CODE_DESC,
+    ORIGINAL_FS_OPEN_DAT,
+    ORIGINAL_RX_OPEN_DAT,
+    GROUP_ONE,
+    GROUP_TWO,
+    ARD_SORT_KEY,
+    AREA_COST_CENTER,
+    REGIION_COST_CENTER,
+    COUNTY_CODE,
+    COUNTY_DESC,
+    SQFT_BRACKET_DESC,
+    SQFT_SORT_KEY,
+    ACQUISITION_CODE,
+    ACQUISITION_DESC,
+    PHOTO_LAB_ADD_DAT,
+    PHOTO_LAB_CLOSE_DAT,
+    MIN_HRS_IND,
+    CREATEDBY,
+    CREATED_ON,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+),
+
+-- ============================================================================
+-- SECTION 4: CV_COMP_MD_COMPFL_STATIC - Comparison Flags Static Data
+-- Source: TBL_WSS_SRP_COMPFLAG physical table
+-- ============================================================================
+
+CV_COMP_MD_COMPFL_STATIC_Base AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+  FROM PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG
+),
+
+-- ============================================================================
+-- SECTION 5: CV_BASE_MD_RCALWEEK_S4 - Calendar Week Data (EXTERNAL - NOT PROVIDED)
+-- Source: ZTFIGL_RCALWEEK physical table
+-- Note: This view definition was not provided in inputs but is referenced
+-- Using the base table structure from CV_BASE_MD_RCAIWEEK_S4_Output.txt
+-- ============================================================================
+
+CV_BASE_MD_RCALWEEK_S4_Base AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZCALYRP,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    ZRYRQTR,
+    ZRWSTRTDATE,
+    ZRWENDDATE
+  FROM PROJECT.DATASET.ZTFIGL_RCALWEEK
+  WHERE RCLNT IN (120, 200)
+),
+
+-- ============================================================================
+-- SECTION 6: CV_BASE_MD_CEPCT_S4 - Cost Element and Profit Center Text
+-- Source: CEPCT physical table
+-- ============================================================================
+
+CV_BASE_MD_CEPCT_S4_Base AS (
+  SELECT
+    MANDT,
+    SPRAS,
+    PRCTR,
+    DATBI,
+    KOKRS,
+    KTEXT,
+    LTEXT,
+    MCTXT
+  FROM PROJECT.DATASET.CEPCT
+  WHERE MANDT IN (120, 200)
+),
+
+-- ============================================================================
+-- SECTION 7: CV_COMP_FIN_BUDGET_STATIC - Final Consolidated Logic
+-- This section consolidates all upstream dependencies into the final output
+-- ============================================================================
+
+WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    _B631_S_AMOUNT,
+    CURRENCY,
+    _BIC_ZIO_AMT,
+    FLAG
+  FROM CV_BASE_FIN_WEEKLY_BUDGET_S4_Final
+  WHERE
+    FISCVARNT = 'K4'
+    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND _BIC_ZIO_VER = @IP_VERSION
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+),
+
+HIER_NODE AS (
+  SELECT
+    MANDT,
+    PARNODE,
+    HRYVALTO,
+    NODEVALUE
+  FROM CV_BASE_MD_HRRP_NODE_S4_Base
+  WHERE
+    REGEXP_CONTAINS(PARNODE, 'CORE_RET$')
+    AND HRYVALTO = '99991231'
+),
+
+Join_1 AS (
+  SELECT
+    ws.*,
+    hn.PARNODE
+  FROM WEEKLY_SNAPSHOT_DS05 ws
+  INNER JOIN HIER_NODE hn
+    ON ws._B631_S_PROFTCTR = hn.NODEVALUE
+),
+
+ONLY_CORE_RET_DATA AS (
+  SELECT * FROM Join_1
+),
+
+STORE_ATTR_ACTUAL AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM CV_COMP_MD_SRPACT_STATIC_Base
+),
+
+Join_2 AS (
+  SELECT
+    ocrt.*,
+    sa.REP_MKT_CODE,
+    sa.REP_MKT_DESC,
+    sa.EMERG_MKT_IND,
+    sa.DIVISION_CODE,
+    sa.DIVISION_DESC,
+    sa.AREA_CODE,
+    sa.AREA_DESC,
+    sa.DISTRICT_CODE,
+    sa.DISTRICT_DESC,
+    sa.STRNUM,
+    sa.REGION_CODE,
+    sa.REGION_DESC,
+    sa.CITY,
+    sa.STATE,
+    sa.FS_OPEN_DAT,
+    sa.RX_OPEN_DAT,
+    sa.RX_DIVISION_CODE,
+    sa.RX_AREA_CODE,
+    sa.RX_REGION_CODE,
+    sa.RX_DISTRICT_CODE
+  FROM ONLY_CORE_RET_DATA ocrt
+  LEFT JOIN STORE_ATTR_ACTUAL sa
+    ON ocrt._B631_S_PROFTCTR = sa.PRCTR
+),
+
+WEEK_NUMBER AS (
+  SELECT
+    *,
+    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_STORE_WEEK_NUMBER
+  FROM Join_2
+),
+
+COMP_FLAG_BUDGET AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    COMP_VER
+  FROM CV_COMP_MD_COMPFL_STATIC_Base
+  WHERE COMP_VER = @IP_VERSION
+),
+
+Join_3 AS (
+  SELECT
+    wn.*,
+    cb.FS_COMP_WK,
+    cb.RX_COMP_WK
+  FROM WEEK_NUMBER wn
+  LEFT JOIN COMP_FLAG_BUDGET cb
+    ON wn._B631_S_PROFTCTR = cb.PRCTR
+    AND wn._BIC_ZIO_SWEEK = cb.ZWEEK
+),
+
+CAL_WEEK AS (
+  SELECT
+    ZZWEEK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    RCLNT
+  FROM CV_BASE_MD_RCALWEEK_S4_Base
+),
+
+Join_4 AS (
+  SELECT
+    j3.*,
+    cw.ZRWSTRTDATE,
+    cw.ZRWENDDATE
+  FROM Join_3 j3
+  LEFT JOIN CAL_WEEK cw
+    ON j3._BIC_ZIO_SWEEK = cw.ZZWEEK
+),
+
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM CV_BASE_MD_CEPCT_S4_Base
+),
+
+Join_5 AS (
+  SELECT
+    j4.*,
+    pct.PROFIT_CENTER_TEXT
+  FROM Join_4 j4
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON j4._B631_S_PROFTCTR = pct.PRCTR
+),
+
+FLAGS AS (
+  SELECT
+    RX_COMP_WK,
+    FS_COMP_WK,
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    (_B631_S_AMOUNT * -1) AS _B631_S_AMOUNT_NEGATIVE,
+    CURRENCY,
+    _BIC_ZIO_AMT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    REGION_CODE,
+    REGION_DESC,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CITY,
+    STATE,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    FLAG,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    CASE
+      WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
+      WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
+      ELSE ''
+    END AS CAL_FS_RX_FLAG,
+    CASE
+      WHEN (
+        CASE
+          WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
+          WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
+          ELSE FS_COMP_WK
+        END
+      ) IS NULL THEN '0'
+      ELSE (
+        CASE
+          WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
+          WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
+          ELSE FS_COMP_WK
+        END
+      )
+    END AS CAL_COMP_FLAG,
+    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    (_B631_S_AMOUNT * -1 * -1) AS _B631_S_AMOUNT
+  FROM Join_5
+)
+
+SELECT 
+  RX_COMP_WK,
+  FS_COMP_WK,
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  _B631_S_AMOUNT_NEGATIVE,
+  CURRENCY,
+  _BIC_ZIO_AMT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  EMERG_MKT_IND,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  REGION_CODE,
+  REGION_DESC,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  FLAG,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  CAL_FS_RX_FLAG,
+  CAL_COMP_FLAG,
+  CAL_WEEK_NUMBER,
+  _B631_S_AMOUNT
+FROM FLAGS;
