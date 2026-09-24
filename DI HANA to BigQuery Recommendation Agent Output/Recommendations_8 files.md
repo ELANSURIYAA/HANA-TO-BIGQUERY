@@ -1,41 +1,38 @@
-**Summary:**
-- Merging CV_BASE_MD_CEPCT_S4, CV_BASE_MD_HRRP_NODE_S4, CV_COMP_MD_SRPACT_STATIC, and CV_COMP_MD_COMPFL_STATIC logic into CV_BASE_MD_RCAIWEEK_S4 as a Merged View will reduce query redundancy and improve reporting performance (see CV_BASE_MD_RCAIWEEK_S4_OUTPUT.txt, CV_BASE_MD_CEPCT_S4_OUTPUT.txt, CV_BASE_MD_HRRP_NODE_S4_Output.txt, CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt, CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt, File Relationships Table.md).
-- Materializing CV_BASE_FIN_WEEKLY_BUDGET_S4 as a Materialized View will accelerate aggregations reused in reporting (see CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt, File Relationships Table.md).
-- Retaining CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4, and CV_BASE_MD_HRRP_NODE_S4 as Standard Views maintains flexibility for master data that changes infrequently (see CV_BASE_MD_CEPCT_S4_OUTPUT.txt, CV_BASE_MD_HRRP_NODE_S4_Output.txt, CV_BASE_MD_RCAIWEEK_S4_Output.txt).
-- Implementing STP_WSS_SRP_ATTRIBUTES as a BigQuery Procedure enables efficient ETL for static tables and supports refresh operations (see STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt, File Relationships Table.md).
-- CV_COMP_FIN_BUDGET_STATIC and CV_COMP_MD_COMPFL_STATIC should be implemented as Physical Tables for static reporting and downstream view dependencies (see CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt, CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt, File Relationships Table.md).
-- Merging is recommended for CV_COMP_MD_SRPACT_STATIC and CV_COMP_MD_COMPFL_STATIC if reporting always requires both, otherwise retain as individual views (see CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt, CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt, File Relationships Table.md).
+# BigQuery Migration Recommendations
 
-| Script Name                        | Recommended Deployment | Justification |
-|------------------------------------|-----------------------|--------------|
-| CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Materialized View     | Aggregates large fact data from AZSRP_DS052_VT_S4 and AZSRP_DS041_VT_S4; used by CV_BASE_MD_RCAIWEEK_S4 for reporting; materialization reduces compute cost and improves refresh performance. (File Relationships Table.md, CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt) |
-| CV_BASE_MD_CEPCT_S4_OUTPUT.txt     | Standard View         | Lightweight profit center/cost element lookup; changes infrequently; referenced by CV_BASE_MD_RCAIWEEK_S4 and can be joined as needed without materialization. (CV_BASE_MD_CEPCT_S4_OUTPUT.txt, File Relationships Table.md) |
-| CV_BASE_MD_HRRP_NODE_S4_Output.txt | Standard View         | Hierarchy master data; rarely changes; referenced by CV_BASE_MD_RCAIWEEK_S4; standard view keeps maintenance low and allows for easy refresh. (CV_BASE_MD_HRRP_NODE_S4_Output.txt, File Relationships Table.md) |
-| CV_BASE_MD_RCAIWEEK_S4_Output.txt  | Merged View           | Central reporting view integrating logic from multiple upstream sources (financials, HR, attributes, flags); merging logic reduces query complexity, improves maintainability, and enhances reporting performance. (CV_BASE_MD_RCAIWEEK_S4_Output.txt, File Relationships Table.md) |
-| CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt | Physical Table        | Static budget snapshot; loaded via ETL, not expected to change frequently; supports fast reporting and downstream dependencies. (CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt, File Relationships Table.md) |
-| CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt | Physical Table        | Static comparison flags; loaded by ETL; referenced by CV_BASE_MD_RCAIWEEK_S4; physical table reduces compute cost and accelerates queries. (CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt, File Relationships Table.md) |
-| CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt | Merged View           | Store attributes; can be merged with CV_COMP_MD_COMPFL_STATIC if always queried together in reporting, otherwise retain as individual view; merging reduces redundancy. (CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt, File Relationships Table.md) |
-| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt  | BigQuery Procedure    | ETL logic for loading static tables (TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG); enables scheduled refresh and repeatable data loads. (STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt, File Relationships Table.md) |
+## Summary
+- Merging logic from `CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt` and `CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt` into a single Materialized View will reduce query cost and improve performance for recurring budget reporting workloads, as both share the same core aggregations and are consumed by downstream composite views (see File Relationships Table.md, relationships #1, #2, #5, #8).
+- Static lookup views such as `CV_BASE_MD_CEPCT_S4_OUTPUT.txt`, `CV_BASE_MD_HRRP_NODE_S4_Output.txt`, and `CV_BASE_MD_RCAIWEEK_S4_Output.txt` should be retained as Standard Views for maintainability and low cost, as they are lightweight dimension tables (see File Relationships Table.md, relationships #3, #4, #12).
+- The ETL logic within `STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt` should be implemented as a BigQuery Procedure, as it orchestrates batch operations and table refreshes, ensuring data freshness for dependent reporting views (`CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt`, `CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt`) (see File Relationships Table.md, relationships #14-19).
+- Composite views (`CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt`, `CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt`) should be implemented as Materialized Views, as they aggregate and join large static tables, are referenced by multiple reporting layers, and benefit from pre-computation (see File Relationships Table.md, relationships #6, #7, #18, #19).
+- The final store attribute aggregation (`STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt`) should remain as a Procedure, as it encapsulates multi-step ETL logic and batch table loads, optimizing both performance and maintenance (see File Relationships Table.md, relationships #16, #17).
 
-| Script Name                        | Can Be Used Individually | Can Be Merged | Best Option (with Reason) |
-|------------------------------------|-------------------------|---------------|--------------------------|
-| CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Yes                    | No            | Materialized View for performance and cost efficiency (see File Relationships Table.md) |
-| CV_BASE_MD_CEPCT_S4_OUTPUT.txt     | Yes                    | Yes (with RCAIWEEK) | Merged View if always joined in reporting (see File Relationships Table.md) |
-| CV_BASE_MD_HRRP_NODE_S4_Output.txt | Yes                    | Yes (with RCAIWEEK) | Merged View if always joined in reporting (see File Relationships Table.md) |
-| CV_BASE_MD_RCAIWEEK_S4_Output.txt  | No                     | Yes           | Merged View to consolidate all reporting logic (see File Relationships Table.md) |
-| CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt | Yes                    | No            | Physical Table for static reporting (see File Relationships Table.md) |
-| CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt | Yes                    | Yes (with SRPACT) | Merged View if reporting always needs both (see File Relationships Table.md) |
-| CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt | Yes                    | Yes (with COMPFL) | Merged View if reporting always needs both (see File Relationships Table.md) |
-| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt  | No                     | No            | BigQuery Procedure for ETL (see File Relationships Table.md) |
+## Recommendation Table
+| Script Name                              | Recommended Deployment  | Justification |
+|------------------------------------------|-------------------------|--------------|
+| CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt  | Materialized View       | Core financial aggregation layer, used in downstream reporting (see File Relationships Table.md #1, #2, #8); high query cost, benefits from pre-computation. |
+| CV_BASE_MD_CEPCT_S4_OUTPUT.txt           | Standard View           | Lightweight dimension/lookup, rarely changes, used for profit center text (see File Relationships Table.md #3, #13). |
+| CV_BASE_MD_HRRP_NODE_S4_Output.txt       | Standard View           | Lightweight HR hierarchy lookup, used for filtering nodes (see File Relationships Table.md #4, #9). |
+| CV_BASE_MD_RCAIWEEK_S4_Output.txt        | Standard View           | Lightweight calendar week lookup, used in time-based joins (see File Relationships Table.md #12). |
+| CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt     | Merge with CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt as Materialized View | Shares core logic with CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt, merging reduces redundancy and cost (see File Relationships Table.md #5). |
+| CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt      | Materialized View       | Aggregates static comparison flag data, referenced in reporting views, benefits from pre-computation (see File Relationships Table.md #6, #11, #19). |
+| CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt      | Materialized View       | Aggregates static store attribute data, referenced in reporting views, benefits from pre-computation (see File Relationships Table.md #7, #10, #18). |
+| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt        | BigQuery Procedure      | Encapsulates ETL/batch logic, refreshes physical tables, enables downstream views (see File Relationships Table.md #14-17). |
 
----
+## Individual vs Merged SQL Analysis
+| Script Name | Individual SQL Usable | Merge Candidate | Combined SQL Recommended | Details |
+|-------------|----------------------|-----------------|-------------------------|---------|
+| CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Yes                 | Yes (with CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt) | Yes                    | Both perform core financial aggregations and are referenced together in reporting; merging as a Materialized View reduces cost and complexity. |
+| CV_BASE_MD_CEPCT_S4_OUTPUT.txt          | Yes                 | No                      | No                      | Lookup table, best kept as a standalone Standard View for maintainability. |
+| CV_BASE_MD_HRRP_NODE_S4_Output.txt      | Yes                 | No                      | No                      | Lookup table, best kept as a standalone Standard View for maintainability. |
+| CV_BASE_MD_RCAIWEEK_S4_Output.txt       | Yes                 | No                      | No                      | Lookup table, best kept as a standalone Standard View for maintainability. |
+| CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt    | No                  | Yes (with CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt) | Yes                    | Shares logic with base weekly budget view; merging eliminates duplication. |
+| CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt     | Yes                 | No                      | No                      | Composite aggregation, best as a Materialized View for performance. |
+| CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt     | Yes                 | No                      | No                      | Composite aggregation, best as a Materialized View for performance. |
+| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt       | Yes                 | No                      | No                      | ETL procedure, must remain as a procedure for orchestrating batch loads. |
 
-**Migration Optimization Opportunities:**
-- CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt should be materialized to accelerate repeated aggregations and reduce on-demand compute cost.
-- CV_BASE_MD_RCAIWEEK_S4_OUTPUT.txt should merge logic from CV_BASE_MD_CEPCT_S4_OUTPUT.txt, CV_BASE_MD_HRRP_NODE_S4_Output.txt, CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt, and CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt to reduce query complexity and improve reporting performance.
-- CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt and CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt should be deployed as physical tables for static, infrequently changing data to optimize query speed.
-- STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt should be implemented as a BigQuery Procedure to orchestrate ETL for static tables, supporting scheduled refresh and minimizing manual intervention.
-- Merging CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt and CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt is recommended if reporting always requires both, otherwise retain as individual views for flexibility.
-
----
-
+## Migration Optimization Opportunities
+- Merging `CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt` and `CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt` as a Materialized View will reduce query cost, improve data freshness, and simplify maintenance by eliminating redundant logic (File Relationships Table.md #1, #2, #5, #8).
+- Retaining lookup views (`CV_BASE_MD_CEPCT_S4_OUTPUT.txt`, `CV_BASE_MD_HRRP_NODE_S4_Output.txt`, `CV_BASE_MD_RCAIWEEK_S4_Output.txt`) as Standard Views preserves maintainability and minimizes cost (File Relationships Table.md #3, #4, #12).
+- Implementing composite views (`CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt`, `CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt`) as Materialized Views improves performance for downstream reporting and reduces resource consumption (File Relationships Table.md #6, #7, #10, #11, #18, #19).
+- Keeping `STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt` as a BigQuery Procedure ensures scalable and maintainable ETL operations, supporting data freshness for all dependent reporting layers (File Relationships Table.md #14-17).
