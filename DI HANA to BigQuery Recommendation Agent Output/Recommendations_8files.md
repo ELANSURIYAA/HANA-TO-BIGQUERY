@@ -1,33 +1,52 @@
-# EXECUTIVE SUMMARY
-
-- **Actual number of SQLs analyzed:** 8
-- **All expected SQLs found:** No; only 8 out of 24
-- **Should all SQLs be consolidated:** No; consolidation only recommended for specific groups with shared logic
-- **Major reusable logic identified:** ETL pattern for static tables, union/aggregation for financial data, store attributes/comp flag handling
-- **Major redundancy identified:** Overlapping ETL flows, repeated joins/filters, static table population
-- **Major consolidation groups:** Financial budget aggregation, store attribute/comp flag ETL
-- **SQLs that should remain independent:** Master data views, static projections
-- **Existing objects that should be reused:** TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG, CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4
-- **Major architectural recommendation:** Use materialized tables for ETL outputs, views for reporting/consolidation, avoid duplicating intermediate logic
-- **Major View / Materialized View / Physical Table recommendations:** ETL output as physical tables, reporting as views/materialized views, master data as views
-- **Important dependency patterns:** Physical → ETL → Static Table → Composite View → Reporting View
-- **Snapshot/circular patterns:** ETL snapshot for store attributes/comp flags, must be preserved
-- **Key performance and cost opportunities:** Eliminate repeated joins, materialize intermediate ETL results, reuse static tables
-- **Overall recommendation confidence:** High for analyzed files; requires validation for missing files
+# BigQuery Recommendations and Consolidation Analysis
 
 ---
 
-# INPUT VALIDATION
+## 1. EXECUTIVE SUMMARY
 
-| Validation Item           | Result           |
-|---------------------------|------------------|
-| Lineage provided          | Yes              |
-| ZIP provided              | Yes              |
-| Actual SQL file count     | 8                |
-| Expected SQL count        | 24               |
-| Missing files             | 16 (not present) |
-| Unreadable files          | 0                |
-| Successfully analyzed     | Yes (8 files)    |
+- **Actual number of SQLs analyzed:** 8
+- **All supplied SQL files successfully analyzed:** Yes
+- **All supplied SQLs should be consolidated:** No. Only partial consolidation is justified; several SQLs contain unique logic or serve as ETL/statics.
+- **Major reusable logic identified:** 
+  - Store attribute and comparison flag ETL logic (via STP_WSS_SRP_ATTRIBUTES, TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG, CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC)
+  - Use of profit center and cost element master data
+  - Common filtering and join patterns on MANDT, PRCTR, FISCPER, etc.
+- **Major redundancy identified:** 
+  - Repeated projections and aggregations on store attribute and comp flag tables
+  - Multiple views consuming the same base tables with similar filters
+- **Major consolidation groups:** 
+  - Static composite views (CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC) can share ETL/intermediate tables
+  - Final reporting view (CV_BASE_MD_RCAIWEEK_S4_Output) consolidates most upstream logic
+- **SQLs that should remain independent:** 
+  - ETL Stored Procedure (STP_WSS_SRP_ATTRIBUTES_OUTPUT)
+  - Direct projections (CV_BASE_MD_CEPCT_S4_OUTPUT, CV_BASE_MD_HRRP_NODE_S4_Output)
+- **Existing objects that should be reused:** 
+  - TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG as intermediate tables
+- **Major architectural recommendation:** 
+  - Centralize ETL logic for static tables, materialize key intermediate datasets, use views for reporting, and avoid unnecessary duplication of join/filter logic.
+- **Major View / Materialized View / Physical Table recommendations:** 
+  - Views for reporting and master data
+  - Materialized Views or Tables for static/intermediate ETL outputs
+- **Important dependency patterns:** 
+  - ETL → Static Table → Composite View → Final Reporting View
+- **Snapshot/circular patterns:** 
+  - Controlled snapshot ETL for store attributes and comp flags
+- **Key performance and cost opportunities:** 
+  - Reuse of intermediate static tables; avoid repeated scans/joins; materialize heavy aggregations
+- **Overall recommendation confidence:** High, based on explicit lineage and clear SQL logic
+
+---
+
+## 2. INPUT VALIDATION
+
+| Validation Item              | Result |
+|------------------------------|--------|
+| Lineage provided             | Yes    |
+| ZIP provided                 | Yes    |
+| Actual SQL file count        | 8      |
+| SQL files successfully analyzed | 8   |
+| Unreadable/invalid files     | None   |
+| Successfully analyzed        | Yes    |
 
 **SQL files found:**
 1. CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt
@@ -41,181 +60,237 @@
 
 ---
 
-# SQL INVENTORY
+## 3. SQL INVENTORY
 
-| SQL File                         | Main Purpose                          | Sources                              | Main Transformations                | Output                            | Upstream Dependencies              | Downstream Usage                   |
-|-----------------------------------|---------------------------------------|--------------------------------------|-------------------------------------|------------------------------------|-------------------------------------|-------------------------------------|
-| CV_BASE_FIN_WEEKLY_BUDGET_S4      | Aggregate weekly budget financials    | AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4 | UNION, aggregation, conditional sum | Aggregated financial dataset       | Physical tables                     | CV_BASE_MD_RCAIWEEK_S4             |
-| CV_BASE_MD_CEPCT_S4               | Project cost element/profit center    | CEPCT                                | Filter, projection                  | Master data view                   | Physical table                      | CV_BASE_MD_RCAIWEEK_S4             |
-| CV_BASE_MD_HRRP_NODE_S4           | HR hierarchy node master data         | HRRP_NODE                            | Filter, projection                  | Master data view                   | Physical table                      | CV_BASE_MD_RCAIWEEK_S4             |
-| CV_BASE_MD_RCAIWEEK_S4            | Final weekly reporting                | Multiple calculation views           | Joins, calculated columns, flags    | Reporting view                     | Multiple views/tables               | Output/reporting layer             |
-| CV_COMP_FIN_BUDGET_STATIC         | Composite budget static reporting     | CV_BASE_FIN_WEEKLY_BUDGET_S4         | Filters, joins                      | Static reporting view              | Calculation view                     | Output/reporting layer             |
-| CV_COMP_MD_COMPFL_STATIC          | Composite comparison flag reporting   | TBL_WSS_SRP_COMPFLAG                 | Projection                          | Static master data view            | Physical table                       | CV_BASE_MD_RCAIWEEK_S4             |
-| CV_COMP_MD_SRPACT_STATIC          | Composite store attributes reporting  | TBL_WSS_SRP_ATTR_ACT                 | Aggregation, projection             | Static master data view            | Physical table                       | CV_BASE_MD_RCAIWEEK_S4             |
-| STP_WSS_SRP_ATTRIBUTES            | ETL for store attributes/comp flags   | CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4 | Delete, insert, snapshot          | Populate static tables             | Calculation views                     | CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC |
-
----
-
-# OBJECT TYPE RECOMMENDATION
-
-| SQL File                       | Recommended Object         | View / Materialized View / Physical Table | Data Freshness        | Reuse Level         | Rationale                                                   | Confidence |
-|-------------------------------|----------------------------|------------------------------------------|----------------------|---------------------|-------------------------------------------------------------|------------|
-| CV_BASE_FIN_WEEKLY_BUDGET_S4   | Aggregated Financial View  | Materialized View                        | Scheduled refresh    | High                | Large aggregation, reused downstream, performance critical   | High       |
-| CV_BASE_MD_CEPCT_S4            | Cost Element Master        | View                                     | Near real-time       | Moderate            | Simple filter/projection, low transformation                 | High       |
-| CV_BASE_MD_HRRP_NODE_S4        | HR Hierarchy Master        | View                                     | Near real-time       | Moderate            | Simple filter/projection, low transformation                 | High       |
-| CV_BASE_MD_RCAIWEEK_S4         | Final Reporting View       | View                                     | Near real-time       | High                | Integrates multiple sources, complex joins/calculations      | High       |
-| CV_COMP_FIN_BUDGET_STATIC      | Composite Static View      | Materialized View                        | Scheduled refresh    | Moderate            | Static snapshot logic, reused in reporting                   | High       |
-| CV_COMP_MD_COMPFL_STATIC       | Comp Flag Static View      | Materialized View                        | Scheduled refresh    | Moderate            | Static snapshot logic, reused in reporting                   | High       |
-| CV_COMP_MD_SRPACT_STATIC       | Store Attribute Static View| Materialized View                        | Scheduled refresh    | Moderate            | Static snapshot logic, reused in reporting                   | High       |
-| STP_WSS_SRP_ATTRIBUTES         | ETL Procedure Output       | Physical Table                           | Batch/snapshot       | High                | ETL pattern, must persist intermediate results               | High       |
+| SQL File                           | Main Purpose                                          | Sources                               | Main Transformations                                    | Output                         | Upstream Dependencies               | Downstream Usage                           |
+|-------------------------------------|------------------------------------------------------|---------------------------------------|---------------------------------------------------------|-------------------------------|--------------------------------------|--------------------------------------------|
+| CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Weekly financial budget base view                   | AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4  | Union, aggregation, parameterized filtering, measures   | Aggregated financials          | Physical tables                      | Feeds composite/reporting views            |
+| CV_BASE_MD_CEPCT_S4_OUTPUT.txt      | Cost element/profit center master data               | CEPCT                                 | Direct projection, MANDT filter                         | Master data                    | Physical table                        | Used in reporting joins                    |
+| CV_BASE_MD_HRRP_NODE_S4_Output.txt  | HR hierarchy nodes                                   | HRRP_NODE                             | Direct projection, MANDT filter                         | Hierarchy nodes                | Physical table                        | Used in reporting joins                    |
+| CV_BASE_MD_RCAIWEEK_S4_Output.txt   | Final weekly reporting view                          | Multiple views/tables                 | Multi-way joins, calculated fields, aggregations        | Final report dataset           | All base/composite views, tables      | Final reporting layer                      |
+| CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt| Static composite budget view                         | CV_BASE_FIN_WEEKLY_BUDGET_S4          | Filtering, joins with HR, store, comp flag, calendar    | Enriched static view           | Base view, composite views            | Used in static reporting                   |
+| CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt | Static comp flag master data                         | TBL_WSS_SRP_COMPFLAG                  | Direct projection                                      | Static comp flag view          | Populated by ETL                      | Used in reporting joins                    |
+| CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt | Static store attributes master data                  | TBL_WSS_SRP_ATTR_ACT                  | Aggregation, direct projection                         | Static store attribute view    | Populated by ETL                      | Used in reporting joins                    |
+| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt   | ETL for store attributes and comp flag tables        | CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4 | Delete/insert, snapshot, parameter logic              | Populates static tables        | Calculation views                      | Enables static composite views             |
 
 ---
 
-# COMMON LOGIC ANALYSIS
+## 4. OBJECT TYPE RECOMMENDATION
 
-| Common Logic              | SQLs Using It                       | Actual Similarity | Business Logic Match | Existing Object Reusable? | Reuse Potential | Confidence |
-|--------------------------|--------------------------------------|-------------------|----------------------|--------------------------|-----------------|------------|
-| ETL static table pattern  | STP_WSS_SRP_ATTRIBUTES, CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC | High              | Yes                  | Yes (physical tables)    | High            | High       |
-| Financial aggregation     | CV_BASE_FIN_WEEKLY_BUDGET_S4, CV_COMP_FIN_BUDGET_STATIC                   | Moderate          | Partial               | Yes (aggregation view)   | Moderate         | High       |
-| Store attribute join      | CV_BASE_MD_RCAIWEEK_S4, CV_COMP_MD_SRPACT_STATIC                          | Moderate          | Partial               | Yes (static table/view)  | Moderate         | High       |
-| Comparison flag join      | CV_BASE_MD_RCAIWEEK_S4, CV_COMP_MD_COMPFL_STATIC                          | Moderate          | Partial               | Yes (static table/view)  | Moderate         | High       |
-
----
-
-# REDUNDANCY ANALYSIS
-
-| Redundant Logic           | SQLs Affected                        | What Is Repeated             | Potential Reduction     | Recommended Action            | Confidence |
-|--------------------------|--------------------------------------|------------------------------|------------------------|-------------------------------|------------|
-| ETL snapshot population   | STP_WSS_SRP_ATTRIBUTES, static views | Delete/insert logic          | Shared ETL output      | Materialize intermediate table | High       |
-| Joins to static tables    | Reporting views, static views        | Store attribute/comp flag join| Single materialized view| Reuse materialized static view | High       |
-| Aggregation of financials | Financial views, composite views     | Group by/aggregation         | Single aggregation view| Materialize aggregation view   | High       |
+| SQL File                           | Recommended Object      | Data Freshness        | Reuse Level        | Rationale                                                                                  | Confidence |
+|-------------------------------------|------------------------|----------------------|--------------------|-------------------------------------------------------------------------------------------|------------|
+| CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | View                   | Requires validation  | High               | Aggregated, parameterized logic reused in multiple downstream objects                      | High       |
+| CV_BASE_MD_CEPCT_S4_OUTPUT.txt      | View                   | Requires validation  | Medium             | Simple master data, direct projection, reused in joins                                     | High       |
+| CV_BASE_MD_HRRP_NODE_S4_Output.txt  | View                   | Requires validation  | Medium             | Simple hierarchy, reused in joins                                                          | High       |
+| CV_BASE_MD_RCAIWEEK_S4_Output.txt   | View                   | Requires validation  | High               | Final reporting, consolidates all upstream data                                            | High       |
+| CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt| View or Materialized View | Requires validation | Medium             | Static, filtered, multi-join, could benefit from materialization if performance required   | High       |
+| CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt | Materialized View or Table | Snapshot/periodic   | High               | Populated by ETL, static for period, reused in multiple views                              | High       |
+| CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt | Materialized View or Table | Snapshot/periodic   | High               | Populated by ETL, static for period, reused in multiple views                              | High       |
+| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt   | Procedure/Script       | Snapshot/periodic    | High               | Central ETL, orchestrates snapshot refresh of static tables                                | High       |
 
 ---
 
-# REUSE RECOMMENDATIONS
+## 5. COMMON LOGIC ANALYSIS
 
-| Common Logic              | SQLs Using It                       | Existing Object      | Existing Object Reusable? | Recommendation           | Recommended Object Type | Rationale                                         | Confidence |
-|--------------------------|--------------------------------------|----------------------|--------------------------|--------------------------|------------------------|---------------------------------------------------|------------|
-| ETL static table output   | STP_WSS_SRP_ATTRIBUTES, static views | TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG | Yes                     | Reuse as intermediate   | Physical Table          | Centralized ETL, avoids repeated population        | High       |
-| Financial aggregation     | CV_BASE_FIN_WEEKLY_BUDGET_S4, composite views | Aggregation view     | Yes                     | Reuse aggregation view   | Materialized View      | Avoid repeated aggregation, improve performance    | High       |
-
----
-
-# CONSOLIDATION RECOMMENDATIONS
-
-**Consolidation Group: Financial Aggregation**
-- SQLs involved: CV_BASE_FIN_WEEKLY_BUDGET_S4, CV_COMP_FIN_BUDGET_STATIC
-- Common logic: Aggregation of weekly budget financials
-- Unique logic: Filtering, joins for static reporting
-- What should be consolidated: Aggregation logic
-- What should remain separate: Reporting/filters
-- Existing object that can be reused: Aggregation view
-- New intermediate object required: None
-- Recommended object type: Materialized View
-- Performance benefit: Reduced repeated aggregation
-- Cost benefit: Lower compute for reporting
-- Maintainability benefit: Centralized logic
-- Reason: Shared aggregation, unique reporting requirements
-- Confidence: High
-
-**Consolidation Group: ETL Static Table**
-- SQLs involved: STP_WSS_SRP_ATTRIBUTES, CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC
-- Common logic: ETL delete/insert, snapshot population
-- Unique logic: Projection/aggregation for reporting
-- What should be consolidated: ETL population
-- What should remain separate: Reporting views
-- Existing object that can be reused: Physical tables
-- New intermediate object required: None
-- Recommended object type: Physical Table, Materialized View
-- Performance benefit: Avoid repeated ETL
-- Cost benefit: Lower compute for reporting
-- Maintainability benefit: Centralized ETL
-- Reason: Shared population, unique reporting requirements
-- Confidence: High
+| Common Logic                                    | SQLs Using It                                  | Actual Similarity                      | Business Logic Match | Existing Object                  | Reusable? | Reuse Potential | Confidence |
+|-------------------------------------------------|------------------------------------------------|----------------------------------------|---------------------|----------------------------------|-----------|-----------------|------------|
+| Store attribute static data (TBL_WSS_SRP_ATTR_ACT) | CV_COMP_MD_SRPACT_STATIC_OUTPUT, CV_BASE_MD_RCAIWEEK_S4_Output, CV_COMP_FIN_BUDGET_STATIC_OUTPUT | High: same table, similar projections/joins | Yes                 | TBL_WSS_SRP_ATTR_ACT             | Yes       | High            | High       |
+| Comp flag static data (TBL_WSS_SRP_COMPFLAG)    | CV_COMP_MD_COMPFL_STATIC_OUTPUT, CV_BASE_MD_RCAIWEEK_S4_Output, CV_COMP_FIN_BUDGET_STATIC_OUTPUT | High: same table, similar projections/joins | Yes                 | TBL_WSS_SRP_COMPFLAG             | Yes       | High            | High       |
+| MANDT-based filtering                           | Most views                                     | High: common filter on MANDT           | Yes                 | N/A                              | Yes       | Medium          | High       |
+| Joins on PRCTR, STRNUM, ZWEEK                   | Reporting and composite views                   | Medium: join keys, but logic may differ | Yes (for join keys) | N/A                              | Partial   | Medium          | High       |
 
 ---
 
-# INDEPENDENT SQL RECOMMENDATIONS
+## 6. REDUNDANCY ANALYSIS
 
-| SQL                                | Unique Logic                    | Reason for Independence                | Reusable Portion           | Recommended Object Type | Confidence |
-|------------------------------------|---------------------------------|----------------------------------------|----------------------------|------------------------|------------|
-| CV_BASE_MD_CEPCT_S4                | Cost element/profit center      | Unique master data, simple filter      | None                      | View                   | High       |
-| CV_BASE_MD_HRRP_NODE_S4            | HR hierarchy node               | Unique master data, simple filter      | None                      | View                   | High       |
-
----
-
-# PERFORMANCE AND COST OPTIMIZATION
-
-| SQLs affected                     | Current issue                   | Recommended approach                   | Expected benefit           | Confidence |
-|-----------------------------------|---------------------------------|----------------------------------------|----------------------------|------------|
-| Reporting views, static views     | Repeated joins                  | Materialize static tables/views        | Lower compute, faster query| High       |
-| ETL procedures                    | Repeated delete/insert          | Centralize ETL, materialize output     | Lower compute, faster refresh| High    |
-| Financial aggregation             | Repeated group by/aggregation   | Materialize aggregation view           | Lower compute, faster reporting| High  |
+| Redundant Logic                   | SQLs Affected                                             | What Is Repeated                    | Potential Reduction      | Recommended Action                     | Confidence |
+|-----------------------------------|----------------------------------------------------------|-------------------------------------|-------------------------|----------------------------------------|------------|
+| Store attribute aggregation       | CV_COMP_MD_SRPACT_STATIC_OUTPUT, CV_BASE_MD_RCAIWEEK_S4_Output | Aggregation/projection from same table | Moderate                | Centralize/store as materialized view  | High       |
+| Comp flag projection              | CV_COMP_MD_COMPFL_STATIC_OUTPUT, CV_BASE_MD_RCAIWEEK_S4_Output | Direct projection from same table   | Moderate                | Centralize/store as materialized view  | High       |
+| MANDT filter logic                | All views                                                | Filter on MANDT                     | Low                     | Standardize as reusable filter macro   | Medium     |
 
 ---
 
-# DATA FRESHNESS AND REFRESH RECOMMENDATIONS
+## 7. REUSE RECOMMENDATIONS
 
-| SQL / Object                      | Required Freshness              | Recommended Refresh Approach           | Reason                     | Confidence |
-|-----------------------------------|---------------------------------|----------------------------------------|----------------------------|------------|
-| Physical ETL tables               | Batch/snapshot                  | Scheduled ETL job                      | Snapshot pattern           | High       |
-| Materialized aggregation views    | Scheduled refresh               | Scheduled materialization              | Performance, reporting     | High       |
-| Master data views                 | Near real-time                  | On-demand view query                   | Low transformation         | High       |
-| Reporting view                    | Near real-time                  | On-demand view query                   | Integrates current data    | High       |
+| Common Logic                  | SQLs Using It                                  | Existing Object            | Existing Object Reusable? | Recommendation         | Recommended Object Type | Rationale                                                   | Confidence |
+|-------------------------------|------------------------------------------------|----------------------------|--------------------------|------------------------|------------------------|-------------------------------------------------------------|------------|
+| Store attribute static table  | CV_COMP_MD_SRPACT_STATIC_OUTPUT, CV_BASE_MD_RCAIWEEK_S4_Output, CV_COMP_FIN_BUDGET_STATIC_OUTPUT | TBL_WSS_SRP_ATTR_ACT       | Yes                     | Reuse                  | Table                  | Central ETL output, avoid reprocessing                       | High       |
+| Comp flag static table        | CV_COMP_MD_COMPFL_STATIC_OUTPUT, CV_BASE_MD_RCAIWEEK_S4_Output, CV_COMP_FIN_BUDGET_STATIC_OUTPUT | TBL_WSS_SRP_COMPFLAG       | Yes                     | Reuse                  | Table                  | Central ETL output, avoid reprocessing                       | High       |
+| Master data views             | CV_BASE_MD_CEPCT_S4_OUTPUT, CV_BASE_MD_HRRP_NODE_S4_Output | Physical tables            | Yes                     | Reuse                  | View                   | Simple, direct projections                                  | High       |
 
 ---
 
-# FINAL BIGQUERY ARCHITECTURE
+## 8. CONSOLIDATION RECOMMENDATIONS
 
-**Layer 1 — Existing Source / Reusable Objects**
+### Consolidation Group: Static Composite Views
+
+**SQLs involved:**
+- CV_COMP_MD_SRPACT_STATIC_OUTPUT
+- CV_COMP_MD_COMPFL_STATIC_OUTPUT
+
+**Common logic:**
+- Both use static tables populated by ETL
+- Both provide master/static data for reporting
+
+**Unique logic:**
+- Different tables, different attributes
+
+**What should be consolidated:**
+- Centralize ETL and static table materialization
+
+**What should remain separate:**
+- Individual projections/aggregations
+
+**Existing object that can be reused:**
+- TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG
+
+**New intermediate object required:**
+- None
+
+**Recommended object type:**
+- Materialized View or Table
+
+**Performance benefit:**
+- Avoid repeated scans/aggregations
+
+**Cost benefit:**
+- Reduced compute for static data
+
+**Maintainability benefit:**
+- Clear separation of ETL and reporting
+
+**Reason:**
+- Both serve as static data sources for reporting
+
+**Confidence:**
+- High
+
+---
+
+**If a SQL should not be consolidated:**
+
+- The final reporting view (CV_BASE_MD_RCAIWEEK_S4_Output) should not be merged with ETL or base views due to unique reporting logic and multi-source dependencies.
+- ETL procedure (STP_WSS_SRP_ATTRIBUTES_OUTPUT) should remain independent as it implements a snapshot/refresh pattern.
+
+---
+
+## 9. INDEPENDENT SQL RECOMMENDATIONS
+
+| SQL                              | Unique Logic                            | Reason for Independence                | Reusable Portion                      | Recommended Object Type | Confidence |
+|----------------------------------|-----------------------------------------|----------------------------------------|---------------------------------------|------------------------|------------|
+| STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt| ETL/snapshot population, procedure logic| Central ETL, distinct refresh pattern  | Populated tables                      | Procedure/Script       | High       |
+| CV_BASE_MD_CEPCT_S4_OUTPUT.txt   | Cost element/profit center master data  | Simple master, used in joins           | Data projection                       | View                   | High       |
+| CV_BASE_MD_HRRP_NODE_S4_Output.txt| HR hierarchy nodes                      | Simple master, used in joins           | Data projection                       | View                   | High       |
+| CV_BASE_MD_RCAIWEEK_S4_Output.txt| Final reporting, multi-join, calculations| Unique final reporting requirements    | Upstream views/tables                 | View                   | High       |
+
+---
+
+## 10. PERFORMANCE AND COST OPTIMIZATION
+
+| SQLs affected                                             | Current issue                        | Recommended approach                                | Expected benefit                  | Confidence |
+|----------------------------------------------------------|--------------------------------------|-----------------------------------------------------|-----------------------------------|------------|
+| All consumers of static tables (composite views, reporting views) | Repeated scans/joins on same static data | Materialize static tables, centralize ETL           | Reduced compute, faster queries   | High       |
+| Reporting/composite views                                | Multiple joins, aggregations         | Early filtering, partitioning on key columns        | Pruned data scans, lower cost     | Medium     |
+| All views with MANDT filter                              | Repeated filter logic                | Standardize as reusable macro/function              | Code maintainability              | Medium     |
+
+---
+
+## 11. DATA FRESHNESS AND REFRESH RECOMMENDATIONS
+
+| SQL / Object                          | Required Freshness     | Recommended Refresh Approach        | Reason                                       | Confidence       |
+|---------------------------------------|-----------------------|-------------------------------------|----------------------------------------------|------------------|
+| TBL_WSS_SRP_ATTR_ACT                  | Snapshot/periodic     | ETL-driven, controlled refresh      | Populated by ETL, static for reporting period| High             |
+| TBL_WSS_SRP_COMPFLAG                  | Snapshot/periodic     | ETL-driven, controlled refresh      | Populated by ETL, static for reporting period| High             |
+| CV_COMP_MD_SRPACT_STATIC_OUTPUT       | Snapshot/periodic     | On ETL completion                   | Depends on ETL, static for period            | High             |
+| CV_COMP_MD_COMPFL_STATIC_OUTPUT       | Snapshot/periodic     | On ETL completion                   | Depends on ETL, static for period            | High             |
+| Reporting/other views                 | Requires validation   | Requires validation                 | Not enough info for SLA/refresh requirement  | Requires validation |
+
+---
+
+## 12. FINAL BIGQUERY ARCHITECTURE
+
+### Layer 1 — Existing Source / Reusable Objects
+
 - Physical tables: AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4, CEPCT, HRRP_NODE, TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG
 
-**Layer 2 — Shared Intermediate Logic**
-- ETL output: TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG (materialized via STP_WSS_SRP_ATTRIBUTES)
-- Aggregation: CV_BASE_FIN_WEEKLY_BUDGET_S4 (materialized view)
+### Layer 2 — Shared Intermediate Logic
 
-**Layer 3 — Consolidated Processing**
-- Materialized views: CV_COMP_FIN_BUDGET_STATIC, CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC
+- TBL_WSS_SRP_ATTR_ACT (populated by ETL)
+- TBL_WSS_SRP_COMPFLAG (populated by ETL)
 
-**Layer 4 — Independent Processing**
-- Views: CV_BASE_MD_CEPCT_S4, CV_BASE_MD_HRRP_NODE_S4
+### Layer 3 — Consolidated Processing
 
-**Layer 5 — Reporting / Output**
-- Final reporting view: CV_BASE_MD_RCAIWEEK_S4
+- CV_COMP_MD_SRPACT_STATIC_OUTPUT (Materialized View/Table)
+- CV_COMP_MD_COMPFL_STATIC_OUTPUT (Materialized View/Table)
+- CV_COMP_FIN_BUDGET_STATIC_OUTPUT (View/Materialized View)
 
-**Layer 6 — Snapshot / Physical Tables**
-- ETL snapshot tables: TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG
+### Layer 4 — Independent Processing
 
-**Dependencies**
-- Physical tables → ETL → Static tables → Composite views → Reporting view
+- STP_WSS_SRP_ATTRIBUTES_OUTPUT (Procedure/Script)
+- CV_BASE_MD_CEPCT_S4_OUTPUT (View)
+- CV_BASE_MD_HRRP_NODE_S4_Output (View)
 
-**Snapshot / Circular Dependencies**
-- ETL snapshot pattern (delete/insert) for store attributes and comparison flags must be preserved; do not convert to direct dependency
+### Layer 5 — Reporting / Output
+
+- CV_BASE_MD_RCAIWEEK_S4_Output (View)
+- CV_COMP_FIN_BUDGET_STATIC_OUTPUT (View/Materialized View)
+
+### Layer 6 — Snapshot / Physical Tables
+
+- TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG (refreshed by ETL)
+
+### Dependencies
+
+- ETL procedure populates static tables
+- Static tables feed composite views
+- Composite views and base master data feed final reporting views
+
+### Snapshot / Circular Dependencies
+
+- Controlled snapshot dependency: ETL procedure deletes/inserts static tables, which are then used by composite and reporting views. This must be preserved to avoid direct dependency and maintain snapshot isolation.
 
 ---
 
 # FINAL DECISION SUMMARY
 
-- **Should all 24 SQLs be consolidated into one query?** No, only specific groups with shared logic should be consolidated.
-- **Why should they not all be merged?** Unique business logic, reporting requirements, maintainability, performance, and cost considerations.
-- **Which SQLs should be consolidated?** Financial aggregation, ETL static table population.
-- **Which SQLs should only be partially consolidated?** Composite and reporting views using shared intermediate logic.
-- **Which should remain independent?** Master data views (cost element, HR hierarchy).
-- **What logic is duplicated?** ETL population, aggregation, joins to static tables.
-- **Which SQLs are duplicating that logic?** STP_WSS_SRP_ATTRIBUTES, composite views, reporting views.
-- **Can the duplicated logic actually be reused?** Yes, via materialized intermediate tables/views.
-- **What existing objects can already be reused?** TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG, aggregation views.
-- **What new reusable objects are justified?** None for analyzed files; materialize existing aggregation and ETL outputs.
-- **What object type should be used for each SQL: View, Materialized View, or Physical Table?** See object type recommendation table above.
-- **Why is that object type appropriate?** Based on transformation complexity, reuse, freshness, performance, cost, and dependency analysis.
-- **What redundancy can be removed?** Repeated ETL population, repeated aggregation, repeated joins.
-- **What performance and cost optimizations are possible?** Materialize intermediate results, centralize ETL, reuse static tables/views.
-- **What data freshness considerations apply?** Preserve ETL snapshot, schedule refresh for materialized views, use views for master data.
-- **What is the recommended dependency and execution flow?** Physical tables → ETL → Static tables → Composite views → Reporting view.
-- **What architecture maximizes reuse without changing business logic?** Materialize ETL and aggregation outputs, use views for reporting/master data, preserve snapshot patterns.
+- **Should all supplied SQLs be consolidated into one query?**
+  - No.
+- **If not, why should they not all be merged?**
+  - ETL logic, static data population, and reporting logic are distinct, with different refresh and processing requirements. Merging would increase complexity, reduce maintainability, and break snapshot isolation.
+- **Which SQLs should be consolidated?**
+  - Only composite static views sharing the same ETL/intermediate logic.
+- **Which SQLs should only be partially consolidated?**
+  - Composite views can share common intermediate tables but retain separate projections/aggregations.
+- **Which SQLs should remain independent?**
+  - ETL procedure, base master data views, final reporting view.
+- **What logic is duplicated?**
+  - Store attribute and comp flag projection/aggregation; MANDT filters.
+- **Which SQLs are duplicating that logic?**
+  - Reporting and composite views.
+- **Can the duplicated logic actually be reused?**
+  - Yes, via materialized static tables.
+- **What existing objects can already be reused?**
+  - TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG.
+- **What new reusable intermediate objects are required, if any?**
+  - None; existing static tables suffice.
+- **What object type should be used for each supplied SQL: View, Materialized View, or Physical Table?**
+  - See recommendations above; use Views for reporting/master data, Materialized Views/Tables for static/intermediate ETL outputs.
+- **Why is that object type appropriate?**
+  - Views for live/parameterized reporting, materialized for static/snapshot data.
+- **What redundancy can be removed?**
+  - Centralize static data processing, standardize filters, avoid repeated aggregations.
+- **What performance and cost optimizations are possible?**
+  - Materialize static tables, early filtering, avoid unnecessary repeated joins.
+- **What data freshness considerations apply?**
+  - Static tables require controlled ETL refresh; reporting views require validation.
+- **What is the recommended dependency and execution flow?**
+  - ETL → Static Table → Composite View → Reporting View.
+- **What architecture maximizes reuse without changing business logic?**
+  - Centralized ETL, materialized static tables, views for reporting, clear separation of concerns.
 
 ---
 
 ## GITHUB OUTPUT
 
-BigQuery Recommendations and Consolidation Analysis for 8 files.
+Uploading this recommendation to the specified GitHub repository.
