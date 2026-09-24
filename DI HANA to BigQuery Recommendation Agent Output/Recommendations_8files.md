@@ -1,4 +1,4 @@
-Summary: 
+**Summary:**
 - Merging CV_BASE_MD_CEPCT_S4, CV_BASE_MD_HRRP_NODE_S4, CV_COMP_MD_SRPACT_STATIC, and CV_COMP_MD_COMPFL_STATIC logic into CV_BASE_MD_RCAIWEEK_S4 as a Merged View will reduce query redundancy and improve reporting performance (see CV_BASE_MD_RCAIWEEK_S4_OUTPUT.txt, CV_BASE_MD_CEPCT_S4_OUTPUT.txt, CV_BASE_MD_HRRP_NODE_S4_Output.txt, CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt, CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt, File Relationships Table.md).
 - Materializing CV_BASE_FIN_WEEKLY_BUDGET_S4 as a Materialized View will accelerate aggregations reused in reporting (see CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt, File Relationships Table.md).
 - Retaining CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4, and CV_BASE_MD_HRRP_NODE_S4 as Standard Views maintains flexibility for master data that changes infrequently (see CV_BASE_MD_CEPCT_S4_OUTPUT.txt, CV_BASE_MD_HRRP_NODE_S4_Output.txt, CV_BASE_MD_RCAIWEEK_S4_Output.txt).
@@ -39,4 +39,3 @@ Summary:
 
 ---
 
-**GitHub Output Follows Below**
