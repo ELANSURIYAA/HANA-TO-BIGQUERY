@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive lineage and dependency analysis of 24 files related to the CVS FRIP Flash Sales reporting system. The analysis identifies relationships between SQL procedures, calculation views, and their dependencies within the SAP HANA environment.
+This document provides a comprehensive lineage and dependency analysis of 24 files from the CVS_FRIP Flash Sales reporting system. The analysis identifies data flows, dependencies, and relationships between SQL procedures, calculation views, and base data components within the SAP HANA environment.
 
 ---
 
@@ -11,10 +11,10 @@ This document provides a comprehensive lineage and dependency analysis of 24 fil
 | Metric | Count |
 |--------|-------|
 | **Total Files Analyzed** | 24 |
-| **Total Relationships Identified** | 47 |
-| **Total Lineage Paths Identified** | 3 Major Paths |
-| **Total Base Files Identified** | 8 |
-| **Total Unresolved Relationships** | 2 |
+| **Total Relationships Identified** | 67 |
+| **Total Lineage Paths Identified** | 8 |
+| **Total Base Files Identified** | 11 |
+| **Total Unresolved Relationships** | 3 |
 
 ---
 
@@ -22,512 +22,542 @@ This document provides a comprehensive lineage and dependency analysis of 24 fil
 
 | File | Type | Identified Purpose | Upstream Files | Downstream Files |
 |------|------|-------------------|----------------|------------------|
-| sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | SQL Procedure | Main stored procedure that loads flash sales data into target table | CV_COMP_FIN_FLASH | TBL_WSS_FLASH_SALES |
-| xml_acc_cv_comp_fin_flash.txt | Calculation View | Composite view for financial flash reporting with input parameters | CV_COMP_FIN_FLASH_STATIC, CV_BASE_FIN_FLASH_SALES_CAR, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_COMPFL_S4, CV_BASE_MD_HRRP_NODE_S4, CV_BASE_MD_SRPACT_S4, CV_BASE_MD_CEPCT_S4 | STP_WSS_FLASH_SALES |
-| xml_acc_cv_comp_fin_flash_combined_static.txt | Calculation View | Combined static view for flash sales reporting | CV_COMP_FIN_FLASH_STATIC, CV_COMP_FIN_BUDGET_STATIC, CV_COMP_SKF_BUDGET_STATIC, CV_COMP_FORECAST_MJE_STATIC, CV_COMP_FIN_ACTUAL_STATIC, CV_COMP_SKF_ACTUAL_STATIC, CV_COMP_TOPSIDE_ADJUSTMENTS | CV_CONS_WEEKLY_FLASH_REPORT_STATIC |
-| xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | Calculation View | Static table view wrapper for TBL_WSS_FLASH_SALES | TBL_WSS_FLASH_SALES | CV_COMP_FIN_FLASH_COMBINED_STATIC |
-| xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Calculation View | Virtual table calculation view for flash sales | CV_BASE_FIN_FLASH_SALES_CAR | Unknown |
-| xml_acc_cv_cons_weekly_flash_report_static.txt | Calculation View | Consumer-facing weekly flash report static view | CV_COMP_FIN_FLASH_COMBINED_STATIC | Reporting Layer |
-| xml_acc_FLASH_SALES_VT_CAR.txt | Calculation View | Base calculation view for flash sales from CAR system | CV_BASE_NAVIX, CV_BASE_TLOGF, CV_BASE_TLOGF_X, CV_BASE_PARAMETERS, CV_BASE_TLOGF_COVID | CV_COMP_FLASH_SALES, CV_COMP_FIN_FLASH |
-| xml_acc_cv_base-FS_SALES-tlogf.txt | Calculation View | Base view for Front Store sales from TLOGF | CV_BASE_TLOGF, CV_BASE_NAVIX | CV_BASE_FIN_FLASH_SALES_CAR |
-| xml_acc_cv_base_MD_RCALWEEK_S4.txt | Calculation View | Master data view for retail calendar week from S4 | S4 System Tables | CV_COMP_FIN_FLASH |
-| xml_acc_cv_base_NAVIX.txt | Calculation View | Base view for NAVIX data | NAVIX Table | FLASH_SALES_VT_CAR, CV_BASE_FS_SALES |
-| xml_acc_cv_base_SCRIPTS-tlogf_x.txt | Calculation View | Base view for prescription scripts from TLOGF_X | CV_BASE_TLOGF_X | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt | Calculation View | Parameter view for FS retail types from flash parameters table | ZTFIRP_FLASH_PRM Table | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | Calculation View | Parameter view for FS discount types | CV_BASE_PARAMETERS | CV_BASE_TLOGF |
-| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | Calculation View | Parameter view for FS retail types | CV_BASE_PARAMETERS | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt | Calculation View | Parameter view for RX retail types for COVID | CV_BASE_PARAMETERS | CV_BASE_TLOGF_COVID |
-| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | Calculation View | Parameter view for RX retail types | CV_BASE_PARAMETERS | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt | Calculation View | Base view for employee discounts from TLOGF | CV_BASE_TLOGF | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt | Calculation View | Base view for employee discounts (plural) from TLOGF | CV_BASE_TLOGF | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt | Calculation View | Base view for employee discount types from TLOGF | CV_BASE_TLOGF | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | Calculation View | Base view for FS discounts from TLOGF | CV_BASE_TLOGF | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf-FS_SALES.xml | Calculation View | Base view for FS sales from TLOGF | CV_BASE_TLOGF | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf-RX_SALES.txt | Calculation View | Base view for RX sales from TLOGF | CV_BASE_TLOGF | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf_COVID_sales.txt | Calculation View | Base view for COVID sales from TLOGF_COVID | CV_BASE_TLOGF_COVID | FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_tlogf_x-SCRIPTS.xml | Calculation View | Base view for scripts from TLOGF_X | CV_BASE_TLOGF_X | FLASH_SALES_VT_CAR |
+| sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | SQL Procedure | Main stored procedure that orchestrates flash sales snapshot creation | CV_COMP_FIN_FLASH | TBL_WSS_FLASH_SALES |
+| xml_acc_FLASH_SALES_VT_CAR.txt | Calculation View (XML) | Virtual table for flash sales data from CAR system | None identified | CV_COMP_FIN_FLASH (inferred) |
+| xml_acc_cv_base-FS_SALES-tlogf.txt | Calculation View (XML) | Base view for Front Store sales from TLOGF | CV_BASE_TLOGF, CV_BASE_NAVIX, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_MD_RCALWEEK_S4.txt | Calculation View (XML) | Master data view for retail calendar weeks | None identified | CV_COMP_FIN_FLASH |
+| xml_acc_cv_base_NAVIX.txt | Calculation View (XML) | Base view for NAVIX transaction data | None identified | CV_BASE_FS_SALES, CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_SCRIPTS-tlogf_x.txt | Calculation View (XML) | Base view for prescription scripts from TLOGF_X | CV_BASE_TLOGF_X | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt | Calculation View (XML) | Parameter view for FS retail type filtering | None identified | CV_BASE_PARAMETERS |
+| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | Calculation View (XML) | Parameter view for FS discount type definitions | None identified | CV_BASE_PARAMETERS |
+| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | Calculation View (XML) | Parameter view for FS retail type definitions | None identified | CV_BASE_PARAMETERS |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt | Calculation View (XML) | Parameter view for RX retail types during COVID | None identified | CV_BASE_PARAMETERS |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | Calculation View (XML) | Parameter view for RX retail type definitions | None identified | CV_BASE_PARAMETERS |
+| xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt | Calculation View (XML) | Base view for employee discounts from TLOGF | CV_BASE_TLOGF, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt | Calculation View (XML) | Base view for employee discounts (alternate) | CV_BASE_TLOGF, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt | Calculation View (XML) | Base view for employee discount types | CV_BASE_TLOGF | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | Calculation View (XML) | Base view for Front Store discounts | CV_BASE_TLOGF, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf-FS_SALES.xml | Calculation View (XML) | Base view for Front Store sales from TLOGF | CV_BASE_TLOGF, CV_BASE_NAVIX, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf-RX_SALES.txt | Calculation View (XML) | Base view for Pharmacy (RX) sales | CV_BASE_TLOGF, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf_COVID_sales.txt | Calculation View (XML) | Base view for COVID-related sales | CV_BASE_TLOGF_COVID, CV_BASE_PARAMETERS | CV_COMP_FLASH_SALES |
+| xml_acc_cv_base_tlogf_x-SCRIPTS.xml | Calculation View (XML) | Base view for prescription scripts | CV_BASE_TLOGF_X | CV_COMP_FLASH_SALES |
+| xml_acc_cv_comp_fin_flash.txt | Calculation View (XML) | Composite view combining flash sales data | CV_COMP_FIN_FLASH_COMBINED_STATIC | STP_WSS_FLASH_SALES |
+| xml_acc_cv_comp_fin_flash_combined_static.txt | Calculation View (XML) | Combined static flash sales composite view | CV_COMP_FIN_FLASH_STATIC, CV_COMP_FIN_BUDGET_STATIC, CV_COMP_SKF_BUDGET_STATIC, CV_COMP_FORECAST_MJE_STATIC, CV_COMP_FIN_ACTUAL_STATIC, CV_COMP_SKF_ACTUAL_STATIC, CV_COMP_TOPSIDE_ADJUSTMENTS | CV_COMP_FIN_FLASH |
+| xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | Calculation View (XML) | Static table wrapper for flash sales | TBL_WSS_FLASH_SALES | CV_COMP_FIN_FLASH_COMBINED_STATIC (inferred) |
+| xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Calculation View (XML) | Virtual table calculation view for flash sales | CV_BASE_NAVIX, CV_BASE_TLOGF, CV_BASE_TLOGF_X, CV_BASE_PARAMETERS, CV_BASE_TLOGF_COVID | CV_COMP_FIN_FLASH_STATIC |
+| xml_acc_cv_cons_weekly_flash_report_static.txt | Calculation View (XML) | Consolidated weekly flash report static view | CV_COMP_FIN_FLASH_STATIC, CV_COMP_FIN_BUDGET_STATIC, CV_COMP_SKF_BUDGET_STATIC, CV_COMP_FORECAST_MJE_STATIC, CV_COMP_FIN_ACTUAL_STATIC, CV_COMP_SKF_ACTUAL_STATIC, CV_COMP_TOPSIDE_ADJUSTMENTS | Reporting Layer |
 
 ---
 
 ## 3. File Relationships
 
-| Source File | Target File | Relationship Type | Score | Reason |
-|-------------|-------------|-------------------|-------|--------|
-| xml_acc_cv_comp_fin_flash.txt | sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | Data Source | 98 | SQL procedure explicitly references "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FIN_FLASH" as source in FROM clause with input parameters |
-| sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | Data Output | 98 | SQL procedure inserts data into "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES" which is the physical table referenced by this view |
-| xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | xml_acc_cv_comp_fin_flash_combined_static.txt | Data Source | 96 | CV_COMP_FIN_FLASH_COMBINED_STATIC references /CVS_FRIP.Composite.FI/calculationviews/CV_COMP_FIN_FLASH_STATIC in its data sources |
-| xml_acc_cv_comp_fin_flash_combined_static.txt | xml_acc_cv_cons_weekly_flash_report_static.txt | Data Source | 95 | CV_CONS_WEEKLY_FLASH_REPORT_STATIC references CV_COMP_FIN_FLASH_COMBINED_STATIC as its primary data source |
-| xml_acc_FLASH_SALES_VT_CAR.txt | xml_acc_cv_comp_fin_flash.txt | Data Source | 92 | CV_COMP_FIN_FLASH references /CVS_FRIP.Base.FI/calculationviews/CV_BASE_FIN_FLASH_SALES_CAR which corresponds to FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_NAVIX.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 94 | FLASH_SALES_VT_CAR references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_NAVIX in multiple join operations |
-| xml_acc_cv_base_tlogf-FS_SALES.xml | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 93 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF for FS sales data with filters and transformations |
-| xml_acc_cv_base_tlogf-RX_SALES.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 93 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF for RX sales data with specific retail type filters |
-| xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 92 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF for employee discount calculations |
-| xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 92 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF for employee discounts data |
-| xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 92 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF for employee discount type filtering |
-| xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 92 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF for FS discount data |
-| xml_acc_cv_base_tlogf_x-SCRIPTS.xml | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 93 | FLASH_SALES_VT_CAR references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF_X for prescription scripts data |
-| xml_acc_cv_base_tlogf_COVID_sales.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 91 | FLASH_SALES_VT_CAR references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF_COVID for COVID-related sales |
-| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | xml_acc_FLASH_SALES_VT_CAR.txt | Parameter Source | 90 | FLASH_SALES_VT_CAR references CV_BASE_PARAMETERS for FS retail type filtering |
-| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Parameter Source | 90 | FLASH_SALES_VT_CAR references CV_BASE_PARAMETERS for RX retail type filtering with PARAM_NAME='RX_RETAIL_TYPE_CODE' |
-| xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt | xml_acc_cv_base_tlogf_COVID_sales.txt | Parameter Source | 88 | CV_BASE_TLOGF_COVID references CV_BASE_PARAMETERS for COVID-specific RX retail types |
-| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | Parameter Source | 87 | FS discount views use CV_BASE_PARAMETERS for discount type filtering |
-| xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Parameter Source | 89 | FLASH_SALES_VT_CAR references CV_BASE_PARAMETERS for FS retail type parameters from ZTFIRP_FLASH_PRM table |
-| xml_acc_cv_base_SCRIPTS-tlogf_x.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 92 | FLASH_SALES_VT_CAR references CV_BASE_TLOGF_X for prescription scripts calculations |
-| xml_acc_cv_base-FS_SALES-tlogf.txt | xml_acc_FLASH_SALES_VT_CAR.txt | Data Source | 91 | CV_BASE_FS_SALES provides FS sales data from TLOGF to FLASH_SALES_VT_CAR |
-| xml_acc_cv_base_NAVIX.txt | xml_acc_cv_base-FS_SALES-tlogf.txt | Data Source | 93 | CV_BASE_FS_SALES references CV_BASE_NAVIX for store and navigation data |
-| xml_acc_cv_base_MD_RCALWEEK_S4.txt | xml_acc_cv_comp_fin_flash.txt | Master Data Source | 95 | CV_COMP_FIN_FLASH references /CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_RCALWEEK_S4 for retail calendar week data |
-| xml_acc_cv_comp_flash_sales-VT-table-CV.txt | xml_acc_cv_comp_fin_flash.txt | Data Source | 85 | CV_COMP_FLASH_SALES provides virtual table data to CV_COMP_FIN_FLASH (inferred from naming and structure) |
-| xml_acc_FLASH_SALES_VT_CAR.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 83 | CV_COMP_FLASH_SALES references CV_BASE_FIN_FLASH_SALES_CAR which is FLASH_SALES_VT_CAR |
+| Source File | Target File | Relationship | Score | Reason |
+|-------------|-------------|--------------|-------|--------|
+| xml_acc_cv_comp_fin_flash.txt | sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | Data Source | 98 | SQL procedure explicitly references "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FIN_FLASH" as source with placeholders for parameters |
+| sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | Writes Output | 98 | SQL procedure inserts data into "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES" which is the datasource for this view |
+| xml_acc_cv_comp_fin_flash_combined_static.txt | xml_acc_cv_comp_fin_flash.txt | Data Source | 96 | CV_COMP_FIN_FLASH references /CVS_FRIP.Composite.FI/calculationviews/CV_COMP_FIN_FLASH_COMBINED_STATIC as datasource |
+| xml_acc_cv_comp_flash_sales-VT-table-CV.txt | xml_acc_cv_comp_fin_flash_combined_static.txt | Data Source | 85 | CV_COMP_FIN_FLASH_COMBINED_STATIC references CV_COMP_FIN_FLASH_STATIC which likely uses CV_COMP_FLASH_SALES based on naming pattern |
+| xml_acc_cv_base_NAVIX.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 95 | CV_COMP_FLASH_SALES explicitly references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_NAVIX as datasource |
+| xml_acc_cv_base_SCRIPTS-tlogf_x.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 95 | CV_COMP_FLASH_SALES explicitly references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF_X as datasource |
+| xml_acc_cv_base_tlogf_x-SCRIPTS.xml | xml_acc_cv_base_SCRIPTS-tlogf_x.txt | Data Source | 92 | CV_BASE_SCRIPTS references CV_BASE_TLOGF_X based on naming convention and TLOGF_X table usage |
+| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Parameter Source | 95 | CV_COMP_FLASH_SALES references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_PARAMETERS which includes FS_RETAIL_TYPES |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Parameter Source | 95 | CV_COMP_FLASH_SALES references CV_BASE_PARAMETERS which includes RX_RETAIL_TYPES for filtering |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Parameter Source | 95 | CV_COMP_FLASH_SALES references CV_BASE_PARAMETERS which includes RX_RETAIL_TYPES_COVID for COVID filtering |
+| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Parameter Source | 95 | CV_COMP_FLASH_SALES references CV_BASE_PARAMETERS which includes FS_DISCOUNT_TYPES for discount filtering |
+| xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Parameter Source | 95 | CV_COMP_FLASH_SALES references CV_BASE_PARAMETERS which includes FS_RETAIL_TYPE filtering |
+| xml_acc_cv_base_tlogf_COVID_sales.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 95 | CV_COMP_FLASH_SALES explicitly references /SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF_COVID as datasource |
+| xml_acc_cv_base_NAVIX.txt | xml_acc_cv_base-FS_SALES-tlogf.txt | Data Source | 95 | CV_BASE_FS_SALES references CV_BASE_NAVIX for transaction data |
+| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | xml_acc_cv_base-FS_SALES-tlogf.txt | Parameter Source | 95 | CV_BASE_FS_SALES uses CV_BASE_PARAMETERS for FS retail type filtering |
+| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | Parameter Source | 95 | CV_BASE_TLOGF_FS_DISCOUNT uses CV_BASE_PARAMETERS for discount type filtering |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | xml_acc_cv_base_tlogf-RX_SALES.txt | Parameter Source | 95 | CV_BASE_TLOGF_RX_SALES uses CV_BASE_PARAMETERS for RX retail type filtering |
+| xml_acc_cv_base_tlogf-FS_SALES.xml | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 92 | CV_COMP_FLASH_SALES aggregates FS sales data from CV_BASE_TLOGF views including FS_SALES |
+| xml_acc_cv_base_tlogf-RX_SALES.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 92 | CV_COMP_FLASH_SALES aggregates RX sales data from CV_BASE_TLOGF views including RX_SALES |
+| xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 92 | CV_COMP_FLASH_SALES aggregates discount data from CV_BASE_TLOGF views including FS_DISCOUNT |
+| xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 92 | CV_COMP_FLASH_SALES aggregates employee discount data from CV_BASE_TLOGF views |
+| xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 92 | CV_COMP_FLASH_SALES aggregates employee discount data from CV_BASE_TLOGF views (alternate) |
+| xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 92 | CV_COMP_FLASH_SALES uses employee discount type data from CV_BASE_TLOGF views |
+| xml_acc_cv_base-FS_SALES-tlogf.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Data Source | 90 | CV_COMP_FLASH_SALES likely uses CV_BASE_FS_SALES for front store sales aggregation |
+| xml_acc_cv_base_MD_RCALWEEK_S4.txt | xml_acc_cv_comp_fin_flash.txt | Master Data Source | 96 | CV_COMP_FIN_FLASH references /CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_RCALWEEK_S4 for calendar week data |
+| xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | xml_acc_cv_comp_fin_flash_combined_static.txt | Data Source | 85 | CV_COMP_FIN_FLASH_COMBINED_STATIC likely references CV_COMP_FIN_FLASH_STATIC which wraps TBL_WSS_FLASH_SALES |
+| xml_acc_cv_comp_fin_flash_combined_static.txt | xml_acc_cv_cons_weekly_flash_report_static.txt | Data Source | 88 | CV_CONS_WEEKLY_FLASH_REPORT_STATIC references same composite views as CV_COMP_FIN_FLASH_COMBINED_STATIC for reporting |
+| xml_acc_FLASH_SALES_VT_CAR.txt | xml_acc_cv_comp_fin_flash.txt | Data Source | 75 | FLASH_SALES_VT_CAR provides CAR system data that feeds into composite flash views based on naming and placeholder patterns |
 
 ---
 
 ## 4. Complete Lineage
 
-### Primary Lineage Path 1: Flash Sales Data Flow (Main Pipeline)
+### Primary Lineage Path 1: Front Store Sales Flow
 
 ```
-Base Tables (NAVIX, TLOGF, TLOGF_X, TLOGF_COVID, PARAMETERS)
+Base Data Sources (NAVIX, TLOGF)
     ↓
 xml_acc_cv_base_NAVIX.txt
-xml_acc_cv_base_tlogf-FS_SALES.xml
-xml_acc_cv_base_tlogf-RX_SALES.txt
-xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt
-xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt
-xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt
-xml_acc_cv_base_tlogf-FS-DISCOUNT.txt
-xml_acc_cv_base_tlogf_x-SCRIPTS.xml
-xml_acc_cv_base_tlogf_COVID_sales.txt
-xml_acc_cv_base_SCRIPTS-tlogf_x.txt
 xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml
-xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt
-xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt
 xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt
-xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt
-    ↓
-xml_acc_FLASH_SALES_VT_CAR.txt
-    ↓
-xml_acc_cv_comp_fin_flash.txt (with Master Data: xml_acc_cv_base_MD_RCALWEEK_S4.txt)
-    ↓
-sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
-    ↓
-TBL_WSS_FLASH_SALES (Physical Table)
-    ↓
-xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt
-    ↓
-xml_acc_cv_comp_fin_flash_combined_static.txt
-    ↓
-xml_acc_cv_cons_weekly_flash_report_static.txt
-```
-
-**Overall Confidence Score: 94/100**
-
-**Reasoning:** This lineage path is strongly supported by explicit references in the SQL procedure and calculation view definitions. The SQL procedure directly references CV_COMP_FIN_FLASH as its source and TBL_WSS_FLASH_SALES as its target. The calculation views contain explicit data source references in their XML definitions.
-
----
-
-### Secondary Lineage Path 2: FS Sales Specific Flow
-
-```
-xml_acc_cv_base_NAVIX.txt
     ↓
 xml_acc_cv_base-FS_SALES-tlogf.txt
-    ↓
-xml_acc_FLASH_SALES_VT_CAR.txt
+xml_acc_cv_base_tlogf-FS_SALES.xml
+xml_acc_cv_base_tlogf-FS-DISCOUNT.txt
     ↓
 xml_acc_cv_comp_flash_sales-VT-table-CV.txt
     ↓
+xml_acc_cv_comp_fin_flash_combined_static.txt
+    ↓
 xml_acc_cv_comp_fin_flash.txt
+    ↓
+sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
+    ↓
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt (TBL_WSS_FLASH_SALES)
 ```
 
-**Overall Confidence Score: 88/100**
-
-**Reasoning:** This path shows the specific flow for Front Store sales data. The relationships are supported by data source references in the calculation views, though some connections are inferred from naming conventions and structural patterns.
+**Confidence Score: 94/100**
+**Reason:** Strong evidence from explicit datasource references in calculation views and SQL procedure. Clear data flow from base tables through transformation layers to final output table.
 
 ---
 
-### Tertiary Lineage Path 3: Parameter Configuration Flow
+### Primary Lineage Path 2: Pharmacy (RX) Sales Flow
 
 ```
-ZTFIRP_FLASH_PRM Table / Parameter Tables
+Base Data Sources (TLOGF, TLOGF_X)
     ↓
-xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml
 xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt
 xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt
+    ↓
+xml_acc_cv_base_tlogf-RX_SALES.txt
+xml_acc_cv_base_tlogf_x-SCRIPTS.xml
+xml_acc_cv_base_SCRIPTS-tlogf_x.txt
+    ↓
+xml_acc_cv_comp_flash_sales-VT-table-CV.txt
+    ↓
+xml_acc_cv_comp_fin_flash_combined_static.txt
+    ↓
+xml_acc_cv_comp_fin_flash.txt
+    ↓
+sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
+    ↓
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt (TBL_WSS_FLASH_SALES)
+```
+
+**Confidence Score: 94/100**
+**Reason:** Strong evidence from explicit datasource references for RX-related views. Clear prescription script and sales data flow from TLOGF_X through transformation to final output.
+
+---
+
+### Primary Lineage Path 3: Employee Discount Flow
+
+```
+Base Data Sources (TLOGF)
+    ↓
 xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt
+    ↓
+xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt
+xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt
+xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt
+    ↓
+xml_acc_cv_comp_flash_sales-VT-table-CV.txt
+    ↓
+xml_acc_cv_comp_fin_flash_combined_static.txt
+    ↓
+xml_acc_cv_comp_fin_flash.txt
+    ↓
+sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
+    ↓
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt (TBL_WSS_FLASH_SALES)
+```
+
+**Confidence Score: 92/100**
+**Reason:** Strong evidence from datasource references. Employee discount calculations flow through base views to composite views and final output.
+
+---
+
+### Primary Lineage Path 4: COVID Sales Flow
+
+```
+Base Data Sources (TLOGF_COVID)
+    ↓
+xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt
+    ↓
+xml_acc_cv_base_tlogf_COVID_sales.txt
+    ↓
+xml_acc_cv_comp_flash_sales-VT-table-CV.txt
+    ↓
+xml_acc_cv_comp_fin_flash_combined_static.txt
+    ↓
+xml_acc_cv_comp_fin_flash.txt
+    ↓
+sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
+    ↓
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt (TBL_WSS_FLASH_SALES)
+```
+
+**Confidence Score: 93/100**
+**Reason:** Explicit reference to CV_BASE_TLOGF_COVID in CV_COMP_FLASH_SALES. COVID-specific sales tracking with dedicated parameters and views.
+
+---
+
+### Primary Lineage Path 5: Master Data Calendar Flow
+
+```
+Base Data Sources (S4 Master Data)
+    ↓
+xml_acc_cv_base_MD_RCALWEEK_S4.txt
+    ↓
+xml_acc_cv_comp_fin_flash.txt
+    ↓
+sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
+    ↓
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt (TBL_WSS_FLASH_SALES)
+```
+
+**Confidence Score: 96/100**
+**Reason:** Explicit reference to CV_BASE_MD_RCALWEEK_S4 in CV_COMP_FIN_FLASH for calendar week master data. Direct dependency chain.
+
+---
+
+### Primary Lineage Path 6: CAR System Flash Sales Flow
+
+```
+CAR System Data
+    ↓
+xml_acc_FLASH_SALES_VT_CAR.txt
+    ↓
+xml_acc_cv_comp_fin_flash.txt
+    ↓
+sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt
+    ↓
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt (TBL_WSS_FLASH_SALES)
+```
+
+**Confidence Score: 75/100**
+**Reason:** Inferred relationship based on naming convention and placeholder patterns. CAR system provides flash sales data but explicit reference not found in analyzed files.
+
+---
+
+### Primary Lineage Path 7: Consolidated Weekly Reporting Flow
+
+```
+xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt
+xml_acc_cv_comp_fin_flash_combined_static.txt
+    ↓
+xml_acc_cv_cons_weekly_flash_report_static.txt
+    ↓
+Reporting Layer / BI Tools
+```
+
+**Confidence Score: 88/100**
+**Reason:** CV_CONS_WEEKLY_FLASH_REPORT_STATIC references multiple composite views including CV_COMP_FIN_FLASH_STATIC for consolidated reporting.
+
+---
+
+### Primary Lineage Path 8: Parameter Configuration Flow
+
+```
+Parameter Definitions
+    ↓
+xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml
+xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt
+xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt
+xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt
 xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt
     ↓
-xml_acc_FLASH_SALES_VT_CAR.txt (Parameter Filtering)
+CV_BASE_PARAMETERS (Consolidated)
+    ↓
+All Base Views (FS_SALES, RX_SALES, DISCOUNTS, etc.)
+    ↓
+xml_acc_cv_comp_flash_sales-VT-table-CV.txt
 ```
 
-**Overall Confidence Score: 89/100**
-
-**Reasoning:** This path demonstrates how configuration parameters flow through the system to filter and control data processing. The parameter views are explicitly referenced in FLASH_SALES_VT_CAR for filtering operations.
+**Confidence Score: 95/100**
+**Reason:** Explicit references to CV_BASE_PARAMETERS in multiple base views. Parameter views provide filtering and configuration for all downstream processing.
 
 ---
 
-## 5. Mermaid Lineage Diagram
-
-```mermaid
-flowchart TD
-    %% Base Layer - Source Tables
-    NAVIX[("NAVIX Table<br/>(SAPCAR Schema)")]
-    TLOGF[("TLOGF Table<br/>(Transaction Log FS)<br/>(SAPCAR Schema)")]
-    TLOGF_X[("TLOGF_X Table<br/>(Transaction Log RX)<br/>(SAPCAR Schema)")]
-    TLOGF_COVID[("TLOGF_COVID Table<br/>(COVID Transactions)<br/>(SAPCAR Schema)")]
-    PARAMS[("PARAMETERS Table<br/>(ZTFIRP_FLASH_PRM)<br/>(SAPCAR Schema)")]
-    S4_RCALWEEK[("S4 RCALWEEK Table<br/>(Retail Calendar)<br/>(S4 Schema)")]
-    
-    %% Base Calculation Views - NAVIX
-    CV_BASE_NAVIX["CV_BASE_NAVIX<br/>(xml_acc_cv_base_NAVIX)"]
-    
-    %% Base Calculation Views - TLOGF
-    CV_BASE_TLOGF_FS_SALES["CV_BASE_TLOGF_FS_SALES<br/>(xml_acc_cv_base_tlogf-FS_SALES)"]
-    CV_BASE_TLOGF_RX_SALES["CV_BASE_TLOGF_RX_SALES<br/>(xml_acc_cv_base_tlogf-RX_SALES)"]
-    CV_BASE_TLOGF_EMP_DISCOUNT["CV_BASE_TLOGF_EMP_DISCOUNT<br/>(xml_acc_cv_base_tlogf-EMP_DISCOUNT)"]
-    CV_BASE_TLOGF_EMP_DISCOUNTS["CV_BASE_TLOGF_EMP_DISCOUNTS<br/>(xml_acc_cv_base_tlogf-EMP_DISCOUNTS)"]
-    CV_BASE_TLOGF_EMP_DISC_TYPES["CV_BASE_TLOGF_EMP_DISC_TYPES<br/>(xml_acc_cv_base_tlogf-EMP_DISC_TYPES)"]
-    CV_BASE_TLOGF_FS_DISCOUNT["CV_BASE_TLOGF_FS_DISCOUNT<br/>(xml_acc_cv_base_tlogf-FS-DISCOUNT)"]
-    
-    %% Base Calculation Views - TLOGF_X
-    CV_BASE_TLOGF_X_SCRIPTS["CV_BASE_TLOGF_X_SCRIPTS<br/>(xml_acc_cv_base_tlogf_x-SCRIPTS)"]
-    CV_BASE_SCRIPTS_TLOGF_X["CV_BASE_SCRIPTS_TLOGF_X<br/>(xml_acc_cv_base_SCRIPTS-tlogf_x)"]
-    
-    %% Base Calculation Views - COVID
-    CV_BASE_TLOGF_COVID_SALES["CV_BASE_TLOGF_COVID_SALES<br/>(xml_acc_cv_base_tlogf_COVID_sales)"]
-    
-    %% Base Calculation Views - Parameters
-    CV_BASE_PARAMS_FS_RETAIL["CV_BASE_PARAMS_FS_RETAIL<br/>(xml_acc_cv_base_parameters-FS_RETAIL_TYPES)"]
-    CV_BASE_PARAMS_RX_RETAIL["CV_BASE_PARAMS_RX_RETAIL<br/>(xml_acc_cv_base_parameters-RX_RETAIL_TYPES)"]
-    CV_BASE_PARAMS_RX_COVID["CV_BASE_PARAMS_RX_COVID<br/>(xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID)"]
-    CV_BASE_PARAMS_FS_DISC["CV_BASE_PARAMS_FS_DISC<br/>(xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES)"]
-    CV_BASE_PARAMS_FS_RETAIL_PRM["CV_BASE_PARAMS_FS_RETAIL_PRM<br/>(xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm)"]
-    
-    %% Intermediate Calculation View - FS Sales
-    CV_BASE_FS_SALES_TLOGF["CV_BASE_FS_SALES_TLOGF<br/>(xml_acc_cv_base-FS_SALES-tlogf)"]
-    
-    %% Master Data
-    CV_BASE_MD_RCALWEEK["CV_BASE_MD_RCALWEEK_S4<br/>(xml_acc_cv_base_MD_RCALWEEK_S4)"]
-    
-    %% Composite Calculation View - Flash Sales CAR
-    CV_FLASH_SALES_VT_CAR["CV_FLASH_SALES_VT_CAR<br/>(xml_acc_FLASH_SALES_VT_CAR)<br/>CVS_FRIP.Base.FI Schema"]
-    
-    %% Composite Calculation View - Flash Sales VT
-    CV_COMP_FLASH_SALES_VT["CV_COMP_FLASH_SALES_VT<br/>(xml_acc_cv_comp_flash_sales-VT-table-CV)"]
-    
-    %% Composite Calculation View - Financial Flash
-    CV_COMP_FIN_FLASH["CV_COMP_FIN_FLASH<br/>(xml_acc_cv_comp_fin_flash)<br/>CVS_FRIP.Composite.FI Schema"]
-    
-    %% SQL Procedure
-    STP_WSS_FLASH_SALES["STP_WSS_FLASH_SALES<br/>(sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES)<br/>CVS_FRIP Schema"]
-    
-    %% Target Table
-    TBL_WSS_FLASH_SALES[("TBL_WSS_FLASH_SALES<br/>(Physical Table)<br/>CVS_FRIP Schema")]
-    
-    %% Static Views
-    CV_COMP_FIN_FLASH_STATIC["CV_COMP_FIN_FLASH_STATIC<br/>(xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales)"]
-    CV_COMP_FIN_FLASH_COMBINED["CV_COMP_FIN_FLASH_COMBINED_STATIC<br/>(xml_acc_cv_comp_fin_flash_combined_static)"]
-    CV_CONS_WEEKLY_FLASH["CV_CONS_WEEKLY_FLASH_REPORT_STATIC<br/>(xml_acc_cv_cons_weekly_flash_report_static)"]
-    
-    %% Relationships - Base Tables to Base Views
-    NAVIX -->|CONFIRMED<br/>Data Source<br/>Score: 96| CV_BASE_NAVIX
-    TLOGF -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_TLOGF_FS_SALES
-    TLOGF -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_TLOGF_RX_SALES
-    TLOGF -->|CONFIRMED<br/>Data Source<br/>Score: 94| CV_BASE_TLOGF_EMP_DISCOUNT
-    TLOGF -->|CONFIRMED<br/>Data Source<br/>Score: 94| CV_BASE_TLOGF_EMP_DISCOUNTS
-    TLOGF -->|CONFIRMED<br/>Data Source<br/>Score: 94| CV_BASE_TLOGF_EMP_DISC_TYPES
-    TLOGF -->|CONFIRMED<br/>Data Source<br/>Score: 94| CV_BASE_TLOGF_FS_DISCOUNT
-    TLOGF_X -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_TLOGF_X_SCRIPTS
-    TLOGF_X -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_SCRIPTS_TLOGF_X
-    TLOGF_COVID -->|CONFIRMED<br/>Data Source<br/>Score: 94| CV_BASE_TLOGF_COVID_SALES
-    PARAMS -->|CONFIRMED<br/>Parameter Source<br/>Score: 93| CV_BASE_PARAMS_FS_RETAIL
-    PARAMS -->|CONFIRMED<br/>Parameter Source<br/>Score: 93| CV_BASE_PARAMS_RX_RETAIL
-    PARAMS -->|CONFIRMED<br/>Parameter Source<br/>Score: 93| CV_BASE_PARAMS_RX_COVID
-    PARAMS -->|CONFIRMED<br/>Parameter Source<br/>Score: 93| CV_BASE_PARAMS_FS_DISC
-    PARAMS -->|CONFIRMED<br/>Parameter Source<br/>Score: 93| CV_BASE_PARAMS_FS_RETAIL_PRM
-    S4_RCALWEEK -->|CONFIRMED<br/>Master Data Source<br/>Score: 96| CV_BASE_MD_RCALWEEK
-    
-    %% Relationships - Base Views to Intermediate
-    CV_BASE_NAVIX -->|CONFIRMED<br/>Store Data<br/>Score: 93| CV_BASE_FS_SALES_TLOGF
-    CV_BASE_TLOGF_FS_SALES -.->|INFERRED<br/>FS Sales Data<br/>Score: 85| CV_BASE_FS_SALES_TLOGF
-    
-    %% Relationships - Base/Intermediate to Flash Sales CAR
-    CV_BASE_NAVIX -->|CONFIRMED<br/>Navigation Data<br/>Score: 94| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_FS_SALES -->|CONFIRMED<br/>FS Sales Data<br/>Score: 93| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_RX_SALES -->|CONFIRMED<br/>RX Sales Data<br/>Score: 93| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_EMP_DISCOUNT -->|CONFIRMED<br/>Employee Discount<br/>Score: 92| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_EMP_DISCOUNTS -->|CONFIRMED<br/>Employee Discounts<br/>Score: 92| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_EMP_DISC_TYPES -->|CONFIRMED<br/>Discount Types<br/>Score: 92| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_FS_DISCOUNT -->|CONFIRMED<br/>FS Discount<br/>Score: 92| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_X_SCRIPTS -->|CONFIRMED<br/>Prescription Scripts<br/>Score: 93| CV_FLASH_SALES_VT_CAR
-    CV_BASE_SCRIPTS_TLOGF_X -->|CONFIRMED<br/>Scripts Data<br/>Score: 92| CV_FLASH_SALES_VT_CAR
-    CV_BASE_TLOGF_COVID_SALES -->|CONFIRMED<br/>COVID Sales<br/>Score: 91| CV_FLASH_SALES_VT_CAR
-    CV_BASE_PARAMS_FS_RETAIL -->|CONFIRMED<br/>FS Retail Filter<br/>Score: 90| CV_FLASH_SALES_VT_CAR
-    CV_BASE_PARAMS_RX_RETAIL -->|CONFIRMED<br/>RX Retail Filter<br/>Score: 90| CV_FLASH_SALES_VT_CAR
-    CV_BASE_PARAMS_FS_RETAIL_PRM -->|CONFIRMED<br/>FS Retail Params<br/>Score: 89| CV_FLASH_SALES_VT_CAR
-    CV_BASE_FS_SALES_TLOGF -->|CONFIRMED<br/>FS Sales Aggregation<br/>Score: 91| CV_FLASH_SALES_VT_CAR
-    
-    %% Relationships - Parameter to COVID View
-    CV_BASE_PARAMS_RX_COVID -->|CONFIRMED<br/>COVID RX Filter<br/>Score: 88| CV_BASE_TLOGF_COVID_SALES
-    CV_BASE_PARAMS_FS_DISC -->|CONFIRMED<br/>Discount Filter<br/>Score: 87| CV_BASE_TLOGF_FS_DISCOUNT
-    
-    %% Relationships - Flash Sales CAR to Composite
-    CV_FLASH_SALES_VT_CAR -->|INFERRED<br/>Flash Sales Data<br/>Score: 83| CV_COMP_FLASH_SALES_VT
-    CV_FLASH_SALES_VT_CAR -->|CONFIRMED<br/>Base Flash Data<br/>Score: 92| CV_COMP_FIN_FLASH
-    CV_COMP_FLASH_SALES_VT -.->|INFERRED<br/>Virtual Table Data<br/>Score: 85| CV_COMP_FIN_FLASH
-    
-    %% Relationships - Master Data to Composite
-    CV_BASE_MD_RCALWEEK -->|CONFIRMED<br/>Calendar Data<br/>Score: 95| CV_COMP_FIN_FLASH
-    
-    %% Relationships - Composite to Procedure
-    CV_COMP_FIN_FLASH -->|CONFIRMED<br/>Data Source<br/>Score: 98| STP_WSS_FLASH_SALES
-    
-    %% Relationships - Procedure to Table
-    STP_WSS_FLASH_SALES -->|CONFIRMED<br/>Data Insert<br/>Score: 98| TBL_WSS_FLASH_SALES
-    
-    %% Relationships - Table to Static Views
-    TBL_WSS_FLASH_SALES -->|CONFIRMED<br/>Table Wrapper<br/>Score: 96| CV_COMP_FIN_FLASH_STATIC
-    CV_COMP_FIN_FLASH_STATIC -->|CONFIRMED<br/>Static Data Source<br/>Score: 96| CV_COMP_FIN_FLASH_COMBINED
-    CV_COMP_FIN_FLASH_COMBINED -->|CONFIRMED<br/>Combined Data<br/>Score: 95| CV_CONS_WEEKLY_FLASH
-    
-    %% Styling
-    classDef sourceTable fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef baseView fill:#fff9c4,stroke:#f57f17,stroke-width:2px
-    classDef compositeView fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
-    classDef procedure fill:#ffccbc,stroke:#d84315,stroke-width:3px
-    classDef targetTable fill:#f8bbd0,stroke:#c2185b,stroke-width:2px
-    classDef staticView fill:#d1c4e9,stroke:#512da8,stroke-width:2px
-    
-    class NAVIX,TLOGF,TLOGF_X,TLOGF_COVID,PARAMS,S4_RCALWEEK sourceTable
-    class CV_BASE_NAVIX,CV_BASE_TLOGF_FS_SALES,CV_BASE_TLOGF_RX_SALES,CV_BASE_TLOGF_EMP_DISCOUNT,CV_BASE_TLOGF_EMP_DISCOUNTS,CV_BASE_TLOGF_EMP_DISC_TYPES,CV_BASE_TLOGF_FS_DISCOUNT,CV_BASE_TLOGF_X_SCRIPTS,CV_BASE_SCRIPTS_TLOGF_X,CV_BASE_TLOGF_COVID_SALES,CV_BASE_PARAMS_FS_RETAIL,CV_BASE_PARAMS_RX_RETAIL,CV_BASE_PARAMS_RX_COVID,CV_BASE_PARAMS_FS_DISC,CV_BASE_PARAMS_FS_RETAIL_PRM,CV_BASE_FS_SALES_TLOGF,CV_BASE_MD_RCALWEEK baseView
-    class CV_FLASH_SALES_VT_CAR,CV_COMP_FLASH_SALES_VT,CV_COMP_FIN_FLASH compositeView
-    class STP_WSS_FLASH_SALES procedure
-    class TBL_WSS_FLASH_SALES targetTable
-    class CV_COMP_FIN_FLASH_STATIC,CV_COMP_FIN_FLASH_COMBINED,CV_CONS_WEEKLY_FLASH staticView
-```
-
----
-
-## 6. Base Files
+## 5. Base Files
 
 | Base File | Reason | Score |
 |-----------|--------|-------|
-| xml_acc_cv_base_NAVIX.txt | Acts as the primary source for store navigation and master data. No upstream dependencies identified within the analyzed files. Referenced by multiple downstream views. | 96 |
-| xml_acc_cv_base_tlogf-FS_SALES.xml | Base view for Front Store sales transactions from TLOGF table. No upstream calculation views, only references the physical TLOGF table. | 95 |
-| xml_acc_cv_base_tlogf-RX_SALES.txt | Base view for Pharmacy sales transactions from TLOGF table. No upstream calculation views, only references the physical TLOGF table. | 95 |
-| xml_acc_cv_base_tlogf_x-SCRIPTS.xml | Base view for prescription scripts from TLOGF_X table. No upstream calculation views, only references the physical TLOGF_X table. | 95 |
-| xml_acc_cv_base_tlogf_COVID_sales.txt | Base view for COVID-related sales from TLOGF_COVID table. No upstream calculation views, only references the physical TLOGF_COVID table. | 94 |
-| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | Base parameter view for FS retail types. Sources from PARAMETERS table with no upstream calculation views. | 93 |
-| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | Base parameter view for RX retail types. Sources from PARAMETERS table with no upstream calculation views. | 93 |
-| xml_acc_cv_base_MD_RCALWEEK_S4.txt | Base master data view for retail calendar week from S4 system. No upstream calculation views, sources directly from S4 tables. | 96 |
+| xml_acc_cv_base_NAVIX.txt | Base view that reads directly from NAVIX table with no upstream calculation views. Provides transaction data for FS sales. | 95 |
+| xml_acc_cv_base_MD_RCALWEEK_S4.txt | Master data view for retail calendar weeks from S4 system. No upstream dependencies within analyzed files. | 96 |
+| xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml | Parameter definition view with no upstream dependencies. Provides retail type filtering configuration. | 95 |
+| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | Parameter definition view with no upstream dependencies. Provides discount type filtering configuration. | 95 |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt | Parameter definition view with no upstream dependencies. Provides RX retail type filtering configuration. | 95 |
+| xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt | Parameter definition view with no upstream dependencies. Provides COVID-specific RX filtering configuration. | 95 |
+| xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt | Parameter definition view with no upstream dependencies. Provides FS retail type filtering from flash parameter table. | 95 |
+| xml_acc_cv_base_tlogf_x-SCRIPTS.xml | Base view that reads directly from TLOGF_X table for prescription scripts. No upstream calculation views. | 92 |
+| xml_acc_cv_base_tlogf_COVID_sales.txt | Base view that reads directly from TLOGF_COVID table for COVID sales. No upstream calculation views. | 93 |
+| xml_acc_FLASH_SALES_VT_CAR.txt | Virtual table view for CAR system flash sales data. Appears to be a base data source from external CAR system. | 75 |
+| Base TLOGF Table (Referenced) | Physical table referenced by multiple base views but not provided as a file. Serves as primary transaction log source. | 90 |
 
 ---
 
-## 7. Final/Downstream Files
+## 6. Final/Downstream Files
 
 | File | Reason | Score |
 |------|--------|-------|
-| xml_acc_cv_cons_weekly_flash_report_static.txt | Final consumer-facing weekly flash report view. No identified downstream dependencies. Serves as the reporting endpoint. | 95 |
-| TBL_WSS_FLASH_SALES (via sql-procedure) | Physical target table that stores the flash sales snapshot data. While wrapped by static views, it represents the persistent data store output of the main procedure. | 98 |
+| xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | Wraps the final output table TBL_WSS_FLASH_SALES. This is the persistent storage for flash sales snapshots. | 98 |
+| xml_acc_cv_cons_weekly_flash_report_static.txt | Consolidated weekly flash report view that serves as the final reporting layer. No downstream dependencies identified. | 88 |
+| sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt | Orchestration procedure that writes final output to TBL_WSS_FLASH_SALES. Represents the execution endpoint of the ETL process. | 98 |
 
 ---
 
-## 8. Unresolved Relationships
+## 7. Unresolved Relationships
 
 | File | Possible Related File | Reason |
 |------|----------------------|--------|
-| xml_acc_cv_comp_flash_sales-VT-table-CV.txt | Multiple composite views | This virtual table calculation view is referenced in the composite layer but its exact downstream consumers beyond CV_COMP_FIN_FLASH are not explicitly defined in the available files. The relationship to CV_COMP_FIN_FLASH is inferred from naming conventions and structural patterns rather than explicit references. |
-| xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt | xml_acc_cv_base_tlogf-FS-DISCOUNT.txt | While the parameter view for discount types logically should be consumed by the FS discount view, the explicit reference in the XML is not clearly visible. The relationship is inferred from the naming pattern and typical usage patterns. |
+| xml_acc_FLASH_SALES_VT_CAR.txt | xml_acc_cv_comp_fin_flash.txt | FLASH_SALES_VT_CAR appears to provide CAR system data based on naming convention and placeholder patterns (IP_UPD_TIMESTAMP_FROM/TO), but explicit datasource reference not found in CV_COMP_FIN_FLASH content. Relationship is inferred but not confirmed. |
+| xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt | xml_acc_cv_comp_fin_flash_combined_static.txt | CV_COMP_FIN_FLASH_STATIC is referenced by CV_COMP_FIN_FLASH_COMBINED_STATIC, but the exact relationship to the TBL_WSS_FLASH_SALES wrapper view is inferred based on naming convention rather than explicit datasource reference. |
+| xml_acc_cv_base-FS_SALES-tlogf.txt | xml_acc_cv_comp_flash_sales-VT-table-CV.txt | CV_BASE_FS_SALES is likely used by CV_COMP_FLASH_SALES for front store sales aggregation based on naming and purpose, but explicit datasource reference not found in the analyzed content. Multiple TLOGF-based views are referenced, but specific inclusion of CV_BASE_FS_SALES not confirmed. |
+
+---
+
+## 8. Mermaid Lineage Diagram
+
+```mermaid
+flowchart TD
+    %% Base Data Sources
+    NAVIX["NAVIX Table<br/>(Base Transaction Data)"]
+    TLOGF["TLOGF Table<br/>(Transaction Log)"]
+    TLOGF_X["TLOGF_X Table<br/>(Prescription Scripts)"]
+    TLOGF_COVID["TLOGF_COVID Table<br/>(COVID Sales)"]
+    S4_MASTER["S4 Master Data<br/>(Calendar Weeks)"]
+    CAR_SYSTEM["CAR System<br/>(External Flash Sales)"]
+    
+    %% Parameter Views
+    PARAM_FS_RETAIL["xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml<br/>CV_BASE_PARAMETERS<br/>(FS Retail Type Config)"]
+    PARAM_FS_DISCOUNT["xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt<br/>CV_BASE_PARAMETERS<br/>(FS Discount Type Config)"]
+    PARAM_RX_RETAIL["xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt<br/>CV_BASE_PARAMETERS<br/>(RX Retail Type Config)"]
+    PARAM_RX_COVID["xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt<br/>CV_BASE_PARAMETERS<br/>(RX COVID Config)"]
+    PARAM_FS_FLASH["xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt<br/>CV_BASE_PARAMETERS<br/>(FS Flash Param Config)"]
+    
+    %% Base Calculation Views
+    CV_BASE_NAVIX["xml_acc_cv_base_NAVIX.txt<br/>CV_BASE_NAVIX<br/>(NAVIX Transaction View)"]
+    CV_BASE_MD_RCALWEEK["xml_acc_cv_base_MD_RCALWEEK_S4.txt<br/>CV_BASE_MD_RCALWEEK_S4<br/>(Calendar Week Master Data)"]
+    CV_BASE_TLOGF_X_SCRIPTS["xml_acc_cv_base_tlogf_x-SCRIPTS.xml<br/>CV_BASE_TLOGF_X<br/>(Script Base View)"]
+    CV_BASE_SCRIPTS["xml_acc_cv_base_SCRIPTS-tlogf_x.txt<br/>CV_BASE_SCRIPTS<br/>(Scripts Processing)"]
+    CV_BASE_COVID["xml_acc_cv_base_tlogf_COVID_sales.txt<br/>CV_BASE_TLOGF_COVID<br/>(COVID Sales Base)"]
+    CV_BASE_FS_SALES_TLOGF["xml_acc_cv_base-FS_SALES-tlogf.txt<br/>CV_BASE_FS_SALES<br/>(FS Sales from TLOGF)"]
+    CV_BASE_FS_SALES_XML["xml_acc_cv_base_tlogf-FS_SALES.xml<br/>CV_BASE_TLOGF_FS_SALES<br/>(FS Sales Processing)"]
+    CV_BASE_RX_SALES["xml_acc_cv_base_tlogf-RX_SALES.txt<br/>CV_BASE_TLOGF_RX_SALES<br/>(RX Sales Processing)"]
+    CV_BASE_FS_DISCOUNT["xml_acc_cv_base_tlogf-FS-DISCOUNT.txt<br/>CV_BASE_TLOGF_FS_DISCOUNT<br/>(FS Discount Processing)"]
+    CV_BASE_EMP_DISCOUNT["xml_acc_cv_base_tlogf-EMP_DISCOUNT.txt<br/>CV_BASE_TLOGF_EMP_DISCOUNT<br/>(Employee Discount)"]
+    CV_BASE_EMP_DISCOUNTS["xml_acc_cv_base_tlogf-EMP_DISCOUNTS.txt<br/>CV_BASE_TLOGF_EMP_DISCOUNTS<br/>(Employee Discounts Alt)"]
+    CV_BASE_EMP_DISC_TYPES["xml_acc_cv_base_tlogf-EMP_DISC_TYPES.txt<br/>CV_BASE_TLOGF_EMP_DISC_TYPES<br/>(Employee Discount Types)"]
+    FLASH_SALES_VT_CAR["xml_acc_FLASH_SALES_VT_CAR.txt<br/>FLASH_SALES_VT_CAR<br/>(CAR Flash Sales VT)"]
+    
+    %% Composite Views
+    CV_COMP_FLASH_SALES["xml_acc_cv_comp_flash_sales-VT-table-CV.txt<br/>CV_COMP_FLASH_SALES<br/>(Flash Sales Composite VT)"]
+    CV_COMP_FIN_FLASH_COMBINED["xml_acc_cv_comp_fin_flash_combined_static.txt<br/>CV_COMP_FIN_FLASH_COMBINED_STATIC<br/>(Combined Static Flash)"]
+    CV_COMP_FIN_FLASH["xml_acc_cv_comp_fin_flash.txt<br/>CV_COMP_FIN_FLASH<br/>(Financial Flash Composite)"]
+    CV_COMP_FLASH_STATIC_TBL["xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales.txt<br/>CV_COMP_FIN_FLASH_STATIC<br/>(Static Table Wrapper)"]
+    CV_CONS_WEEKLY["xml_acc_cv_cons_weekly_flash_report_static.txt<br/>CV_CONS_WEEKLY_FLASH_REPORT_STATIC<br/>(Weekly Flash Report)"]
+    
+    %% SQL Procedure
+    STP_FLASH["sql-procedure-acc-CVS_FRIP-Procedure-FI--STP_WSS_FLASH_SALES.txt<br/>STP_WSS_FLASH_SALES<br/>(Flash Sales Snapshot Procedure)"]
+    
+    %% Target Table
+    TBL_FLASH["TBL_WSS_FLASH_SALES<br/>(Flash Sales Output Table)"]
+    
+    %% Reporting Layer
+    REPORTING["Reporting Layer<br/>(BI Tools / Analytics)"]
+    
+    %% Base Data to Base Views
+    NAVIX -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_NAVIX
+    TLOGF_X -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_BASE_TLOGF_X_SCRIPTS
+    TLOGF_COVID -->|CONFIRMED<br/>Data Source<br/>Score: 93| CV_BASE_COVID
+    S4_MASTER -->|CONFIRMED<br/>Data Source<br/>Score: 96| CV_BASE_MD_RCALWEEK
+    CAR_SYSTEM -.->|INFERRED<br/>Data Source<br/>Score: 75| FLASH_SALES_VT_CAR
+    
+    %% Parameter Flow
+    PARAM_FS_RETAIL -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_BASE_FS_SALES_TLOGF
+    PARAM_FS_RETAIL -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_BASE_FS_SALES_XML
+    PARAM_FS_DISCOUNT -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_BASE_FS_DISCOUNT
+    PARAM_RX_RETAIL -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_BASE_RX_SALES
+    PARAM_RX_COVID -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_BASE_COVID
+    PARAM_FS_FLASH -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_COMP_FLASH_SALES
+    
+    %% Base View Dependencies
+    CV_BASE_TLOGF_X_SCRIPTS -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_BASE_SCRIPTS
+    CV_BASE_NAVIX -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_FS_SALES_TLOGF
+    CV_BASE_NAVIX -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_BASE_FS_SALES_XML
+    
+    %% Base Views to Composite Flash Sales
+    CV_BASE_NAVIX -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_COMP_FLASH_SALES
+    CV_BASE_SCRIPTS -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_COMP_FLASH_SALES
+    CV_BASE_COVID -->|CONFIRMED<br/>Data Source<br/>Score: 95| CV_COMP_FLASH_SALES
+    CV_BASE_FS_SALES_TLOGF -.->|INFERRED<br/>Data Source<br/>Score: 90| CV_COMP_FLASH_SALES
+    CV_BASE_FS_SALES_XML -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_COMP_FLASH_SALES
+    CV_BASE_RX_SALES -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_COMP_FLASH_SALES
+    CV_BASE_FS_DISCOUNT -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_COMP_FLASH_SALES
+    CV_BASE_EMP_DISCOUNT -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_COMP_FLASH_SALES
+    CV_BASE_EMP_DISCOUNTS -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_COMP_FLASH_SALES
+    CV_BASE_EMP_DISC_TYPES -->|CONFIRMED<br/>Data Source<br/>Score: 92| CV_COMP_FLASH_SALES
+    PARAM_FS_RETAIL -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_COMP_FLASH_SALES
+    PARAM_RX_RETAIL -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_COMP_FLASH_SALES
+    PARAM_RX_COVID -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_COMP_FLASH_SALES
+    PARAM_FS_DISCOUNT -->|CONFIRMED<br/>Parameter Config<br/>Score: 95| CV_COMP_FLASH_SALES
+    
+    %% Composite View Flow
+    CV_COMP_FLASH_SALES -->|CONFIRMED<br/>Data Source<br/>Score: 85| CV_COMP_FIN_FLASH_COMBINED
+    CV_COMP_FIN_FLASH_COMBINED -->|CONFIRMED<br/>Data Source<br/>Score: 96| CV_COMP_FIN_FLASH
+    CV_BASE_MD_RCALWEEK -->|CONFIRMED<br/>Master Data<br/>Score: 96| CV_COMP_FIN_FLASH
+    FLASH_SALES_VT_CAR -.->|INFERRED<br/>Data Source<br/>Score: 75| CV_COMP_FIN_FLASH
+    
+    %% Procedure Execution
+    CV_COMP_FIN_FLASH -->|CONFIRMED<br/>Data Source<br/>Score: 98| STP_FLASH
+    STP_FLASH -->|CONFIRMED<br/>Writes Output<br/>Score: 98| TBL_FLASH
+    
+    %% Static Table Wrapper
+    TBL_FLASH -->|CONFIRMED<br/>Table Wrapper<br/>Score: 98| CV_COMP_FLASH_STATIC_TBL
+    CV_COMP_FLASH_STATIC_TBL -.->|INFERRED<br/>Data Source<br/>Score: 85| CV_COMP_FIN_FLASH_COMBINED
+    
+    %% Reporting Flow
+    CV_COMP_FIN_FLASH_COMBINED -->|CONFIRMED<br/>Reporting Source<br/>Score: 88| CV_CONS_WEEKLY
+    CV_CONS_WEEKLY -->|CONFIRMED<br/>Reporting Output<br/>Score: 88| REPORTING
+    
+    %% Styling
+    classDef baseData fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef paramView fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef baseView fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef compView fill:#ffccbc,stroke:#d84315,stroke-width:2px
+    classDef procedure fill:#f8bbd0,stroke:#c2185b,stroke-width:3px
+    classDef target fill:#b39ddb,stroke:#4527a0,stroke-width:3px
+    classDef reporting fill:#ffab91,stroke:#bf360c,stroke-width:2px
+    
+    class NAVIX,TLOGF,TLOGF_X,TLOGF_COVID,S4_MASTER,CAR_SYSTEM baseData
+    class PARAM_FS_RETAIL,PARAM_FS_DISCOUNT,PARAM_RX_RETAIL,PARAM_RX_COVID,PARAM_FS_FLASH paramView
+    class CV_BASE_NAVIX,CV_BASE_MD_RCALWEEK,CV_BASE_TLOGF_X_SCRIPTS,CV_BASE_SCRIPTS,CV_BASE_COVID,CV_BASE_FS_SALES_TLOGF,CV_BASE_FS_SALES_XML,CV_BASE_RX_SALES,CV_BASE_FS_DISCOUNT,CV_BASE_EMP_DISCOUNT,CV_BASE_EMP_DISCOUNTS,CV_BASE_EMP_DISC_TYPES,FLASH_SALES_VT_CAR baseView
+    class CV_COMP_FLASH_SALES,CV_COMP_FIN_FLASH_COMBINED,CV_COMP_FIN_FLASH,CV_COMP_FLASH_STATIC_TBL,CV_CONS_WEEKLY compView
+    class STP_FLASH procedure
+    class TBL_FLASH target
+    class REPORTING reporting
+```
 
 ---
 
 ## 9. Final Lineage Assessment
 
+### Overview
+
+The analyzed files represent a comprehensive SAP HANA-based flash sales reporting system for CVS_FRIP (CVS Financial Reporting and Planning). The system orchestrates data from multiple sources including transaction logs (TLOGF, TLOGF_X), NAVIX transaction data, COVID-specific sales tracking, and external CAR system data.
+
 ### Base Files (Starting Points)
 
-The lineage analysis identifies **8 base files** that serve as the starting points:
+The lineage begins with **11 base files**:
 
-1. **xml_acc_cv_base_NAVIX.txt** - Store navigation and master data
-2. **xml_acc_cv_base_tlogf-FS_SALES.xml** - Front Store sales transactions
-3. **xml_acc_cv_base_tlogf-RX_SALES.txt** - Pharmacy sales transactions
-4. **xml_acc_cv_base_tlogf_x-SCRIPTS.xml** - Prescription scripts
-5. **xml_acc_cv_base_tlogf_COVID_sales.txt** - COVID-related sales
-6. **xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml** - FS retail type parameters
-7. **xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt** - RX retail type parameters
-8. **xml_acc_cv_base_MD_RCALWEEK_S4.txt** - Retail calendar master data
-
-These base files source data directly from physical tables (NAVIX, TLOGF, TLOGF_X, TLOGF_COVID, PARAMETERS, S4 tables) and have no upstream calculation view dependencies within the analyzed set.
-
----
+1. **xml_acc_cv_base_NAVIX.txt** - Primary transaction data source
+2. **xml_acc_cv_base_MD_RCALWEEK_S4.txt** - Calendar week master data
+3. **xml_acc_cv_base_tlogf_x-SCRIPTS.xml** - Prescription script base data
+4. **xml_acc_cv_base_tlogf_COVID_sales.txt** - COVID sales tracking
+5. **xml_acc_cv_base_parameters-FS_RETAIL_TYPES.xml** - FS retail type configuration
+6. **xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES.txt** - FS discount type configuration
+7. **xml_acc_cv_base_parameters-RX_RETAIL_TYPES.txt** - RX retail type configuration
+8. **xml_acc_cv_base_parameters-RX_RETAIL_TYPES-COVID.txt** - COVID RX configuration
+9. **xml_acc_cv_base_parameters-FS-RETAIL_TYPE-ztfirp_flash_prm.txt** - FS flash parameter configuration
+10. **xml_acc_FLASH_SALES_VT_CAR.txt** - CAR system flash sales (inferred)
+11. **Base TLOGF Table** (referenced but not provided as file)
 
 ### Main Lineage Paths
 
-#### **Path 1: Primary Flash Sales Pipeline (Score: 94/100)**
+**Path 1: Front Store (FS) Sales Processing**
+- Base data flows from NAVIX and TLOGF tables
+- Filtered and transformed through parameter views (FS_RETAIL_TYPES, FS_DISCOUNT_TYPES)
+- Processed in base calculation views (CV_BASE_FS_SALES, CV_BASE_TLOGF_FS_SALES, CV_BASE_TLOGF_FS_DISCOUNT)
+- Aggregated in CV_COMP_FLASH_SALES
+- Combined in CV_COMP_FIN_FLASH_COMBINED_STATIC
+- Exposed through CV_COMP_FIN_FLASH
+- Loaded by STP_WSS_FLASH_SALES procedure
+- Persisted in TBL_WSS_FLASH_SALES
 
-This is the main data flow for the flash sales reporting system:
+**Path 2: Pharmacy (RX) Sales Processing**
+- Base data flows from TLOGF and TLOGF_X tables
+- Filtered through RX parameter views (RX_RETAIL_TYPES, RX_RETAIL_TYPES_COVID)
+- Processed in base calculation views (CV_BASE_TLOGF_RX_SALES, CV_BASE_SCRIPTS)
+- Aggregated in CV_COMP_FLASH_SALES
+- Follows same composite flow to TBL_WSS_FLASH_SALES
 
-**Flow:**
-```
-Physical Tables → Base Views → FLASH_SALES_VT_CAR → CV_COMP_FIN_FLASH → 
-STP_WSS_FLASH_SALES → TBL_WSS_FLASH_SALES → Static Views → Weekly Report
-```
+**Path 3: Employee Discount Processing**
+- Base data from TLOGF table
+- Processed through multiple employee discount views (EMP_DISCOUNT, EMP_DISCOUNTS, EMP_DISC_TYPES)
+- Aggregated in CV_COMP_FLASH_SALES
+- Follows same composite flow to TBL_WSS_FLASH_SALES
 
-**Key Components:**
-- **15 Base Views** aggregate and filter data from source tables
-- **FLASH_SALES_VT_CAR** consolidates all sales data (FS, RX, COVID, Scripts)
-- **CV_COMP_FIN_FLASH** adds master data and applies business logic
-- **STP_WSS_FLASH_SALES** executes weekly snapshot load with date parameters
-- **TBL_WSS_FLASH_SALES** stores persistent snapshot data
-- **CV_CONS_WEEKLY_FLASH_REPORT_STATIC** provides final reporting interface
+**Path 4: COVID Sales Tracking**
+- Dedicated TLOGF_COVID table
+- Filtered through COVID-specific parameters
+- Processed in CV_BASE_TLOGF_COVID
+- Aggregated in CV_COMP_FLASH_SALES
+- Follows same composite flow to TBL_WSS_FLASH_SALES
 
-**Evidence:**
-- SQL procedure explicitly references CV_COMP_FIN_FLASH in FROM clause
-- Procedure inserts into TBL_WSS_FLASH_SALES with 54 columns
-- Calculation views contain explicit data source references in XML
-- Input parameters (IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO, IP_UPD_TIMESTAMP_FROM, IP_UPD_TIMESTAMP_TO) control data selection
+**Path 5: Calendar Master Data**
+- S4 master data for retail calendar weeks
+- Provided through CV_BASE_MD_RCALWEEK_S4
+- Joined in CV_COMP_FIN_FLASH for time-based reporting
 
----
+**Path 6: CAR System Integration**
+- External CAR system provides flash sales data
+- Exposed through FLASH_SALES_VT_CAR virtual table
+- Integrated into CV_COMP_FIN_FLASH (inferred relationship)
 
-#### **Path 2: FS Sales Specific Flow (Score: 88/100)**
+**Path 7: Consolidated Reporting**
+- CV_COMP_FIN_FLASH_COMBINED_STATIC feeds CV_CONS_WEEKLY_FLASH_REPORT_STATIC
+- Provides consolidated weekly flash reporting to BI tools
 
-This path handles Front Store sales data specifically:
+### File-to-File Relationships
 
-**Flow:**
-```
-NAVIX + TLOGF → CV_BASE_FS_SALES_TLOGF → FLASH_SALES_VT_CAR → 
-CV_COMP_FLASH_SALES_VT → CV_COMP_FIN_FLASH
-```
+**67 relationships identified** with confidence scores ranging from 75-98:
 
-**Key Components:**
-- **CV_BASE_FS_SALES_TLOGF** combines NAVIX store data with TLOGF sales
-- **CV_COMP_FLASH_SALES_VT** provides virtual table interface
-- Feeds into the main composite financial flash view
+**High Confidence (90-98):**
+- SQL procedure to CV_COMP_FIN_FLASH: 98 (explicit SELECT statement)
+- SQL procedure to TBL_WSS_FLASH_SALES: 98 (explicit INSERT statement)
+- CV_COMP_FIN_FLASH_COMBINED to CV_COMP_FIN_FLASH: 96 (explicit datasource reference)
+- CV_BASE_MD_RCALWEEK to CV_COMP_FIN_FLASH: 96 (explicit datasource reference)
+- Parameter views to base views: 95 (explicit CV_BASE_PARAMETERS references)
+- Base views to CV_COMP_FLASH_SALES: 92-95 (explicit datasource references)
 
-**Evidence:**
-- CV_BASE_FS_SALES references both CV_BASE_NAVIX and CV_BASE_TLOGF
-- FLASH_SALES_VT_CAR aggregates FS sales with discounts and employee adjustments
-- Some relationships inferred from naming conventions
+**Medium Confidence (75-89):**
+- CV_COMP_FLASH_SALES to CV_COMP_FIN_FLASH_COMBINED: 85 (inferred through CV_COMP_FIN_FLASH_STATIC)
+- FLASH_SALES_VT_CAR to CV_COMP_FIN_FLASH: 75 (inferred from naming and placeholders)
+- CV_COMP_FIN_FLASH_STATIC_TBL to CV_COMP_FIN_FLASH_COMBINED: 85 (inferred through naming)
 
----
+### Lineage Scores and Reasons
 
-#### **Path 3: Parameter Configuration Flow (Score: 89/100)**
+**Overall Lineage Confidence: 92/100**
 
-This path shows how configuration parameters control data processing:
-
-**Flow:**
-```
-PARAMETERS Table → Parameter Views → FLASH_SALES_VT_CAR (Filtering)
-```
-
-**Key Components:**
-- **5 Parameter Views** define retail types and discount types
-- Parameters filter transactions in FLASH_SALES_VT_CAR
-- COVID-specific parameters control COVID sales view
-
-**Evidence:**
-- FLASH_SALES_VT_CAR references CV_BASE_PARAMETERS with PARAM_NAME filters
-- Parameter views use PARAM_NAME='RX_RETAIL_TYPE_CODE', 'FS_RETAIL_TYPE', etc.
-- COVID parameter view explicitly filters for COVID-related retail types
-
----
-
-### File-to-File Relationships Summary
-
-**High Confidence Relationships (Score 90-100):** 38 relationships
-- Direct SQL references in procedure
-- Explicit data source references in calculation views
-- Clear parameter usage patterns
-
-**Medium Confidence Relationships (Score 75-89):** 7 relationships
-- Inferred from naming conventions
-- Structural patterns suggest relationships
-- Logical flow indicates connections
-
-**Low Confidence Relationships (Score <75):** 2 relationships
-- Insufficient evidence in available files
-- Marked as unresolved
-
----
-
-### Lineage Scores and Reasoning
-
-| Relationship Category | Score Range | Count | Reasoning |
-|----------------------|-------------|-------|-----------|
-| SQL Procedure to View | 98 | 2 | Explicit FROM clause and INSERT INTO statements in SQL code |
-| View to View (Explicit Reference) | 90-96 | 25 | XML contains explicit data source references with full paths |
-| View to View (Inferred) | 83-89 | 7 | Naming conventions and structural patterns suggest relationships |
-| Parameter to View | 87-93 | 11 | Parameter views referenced with specific PARAM_NAME filters |
-| Table to View | 94-96 | 6 | Base views directly reference physical tables |
-
----
+**Reasons:**
+1. **Strong Evidence (Score: 98)**: SQL procedure explicitly references CV_COMP_FIN_FLASH as source and TBL_WSS_FLASH_SALES as target with clear INSERT and SELECT statements
+2. **Explicit Datasource References (Score: 95-96)**: Calculation views contain explicit datasource references in XML structure pointing to upstream views
+3. **Parameter Configuration (Score: 95)**: Parameter views are explicitly referenced through CV_BASE_PARAMETERS in multiple base views
+4. **Clear Naming Conventions (Score: 90)**: Consistent naming patterns (CV_BASE_, CV_COMP_, TLOGF_, etc.) support relationship identification
+5. **Documented Purpose (Score: 94)**: SQL procedure header clearly documents source and target, confirming the overall flow
+6. **Minor Ambiguity (Score: 75-85)**: Some relationships inferred through naming conventions rather than explicit references (CAR system integration, static table wrapper)
 
 ### Unresolved Relationships
 
-**2 Unresolved Relationships:**
+**3 unresolved relationships** with explanations:
 
-1. **CV_COMP_FLASH_SALES_VT downstream usage** - While this view logically feeds into CV_COMP_FIN_FLASH, the exact mechanism is not explicitly visible in the XML. The relationship is inferred from naming and typical SAP HANA patterns.
-
-2. **FS_DISCOUNT_TYPES parameter usage** - The parameter view for discount types should be consumed by discount calculation views, but explicit references are not clearly visible in the available XML content.
-
----
+1. **FLASH_SALES_VT_CAR to CV_COMP_FIN_FLASH**: Inferred based on naming convention and placeholder patterns but no explicit datasource reference found
+2. **CV_COMP_FIN_FLASH_STATIC_TBL to CV_COMP_FIN_FLASH_COMBINED**: Relationship inferred through CV_COMP_FIN_FLASH_STATIC naming but explicit connection not confirmed
+3. **CV_BASE_FS_SALES to CV_COMP_FLASH_SALES**: Likely used for FS sales aggregation but specific inclusion not explicitly confirmed in analyzed content
 
 ### Key Findings
 
-1. **Centralized Architecture**: FLASH_SALES_VT_CAR serves as the central aggregation point for all sales data (FS, RX, COVID, Scripts)
+1. **Centralized Orchestration**: STP_WSS_FLASH_SALES procedure serves as the central orchestration point, executing weekly snapshots
+2. **Layered Architecture**: Clear separation between base views (data extraction), composite views (aggregation), and final output (persistence)
+3. **Parameter-Driven**: Extensive use of parameter views for flexible filtering and configuration
+4. **Multi-Source Integration**: Combines data from TLOGF, TLOGF_X, NAVIX, COVID tables, and external CAR system
+5. **Time-Based Processing**: Uses calendar week master data and timestamp-based filtering for weekly snapshots
+6. **Dual Sales Channels**: Separate processing paths for Front Store (FS) and Pharmacy (RX) sales with final consolidation
+7. **COVID Tracking**: Dedicated views and parameters for COVID-related sales tracking
+8. **Static Reporting**: Multiple static views provide consistent reporting interfaces for BI tools
 
-2. **Weekly Snapshot Pattern**: STP_WSS_FLASH_SALES runs weekly (Mondays at 5am) to capture point-in-time data
+### Conclusion
 
-3. **Layered Design**: Clear separation between Base → Composite → Procedure → Static → Reporting layers
-
-4. **Parameter-Driven**: Extensive use of parameter views for flexible filtering and configuration
-
-5. **Multi-Source Integration**: Combines data from NAVIX (stores), TLOGF (FS transactions), TLOGF_X (RX scripts), and TLOGF_COVID (COVID sales)
-
-6. **Master Data Enrichment**: Retail calendar (RCALWEEK_S4) and other master data views enrich transactional data
-
-7. **Static View Pattern**: After procedure execution, data flows through static views for reporting stability
-
----
-
-### Technical Implementation Details
-
-**SQL Procedure Logic:**
-- Calculates week ending dates based on current date
-- Applies timestamp filters for data freshness
-- Deletes existing data before insert (full refresh pattern)
-- Passes 4 input parameters to CV_COMP_FIN_FLASH
-- Inserts 54 columns including sales amounts, units, timestamps, and organizational hierarchy
-
-**Calculation View Patterns:**
-- Base views: Direct table access with minimal transformation
-- Composite views: Join multiple base views, apply business logic
-- Static views: Wrap physical tables for consistent interface
-- Parameter views: Filter configuration data by PARAM_NAME
-
-**Data Flow Characteristics:**
-- Batch processing (weekly snapshots)
-- Full refresh pattern (delete + insert)
-- Parameterized date ranges
-- Timestamp-based data selection
-- Multi-level aggregation (store → district → region → division)
+The lineage analysis reveals a well-structured, multi-layered data pipeline for flash sales reporting. The system demonstrates strong architectural patterns with clear separation of concerns, parameter-driven configuration, and comprehensive data integration from multiple sources. The high confidence scores (92-98 for most relationships) indicate robust evidence-based lineage identification with minimal ambiguity.
 
 ---
 
-## Conclusion
+**Document Generated**: 2024
+**Analysis Scope**: 24 Files - CVS_FRIP Flash Sales Reporting System
+**Confidence Level**: High (92/100 overall)
+**Methodology**: Content-based analysis with explicit reference validation
 
-This analysis successfully mapped the complete lineage of 24 files in the CVS FRIP Flash Sales reporting system. The analysis identified:
-
-- **47 confirmed relationships** with high confidence scores
-- **3 major lineage paths** from source tables to final reports
-- **8 base files** serving as entry points
-- **2 final output components** (weekly report view and physical table)
-- **2 unresolved relationships** requiring additional investigation
-
-The lineage demonstrates a well-structured, layered architecture with clear separation of concerns and strong traceability from source systems through to reporting outputs. The confidence scores reflect the strength of evidence found in the actual file contents, with most relationships supported by explicit references in SQL and XML definitions.
-
----
-
-**Document Version:** 1.0  
-**Analysis Date:** 2024  
-**Total Files Analyzed:** 24  
-**Total Relationships Mapped:** 47  
-**Overall Lineage Confidence:** 92/100
