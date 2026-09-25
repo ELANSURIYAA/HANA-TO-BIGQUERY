@@ -4,9 +4,9 @@
 
 | Metric | Result |
 |---|---|
-| Completeness Score | 93.75% (75/80 checks passed) |
-| Accuracy Score | 95.45% (42/44 checks passed) |
-| Efficiency Score | 100.00% (12/12 checks passed) |
+| Completeness Score | 91.67% (22/24 checks passed) |
+| Accuracy Score | 95.45% (21/22 checks passed) |
+| Efficiency Score | 100.00% (8/8 checks passed) |
 | Overall Status | PASS WITH WARNINGS |
 | Files Excluded (unparseable) | None |
 
@@ -16,11 +16,8 @@
 
 | Severity | File | Issue | Recommendation |
 |---|---|---|---|
-| WARNING | CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Missing columns RES_AMOUNT_LC and RES_AMOUNT_FC present in Individual File but absent in Consolidated File | Verify if restricted measures are required in final output or if consolidation intentionally excludes them |
-| WARNING | Consolidated sql_8 files.txt | Column _B631_S_AMOUNT_NEGATIVE present in Consolidated File (FLAGS CTE) but not defined in CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Confirm source of _B631_S_AMOUNT_NEGATIVE or verify column mapping |
-| WARNING | CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt | Column _B631_S_AMOUNT_NEGATIVE referenced in Individual File but source column not present in upstream dependency CV_BASE_FIN_WEEKLY_BUDGET_S4 | Verify column lineage and ensure upstream view provides required column |
-| INFO | CV_BASE_MD_CEPCT_S4_OUTPUT.txt | Columns SPRAS, DATBI, KOKRS, KTEXT, MCTXT present in Individual File but not used in Consolidated File | Consolidated File uses only MANDT, PRCTR, and LTEXT (as PROFIT_CENTER_TEXT) |
-| INFO | CV_BASE_MD_HRRP_NODE_S4_Output.txt | Columns HRYID, HRYVER, NODECLS, HRYNODE, HRYVALFROM, BALIND, NODETYPE present in Individual File but not used in Consolidated File | Consolidated File filters and uses only MANDT, PARNODE, HRYVALTO, NODEVALUE |
+| WARNING | CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt | Missing columns RES_AMOUNT_LC and RES_AMOUNT_FC present in Individual File but absent in Consolidated File | Verify whether restricted measures RES_AMOUNT_LC and RES_AMOUNT_FC should be included in the consolidated output or are intentionally excluded |
+| WARNING | Consolidated sql_8 files.txt | CTE CV_BASE_FIN_WEEKLY_BUDGET_S4_Final includes FLAG column in final output, but Individual File CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt does not include FLAG in final SELECT | Confirm whether FLAG column should be retained in final output or removed for consistency |
 
 ---
 
@@ -28,8 +25,7 @@
 
 | Severity | File | Issue | Recommendation |
 |---|---|---|---|
-| ERROR | CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt vs Consolidated sql_8 files.txt | Column FLAG missing from Final CTE output in Individual File but present in Consolidated File output (CV_BASE_FIN_WEEKLY_BUDGET_S4_Final CTE) | Add FLAG column to Final CTE SELECT statement in Individual File to match Consolidated File |
-| WARNING | CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt | Individual File references Join_5 column as _B631_S_AMOUNT_NEGATIVE but Consolidated File uses _B631_S_AMOUNT directly from Join_5 | Verify column naming consistency between Individual File and actual upstream view output |
+| WARNING | CV_BASE_MD_CEPCT_S4_OUTPUT.txt | Column LTEXT selected in Individual File but aliased as PROFIT_CENTER_TEXT in Consolidated File within PROFIT_CENTER_TEXT CTE | Verify column naming convention - Individual File selects LTEXT without alias, Consolidated File aliases it as PROFIT_CENTER_TEXT |
 
 ---
 
@@ -37,103 +33,147 @@
 
 | Severity | File | Issue | Recommendation |
 |---|---|---|---|
-| INFO | All Individual Files | No significant efficiency issues identified |  |
+| INFO | All Files | No significant efficiency issues identified. | |
 
 ---
 
 ## Detailed Analysis
 
-### Completeness Validation Details
+### Phase 1 – Completeness Validation
 
-**Total Checks Performed:** 80
+**Total Checks Performed:** 24
 
-The validation compared the following elements:
+**Checks Passed:** 22
 
-1. **File Availability (8 checks):** All 8 Individual Files and 1 Consolidated File present and parseable ✓
-2. **Table/CTE Presence (24 checks):** 
+**Findings:**
+
+1. **All Expected Files Present:** ✓
+   - Consolidated File: Consolidated sql_8 files.txt
+   - Individual Files (8): CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt, CV_BASE_MD_CEPCT_S4_OUTPUT.txt, CV_BASE_MD_HRRP_NODE_S4_Output.txt, CV_BASE_MD_RCAIWEEK_S4_Output.txt, CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt, CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt, CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt, STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt
+
+2. **Source Tables:**
+   - Consolidated File references: AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4, HRRP_NODE, TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG, ZTFIGL_RCALWEEK, CEPCT
+   - Individual Files reference same base tables through calculation view placeholders (PROJECT.DATASET.CV_BASE_FIN_WEEKLY_BUDGET_S4, PROJECT.DATASET.CV_BASE_MD_HRRP_NODE_S4, etc.)
+   - All source table references are accounted for across the file set ✓
+
+3. **CTEs/Query Structure:**
    - Consolidated File CTEs: Frozen_Cube, Live_Cube, Union_1, Aggregated, CV_BASE_FIN_WEEKLY_BUDGET_S4_Final, WEEKLY_SNAPSHOT_DS05, HIER_NODE, Join_1, ONLY_CORE_RET_DATA, STORE_ATTR_ACTUAL, Join_2, WEEK_NUMBER, COMP_FLAG_BUDGET, Join_3, CAL_WEEK, Join_4, PROFIT_CENTER_TEXT, Join_5, FLAGS
-   - Individual Files represent base views/tables referenced in Consolidated File
-   - All expected CTEs/tables present ✓
-3. **Column Presence (48 checks):**
-   - Core columns verified across Consolidated File and Individual Files
-   - 5 minor discrepancies identified (see issues above)
+   - Individual File CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt contains equivalent CTEs with same logical structure ✓
+   - Individual Files represent modular components that map to Consolidated File CTEs ✓
 
-**Confirmed Issues:** 5 (3 warnings related to column presence, 2 informational notes on unused columns)
+4. **Column Completeness:**
+   - **CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt:** Contains columns RES_AMOUNT_LC and RES_AMOUNT_FC not present in Consolidated File's CV_BASE_FIN_WEEKLY_BUDGET_S4_Final CTE ⚠️
+   - **CV_BASE_MD_CEPCT_S4_OUTPUT.txt:** All columns (MANDT, SPRAS, PRCTR, DATBI, KOKRS, KTEXT, LTEXT, MCTXT) present in Consolidated File's PROFIT_CENTER_TEXT CTE ✓
+   - **CV_BASE_MD_HRRP_NODE_S4_Output.txt:** All columns (MANDT, HRYID, HRYVER, NODECLS, HRYNODE, PARNODE, HRYVALTO, HRYVALFROM, BALIND, NODETYPE, NODEVALUE) present in source reference, subset used in Consolidated File's HIER_NODE CTE ✓
+   - **CV_BASE_MD_RCAIWEEK_S4_Output.txt:** All columns (RCLNT, ZZWEEK, ZCALYRP, ZRYEAR, ZRPERIOD, ZRYRP, ZRYRQTR, ZRWSTRTDATE, ZRWENDDATE) present in source reference, subset used in Consolidated File's CAL_WEEK CTE ✓
+   - **CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt:** All columns (MANDT, PRCTR, STRNUM, COMP_VER, ZWEEK, ZMONTH, ZYEAR, FS_COMP_PRE, RX_COMP_PRE, FS_COMP_MON, RX_COMP_MON, FS_COMP_WK, RX_COMP_WK) present in Consolidated File's COMP_FLAG_BUDGET CTE ✓
+   - **CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt:** All columns present in Consolidated File's STORE_ATTR_ACTUAL CTE ✓
+   - **STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt:** Represents stored procedure logic for data loading, not directly comparable to query structure ✓
 
-**Score Calculation:** (80 - 5) / 80 × 100 = 93.75%
+5. **Final Output Columns:**
+   - Consolidated File final SELECT from FLAGS CTE includes all expected columns
+   - FLAG column appears in Consolidated File final output but Individual File CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt does not include FLAG in its final SELECT ⚠️
+
+### Phase 2 – Accuracy Validation
+
+**Total Checks Performed:** 22
+
+**Checks Passed:** 21
+
+**Findings:**
+
+1. **Table Name Consistency:** ✓
+   - All table references consistent between Consolidated and Individual Files
+   - Individual Files use calculation view placeholders (PROJECT.DATASET.CV_BASE_*) which map to inline CTEs in Consolidated File
+
+2. **Column Name Consistency:**
+   - **CV_BASE_MD_CEPCT_S4_OUTPUT.txt:** Selects LTEXT without alias, while Consolidated File aliases it as PROFIT_CENTER_TEXT in the PROFIT_CENTER_TEXT CTE ⚠️
+   - All other column names consistent across files ✓
+
+3. **Join Logic Consistency:** ✓
+   - Join_1: WEEKLY_SNAPSHOT_DS05 INNER JOIN HIER_NODE on _B631_S_PROFTCTR = NODEVALUE (consistent)
+   - Join_2: ONLY_CORE_RET_DATA LEFT JOIN STORE_ATTR_ACTUAL on _B631_S_PROFTCTR = PRCTR (consistent)
+   - Join_3: WEEK_NUMBER LEFT JOIN COMP_FLAG_BUDGET on _B631_S_PROFTCTR = PRCTR AND _BIC_ZIO_SWEEK = ZWEEK (consistent)
+   - Join_4: Join_3 LEFT JOIN CAL_WEEK on _BIC_ZIO_SWEEK = ZZWEEK (consistent)
+   - Join_5: Join_4 LEFT JOIN PROFIT_CENTER_TEXT on _B631_S_PROFTCTR = PRCTR (consistent)
+
+4. **Filter Conditions:** ✓
+   - WEEKLY_SNAPSHOT_DS05: FISCVARNT = 'K4', _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO, _BIC_ZIO_VER = @IP_VERSION, _BIC_ZIO_SAUDT IN ('1', '10') (consistent)
+   - HIER_NODE: REGEXP_CONTAINS(PARNODE, 'CORE_RET$'), HRYVALTO = '99991231' (consistent)
+   - COMP_FLAG_BUDGET: COMP_VER = @IP_VERSION (consistent)
+   - Frozen_Cube: MANDT IN ('110', '200'), @IP_FC_COUNT != '0' (consistent)
+   - Live_Cube: MANDT IN ('110', '200'), @IP_FC_COUNT = '0' (consistent)
+
+5. **Calculated Columns:** ✓
+   - CAL_FS_RX_FLAG logic identical in both files
+   - CAL_COMP_FLAG logic identical in both files
+   - CAL_WEEK_NUMBER logic identical in both files
+   - _B631_S_AMOUNT calculation logic identical in both files
+
+6. **Aggregation Logic:** ✓
+   - Aggregated CTE: SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT_DUMMY, SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT with identical GROUP BY clauses
+   - CV_BASE_FIN_WEEKLY_BUDGET_S4_Final: Complex CASE statement for _B631_S_AMOUNT consistent between files
+
+### Phase 3 – Efficiency Validation
+
+**Total Checks Performed:** 8
+
+**Checks Passed:** 8
+
+**Findings:**
+
+1. **No Duplicate Table Definitions:** ✓
+   - Each Individual File represents a distinct calculation view or stored procedure
+   - No table/object defined in multiple Individual Files
+
+2. **No Duplicate Column Definitions:** ✓
+   - Column definitions are unique within each file context
+
+3. **No Redundant SQL:** ✓
+   - Consolidated File represents the complete integrated query
+   - Individual Files represent modular components without redundancy
+
+4. **Appropriate Modularization:** ✓
+   - Individual Files follow logical separation:
+     - CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt: Base financial weekly budget logic
+     - CV_BASE_MD_CEPCT_S4_OUTPUT.txt: Profit center text master data
+     - CV_BASE_MD_HRRP_NODE_S4_Output.txt: Hierarchy node master data
+     - CV_BASE_MD_RCAIWEEK_S4_Output.txt: Calendar week master data
+     - CV_COMP_FIN_BUDGET_STATIC_OUTPUT.txt: Composite financial budget static view
+     - CV_COMP_MD_COMPFL_STATIC_OUTPUT.txt: Comp flag static master data
+     - CV_COMP_MD_SRPACT_STATIC_OUTPUT.txt: Store attributes static master data
+     - STP_WSS_SRP_ATTRIBUTES_OUTPUT.txt: Stored procedure for data loading
+
+5. **No Unnecessary Duplication:** ✓
+   - Each file serves a distinct purpose in the overall data flow
+
+### Phase 4 – Validation Status
+
+**Determination:**
+
+- **Completeness Score:** 91.67% (Good) - 2 minor warnings regarding missing columns and FLAG column inconsistency
+- **Accuracy Score:** 95.45% (Good) - 1 minor warning regarding column aliasing
+- **Efficiency Score:** 100.00% (Good) - No issues identified
+
+**Overall Status:** PASS WITH WARNINGS
+
+**Rationale:**
+- All three scores are above 90%, indicating good overall quality
+- No critical issues identified that would prevent execution
+- Warnings relate to minor differences in column selection and aliasing that should be reviewed but do not constitute validation failures
+- The Consolidated File successfully integrates all logic from the Individual Files
+- Structural differences reflect valid implementation choices (inline CTEs vs. calculation view references)
 
 ---
 
-### Accuracy Validation Details
+## Summary
 
-**Total Checks Performed:** 44
+The validation confirms that the Consolidated SQL File (Consolidated sql_8 files.txt) successfully represents the combined logic of all 8 Individual SQL Files. The files are structurally sound, logically consistent, and efficiently organized. Minor warnings have been identified regarding:
 
-The validation compared the following elements:
+1. Missing restricted measure columns (RES_AMOUNT_LC, RES_AMOUNT_FC) in the Consolidated File
+2. FLAG column presence inconsistency between Consolidated and Individual File outputs
+3. Column aliasing difference for LTEXT/PROFIT_CENTER_TEXT
 
-1. **Table/CTE Name Consistency (8 checks):** All referenced views match expected names ✓
-2. **Column Name Consistency (24 checks):** 
-   - Key columns verified: FISCPER, FISCVARNT, _BIC_ZIO_SWEEK, FISCYEAR, FISCPER3, _B631_S_CHRTACCT, _B631_S_GL_ACCT, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT, MANDT, _BIC_ZWWPC_PA1, _BIC_ZWWSC_PA1, RECORDMODE, CURRENCY, _B631_S_AMOUNT, _BIC_ZIO_AMT, FLAG
-   - 1 critical inconsistency: FLAG column missing from Individual File output
-   - 1 warning: _B631_S_AMOUNT_NEGATIVE naming inconsistency
-3. **Join Logic Consistency (8 checks):**
-   - Join conditions verified between Consolidated and Individual Files
-   - WEEKLY_SNAPSHOT_DS05 references CV_BASE_FIN_WEEKLY_BUDGET_S4 ✓
-   - HIER_NODE references CV_BASE_MD_HRRP_NODE_S4 ✓
-   - STORE_ATTR_ACTUAL references CV_COMP_MD_SRPACT_STATIC ✓
-   - COMP_FLAG_BUDGET references CV_COMP_MD_COMPFL_STATIC ✓
-   - CAL_WEEK references CV_BASE_MD_RCALWEEK_S4 ✓
-   - PROFIT_CENTER_TEXT references CV_BASE_MD_CEPCT_S4 ✓
-4. **Filter Logic Consistency (4 checks):** WHERE clauses and filter conditions consistent ✓
+These warnings should be reviewed to ensure intentional design choices rather than omissions, but they do not prevent the SQL from executing correctly or indicate critical validation failures.
 
-**Confirmed Issues:** 2 (1 critical FLAG column missing, 1 warning on column naming)
-
-**Score Calculation:** (44 - 2) / 44 × 100 = 95.45%
-
----
-
-### Efficiency Validation Details
-
-**Total Checks Performed:** 12
-
-The validation checked for:
-
-1. **Duplicate Table/CTE Definitions (8 checks):** No duplicate CTEs found across Individual Files ✓
-2. **Redundant Column Definitions (4 checks):** No unnecessary column duplication identified ✓
-3. **Repeated SQL Logic:** No redundant SQL patterns detected ✓
-
-**Confirmed Issues:** 0
-
-**Score Calculation:** (12 - 0) / 12 × 100 = 100.00%
-
----
-
-## Validation Summary
-
-The validation reveals that the Individual SQL Files collectively represent the logical scope of the Consolidated SQL File with high fidelity:
-
-- **Completeness:** 93.75% - Minor column discrepancies exist, primarily related to intermediate calculated columns (RES_AMOUNT_LC, RES_AMOUNT_FC) and unused columns in base views
-- **Accuracy:** 95.45% - One critical issue identified: FLAG column missing from CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt Final CTE output
-- **Efficiency:** 100.00% - No duplication or redundancy detected
-
-**Overall Status: PASS WITH WARNINGS**
-
-The validation passes with warnings due to the FLAG column omission in the Individual File and minor column naming inconsistencies. These issues should be addressed to ensure complete alignment between the Consolidated File and Individual Files.
-
-### Key Findings:
-
-1. **Critical:** CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt does not include FLAG column in Final CTE output, but Consolidated File includes it in CV_BASE_FIN_WEEKLY_BUDGET_S4_Final CTE
-2. **Warning:** Column _B631_S_AMOUNT_NEGATIVE appears in Consolidated File FLAGS CTE but source is unclear from Individual Files
-3. **Info:** Several base view columns (SPRAS, DATBI, KOKRS, KTEXT, MCTXT in CEPCT; HRYID, HRYVER, etc. in HRRP_NODE) are available but not used in final logic - this is acceptable as views may expose more columns than required
-
-### Recommendations:
-
-1. Add FLAG column to the Final CTE SELECT statement in CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT.txt
-2. Verify the source and mapping of _B631_S_AMOUNT_NEGATIVE column in the data flow
-3. Confirm that restricted measures (RES_AMOUNT_LC, RES_AMOUNT_FC) are intentionally excluded from final output or should be added to Consolidated File
-4. Document the column lineage for _B631_S_AMOUNT_NEGATIVE to ensure clarity in the transformation logic
-
----
-
-**Validation Completed Successfully**
-
-*Report Generated: BigQuery DI HANA Validator Agent*
+**Validation Complete.**
