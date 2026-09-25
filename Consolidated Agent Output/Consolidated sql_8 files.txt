@@ -1,6 +1,7 @@
 -- FINAL CONSOLIDATED BIGQUERY SQL
--- Consolidates CV_COMP_FIN_BUDGET_STATIC with all upstream dependencies
--- Target: Complete execution-ready SQL from physical source tables
+-- Consolidated from 8 source files based on lineage analysis
+-- Target: CV_COMP_FIN_BUDGET_STATIC (Final Consumer-Facing Artifact)
+-- All dependencies recursively expanded to physical source tables
 
 WITH Frozen_Cube AS (
   SELECT
@@ -510,7 +511,7 @@ FLAGS AS (
     _B631_S_GL_ACCT,
     _BIC_ZWWPC_PA1,
     _BIC_ZWWSC_PA1,
-    _B631_S_AMOUNT,
+    _B631_S_AMOUNT AS _B631_S_AMOUNT_NEGATIVE,
     CURRENCY,
     _BIC_ZIO_AMT,
     REP_MKT_CODE,
@@ -558,7 +559,8 @@ FLAGS AS (
         END
       )
     END AS CAL_COMP_FLAG,
-    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER
+    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    (_B631_S_AMOUNT * -1) AS _B631_S_AMOUNT
   FROM Join_5
 )
 
