@@ -1,0 +1,149 @@
+---
+
+Here is the complete analysis report for the SAP HANA Calculation View **CV_BASE_FIN_WEEKLY_BUDGET_S4**:
+
+---
+
+<div style="border:1px solid #d0d7de;border-radius:6px;overflow:hidden;font-family:Arial,sans-serif;width:100%;margin-bottom:15px;">
+<div style="background:#1f4e79;color:white;padding:10px;font-size:16px;font-weight:bold;">
+CV_BASE_FIN_WEEKLY_BUDGET_S4 Analyze Report
+</div>
+<table style="border-collapse:collapse;width:100%;">
+<tr>
+<td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;width:150px;"><b>Author</b></td>
+<td style="padding:8px;border:1px solid #ddd;">Ascendion AAVA</td>
+</tr>
+<tr>
+<td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Created On</b></td>
+<td style="padding:8px;border:1px solid #ddd;">2026-10-09</td>
+</tr>
+<tr>
+<td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Description</b></td>
+<td style="padding:8px;border:1px solid #ddd;">SAP HANA Calculation View for Store Reporting Financials Budget with conditional union logic between frozen and live cubes, restricted measures, and derived scalar function-based parameter filtering converted to BigQuery View with conditional UNION ALL and CASE expressions.</td>
+</tr>
+</table>
+</div>
+
+---
+
+**Asset Name:** CV_BASE_FIN_WEEKLY_BUDGET_S4
+
+---
+
+## 1. BigQuery Recommendations
+
+### **(Best Fit) BigQuery View with Conditional UNION ALL Logic**
+
+**Reason 1:** The Calculation View implements a conditional UNION between two projection nodes (`Frozen_Cube` and `Live_Cube`) based on the derived parameter `IP_FC_COUNT`. This logic maps directly to a BigQuery View with a UNION ALL statement, where each branch is filtered using the equivalent of the scalar function `SFN_FC_FLAG` result.
+
+**Reason 2:** The view contains restricted measures (`RES_AMOUNT_LC`, `RES_AMOUNT_FC`) and a calculated measure (`_B631_S_AMOUNT`) that uses conditional logic (`IF(isnull(...))`). These can be implemented as CASE expressions in BigQuery SQL within the view definition, avoiding the need for stored procedures.
+
+**Reason 3:** The asset is a reporting-enabled Calculation View (`visibility="reportingEnabled"`, `outputViewType="Aggregation"`), indicating it serves as a semantic layer for BI tools. BigQuery Views are the natural equivalent for this use case, providing a queryable interface for downstream reporting tools like Looker Studio or other BI connectors.
+
+---
+
+### **(Alternative) BigQuery Materialized View**
+
+**Reason 1:** If the Calculation View is queried frequently and the underlying base tables (`AZSRP_DS052_VT_S4`, `AZSRP_DS041_VT_S4`) are large, a Materialized View can pre-compute the UNION ALL and aggregation logic, reducing query latency.
+
+**Reason 2:** The `outputViewType="Aggregation"` and the presence of measures with `aggregationType="sum"` suggest that aggregation occurs at query time. A Materialized View can cache these aggregated results, improving performance for repetitive analytical queries.
+
+**Reason 3:** Trade-off: Materialized Views in BigQuery have refresh costs and latency. Since the asset uses input parameters (`IP_VERSION`, `IP_FC_COUNT`), parameterization would need to be handled externally (e.g., via a Stored Procedure or Scheduled Query that refreshes the Materialized View for specific parameter values), adding complexity.
+
+---
+
+## 2. Syntax Differences
+
+| **SAP HANA Construct** | **BigQuery Equivalent** | **Details from Asset** |
+|------------------------|-------------------------|------------------------|
+| **Calculation View (CUBE type)** | **BigQuery View** | `CV_BASE_FIN_WEEKLY_BUDGET_S4` is a CUBE-type Calculation View with `outputViewType="Aggregation"`. This maps to a BigQuery View that performs UNION ALL and aggregation via GROUP BY (if needed). |
+| **Projection Node with Filter** | **BigQuery SELECT with WHERE Clause** | `Frozen_Cube` Projection node filters: `(in ("MANDT",'110','200')) AND ('$$IP_FC_COUNT$$' != 0)`. In BigQuery: `WHERE MANDT IN ('110','200') AND @IP_FC_COUNT != 0`. |
+| **Projection Node with Column Renaming** | **BigQuery SELECT with Column Aliases** | `Live_Cube` Projection node renames `_BIC_ZIO_PCTR` to `_B631_S_PROFTCTR` and `_BIC_ZIO_CCTR` to `_B631_S_COSTCNTR`. In BigQuery: `SELECT _BIC_ZIO_PCTR AS _B631_S_PROFTCTR, _BIC_ZIO_CCTR AS _B631_S_COSTCNTR`. |
+| **Union Node** | **BigQuery UNION ALL** | `Union_1` node combines `Frozen_Cube` and `Live_Cube`. In BigQuery: `SELECT ... FROM Frozen_Cube UNION ALL SELECT ... FROM Live_Cube`. |
+| **ConstantAttributeMapping (Literal Column)** | **BigQuery Literal in SELECT** | `Union_1` adds constant `FLAG` with values `'FC'` and `'LC'`. In BigQuery: `SELECT ..., 'FC' AS FLAG FROM Frozen_Cube UNION ALL SELECT ..., 'LC' AS FLAG FROM Live_Cube`. |
+| **Restricted Measure (Filter on Attribute)** | **BigQuery CASE Expression with Aggregation** | `RES_AMOUNT_LC` restricts `_B631_S_AMOUNT_DUMMY` where `FLAG='LC'`. In BigQuery: `SUM(CASE WHEN FLAG = 'LC' THEN _B631_S_AMOUNT ELSE 0 END) AS RES_AMOUNT_LC`. |
+| **Calculated Measure (IF/ISNULL)** | **BigQuery COALESCE or CASE** | `_B631_S_AMOUNT` formula: `IF(isnull("RES_AMOUNT_FC"), "RES_AMOUNT_LC", "RES_AMOUNT_FC")`. In BigQuery: `COALESCE(RES_AMOUNT_FC, RES_AMOUNT_LC) AS _B631_S_AMOUNT`. |
+| **Input Parameter (Variable)** | **BigQuery Script Variable or Query Parameter** | `IP_VERSION` and `IP_FC_COUNT` are input parameters. In BigQuery: Use query parameters (`@IP_VERSION`, `@IP_FC_COUNT`) or session variables in a Stored Procedure. |
+| **Derived Variable (Scalar Function Call)** | **BigQuery UDF or Inline Subquery** | `IP_FC_COUNT` is derived via scalar function `SFN_FC_FLAG(IP_VERSION)`. In BigQuery: Convert `SFN_FC_FLAG` to a BigQuery SQL UDF or inline the logic as a subquery/CTE. |
+| **Base Table Reference (DATA_BASE_TABLE)** | **BigQuery Table Reference** | `AZSRP_DS052_VT_S4` and `AZSRP_DS041_VT_S4` in schema `CVS_FRIP`. In BigQuery: `project.dataset.AZSRP_DS052_VT_S4`. |
+| **Measure Aggregation (sum)** | **BigQuery SUM() Function** | Measures `_B631_S_AMOUNT_DUMMY` and `_BIC_ZIO_AMT` use `aggregationType="sum"`. In BigQuery: `SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT`. |
+| **Attribute (Dimension Column)** | **BigQuery Column in SELECT** | Attributes like `FISCPER`, `FISCVARNT`, `_BIC_ZIO_SWEEK` are dimensions. In BigQuery: Include as-is in SELECT and GROUP BY. |
+| **Hidden Measure** | **BigQuery CTE or Subquery Column** | `RES_AMOUNT_LC` and `RES_AMOUNT_FC` are hidden (`hidden="true"`). In BigQuery: Define these as intermediate columns in a CTE, not exposed in the final SELECT. |
+| **MANDT Filter (Client Field)** | **BigQuery WHERE Clause** | Both Projection nodes filter `MANDT IN ('110','200')`. In BigQuery: `WHERE MANDT IN ('110','200')`. |
+| **emptyUnionBehavior="NO_ROW"** | **BigQuery UNION ALL (Default Behavior)** | Union node specifies `emptyUnionBehavior="NO_ROW"`. BigQuery UNION ALL naturally excludes empty result sets. |
+
+---
+
+## 3. Manual Adjustments Post Agent Conversion
+
+1. **Convert Scalar Function `SFN_FC_FLAG` to BigQuery UDF or Inline Logic**  
+   The derived variable `IP_FC_COUNT` calls `CVS_FRIP.Composite.Master::SFN_FC_FLAG(IP_VERSION)`. This scalar function must be converted to a BigQuery SQL UDF or the logic must be inlined as a subquery/CTE. Update the BigQuery view to reference the converted UDF or inline the function logic directly.
+
+2. **Update Schema and Table References**  
+   Replace HANA schema `CVS_FRIP` and table names `AZSRP_DS052_VT_S4`, `AZSRP_DS041_VT_S4` with BigQuery project, dataset, and table references (e.g., `project_id.dataset_name.AZSRP_DS052_VT_S4`).
+
+3. **Configure Query Parameters for Input Variables**  
+   The Calculation View uses input parameters `IP_VERSION` and `IP_FC_COUNT`. In BigQuery, implement these as query parameters (`@IP_VERSION`, `@IP_FC_COUNT`) or as variables in a BigQuery Stored Procedure if the view is invoked programmatically.
+
+4. **Update BI Tool Connections**  
+   The Calculation View is `reportingEnabled`, indicating it is consumed by BEx Queries, Analysis for Office, or other BI tools. Update BI tool connections (e.g., Looker Studio, Tableau, Power BI) to point to the new BigQuery View instead of the HANA Calculation View.
+
+5. **Set BigQuery Dataset Location and IAM Permissions**  
+   Ensure the target BigQuery dataset is created in the appropriate region. Grant necessary IAM roles (e.g., `roles/bigquery.dataViewer`, `roles/bigquery.jobUser`) to service accounts or users who will query the view.
+
+6. **Handle `defaultLanguage="$$language$$"` Variable**  
+   The Calculation View uses `defaultLanguage="$$language$$"`, which is a session variable in HANA. If language-specific logic exists in the underlying tables or scalar function, implement equivalent logic in BigQuery (e.g., using a query parameter or session variable).
+
+7. **Test Conditional UNION Logic with Different Parameter Values**  
+   Validate that the conditional logic (`IP_FC_COUNT != 0` for Frozen_Cube, `IP_FC_COUNT = 0` for Live_Cube) works correctly in BigQuery by testing with different values of `@IP_FC_COUNT` to ensure only the correct branch is executed.
+
+8. **Optimize Filter Pushdown for MANDT**  
+   Both projection nodes filter `MANDT IN ('110','200')`. Ensure this filter is pushed down to the base tables in BigQuery by verifying the query execution plan. If the base tables are partitioned or clustered, adjust the filter to leverage partitioning/clustering.
+
+---
+
+## 4. Optimization Techniques
+
+### **Partitioning**
+- **Recommendation:** Partition the base tables `AZSRP_DS052_VT_S4` and `AZSRP_DS041_VT_S4` by a time-unit column (e.g., `_BIC_ZIO_SAUDT` or `FISCPER`) if they contain historical data. This reduces the amount of data scanned when the view is queried with date filters.
+- **Justification:** The asset includes fiscal period fields (`FISCPER`, `FISCYEAR`, `FISCPER3`) and a date field (`_BIC_ZIO_SAUDT`), indicating time-based queries are common.
+
+### **Clustering Keys**
+- **Recommendation:** Cluster the base tables on frequently filtered columns: `MANDT`, `_BIC_ZIO_VER`, `_B631_S_GL_ACCT`, `_B631_S_PROFTCTR`. The view filters on `MANDT` and likely uses `_BIC_ZIO_VER` (version) and account/profit center fields for reporting.
+- **Justification:** The Projection nodes filter on `MANDT`, and the restricted measures filter on `FLAG`. Clustering on these and other dimension columns improves query performance.
+
+### **Materialized View for Aggregation**
+- **Recommendation:** If the view is queried frequently with the same parameter values, create a Materialized View that pre-computes the UNION ALL and aggregation logic. Refresh the Materialized View on a schedule (e.g., daily) using a Scheduled Query.
+- **Justification:** The `outputViewType="Aggregation"` and measures with `aggregationType="sum"` indicate aggregation-heavy queries. A Materialized View can cache results and reduce query latency.
+
+### **Query Pruning via Filter Pushdown**
+- **Recommendation:** Ensure filters on `MANDT`, `IP_FC_COUNT`, and `FLAG` are pushed down to the base tables and intermediate CTEs. Use BigQuery's query execution plan to verify filter pushdown.
+- **Justification:** The Projection nodes apply filters early (`MANDT IN ('110','200')`, `IP_FC_COUNT != 0`). Proper filter pushdown minimizes data scanned.
+
+### **BI Engine Acceleration**
+- **Recommendation:** Enable BI Engine for the BigQuery dataset if the view is consumed by BI tools (e.g., Looker Studio). BI Engine caches frequently queried data in-memory for sub-second response times.
+- **Justification:** The Calculation View is `reportingEnabled`, indicating it serves BI workloads. BI Engine is optimized for interactive dashboards.
+
+### **Temporary Tables for Complex Logic**
+- **Recommendation:** If the scalar function `SFN_FC_FLAG` contains complex logic, consider using a Temporary Table to store the result of `SFN_FC_FLAG(IP_VERSION)` before executing the main view logic. This avoids re-computing the function multiple times.
+- **Justification:** The derived variable `IP_FC_COUNT` is used in both Projection node filters. Caching the result in a Temporary Table can improve performance.
+
+### **Refactor or Rebuild**
+- **Recommendation:** **Refactor**  
+- **Justification:** The Calculation View has moderate complexity (3 calculation nodes: 2 Projections + 1 Union, plus restricted and calculated measures). The logic is well-structured and can be directly translated to BigQuery SQL. Refactoring is sufficient; a full rebuild is not necessary.
+
+---
+
+## 5. Sensitive and Privacy Data Assessment
+
+No sensitive data found
+
+---
+
+## 6. API Cost
+
+**API COST:** 0.0000
+
+---
+
+**End of Report**
