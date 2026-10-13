@@ -1,0 +1,213 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_SRPACT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTSRP_ATTR_ACT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns in <logicalModel><attributes> are mapped 1:1 from the source table SAP_S4.ZTSRP_ATTR_ACT via the Projection_1 node.
+- Measures (aggregated as SUM in output):
+  - RX_HRS_OPER
+  - FS_HRS_OPER
+  - RETAIL_SQFT_AMT
+  - TOTAL_SQFT_AMT
+- Non-measure attributes (grouped by in output): All other columns listed in <logicalModel><attributes> (71 columns).
+- Filter: MANDT IN (120, 200)
+- No calculated columns, calculated measures, or restricted measures are defined.
+- No parameters, placeholders, or variables are defined.
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation", requiring final GROUP BY + aggregation logic.
+- Data source is a single table: SAP_S4.ZTSRP_ATTR_ACT.
+- A Projection node (Projection_1) selects all columns, applies a filter on MANDT (MANDT IN (120, 200)), and maps all columns directly.
+- The logical model defines 75 attributes and 4 measures, with explicit SUM aggregation on the measures.
+- No joins, unions, calculated columns, or procedural logic.
+- No input parameters or placeholders.
+- dataCategory="CUBE", outputViewType="Aggregation" → final output must aggregate all measures by GROUP BY all non-measure attributes.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  -- Aggregated measures
+  SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+  SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+  SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+  SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+FROM
+  PROJECT.DATASET.ZTSRP_ATTR_ACT
+WHERE
+  MANDT IN (120, 200)
+GROUP BY
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The filter on MANDT (MANDT IN (120, 200)) is preserved exactly as in the Calculation View XML.
+- All columns are mapped 1:1 from the source table, as in the original Calculation View.
+- Aggregation logic is required because dataCategory="CUBE" and outputViewType="Aggregation": the four measures are aggregated using SUM(), and all other columns are included in the GROUP BY clause.
+- No calculated columns, parameters, placeholders, or input variables are present; thus, no special handling is required.
+- No joins or unions are present.
+- The BigQuery table reference PROJECT.DATASET.ZTSRP_ATTR_ACT is a placeholder; the actual dataset/project must be supplied.
+- The SQL preserves the explicit output column order and naming as defined in the Calculation View's logical model.
+- All 75 attributes plus 4 measures (79 columns) are included in the SELECT; the same 75 attributes are included in the GROUP BY.
+- No data type conversions are performed; values such as 120 and 200 are assumed to be numeric as in the source filter (if these are strings in the source, this must be adjusted after datatype validation).
+
+ASSUMPTIONS:
+- The source table SAP_S4.ZTSRP_ATTR_ACT is available in BigQuery as PROJECT.DATASET.ZTSRP_ATTR_ACT (placeholder only; actual mapping required).
+- The columns in SAP_S4.ZTSRP_ATTR_ACT have the same names and compatible types as defined in the Calculation View.
+- The filter values 120 and 200 for MANDT are numeric; if the source column is string, this filter must be quoted (datatype validation required).
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery dataset/project/table mapping for SAP_S4.ZTSRP_ATTR_ACT is not provided and must be supplied.
+- Data type of MANDT is not specified; the filter assumes numeric. If MANDT is a string, the filter should be MANDT IN ('120', '200').
+- Data types of all columns are UNRESOLVED; the conversion assumes column names and aggregation compatibility only.
+- If there are any source-level column name differences or datatype incompatibilities, these must be validated.
+
+CONFIDENCE:
+High
+
+This conversion covers all logic explicitly defined in the Calculation View XML, with no unresolved transformation logic or calculation. The only unresolved items are external to the artifact (table mapping and datatype validation). All output columns, aggregations, and groupings match the Calculation View's logical model.

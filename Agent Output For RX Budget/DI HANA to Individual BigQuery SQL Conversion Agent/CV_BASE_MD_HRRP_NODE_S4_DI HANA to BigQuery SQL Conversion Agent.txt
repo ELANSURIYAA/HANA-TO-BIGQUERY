@@ -1,0 +1,74 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_HRRP_NODE_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.HRRP_NODE
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: MANDT, filter: IN (120, 200))
+- HRYID (source: HRYID)
+- HRYVER (source: HRYVER)
+- NODECLS (source: NODECLS)
+- HRYNODE (source: HRYNODE)
+- PARNODE (source: PARNODE)
+- HRYVALTO (source: HRYVALTO)
+- HRYVALFROM (source: HRYVALFROM)
+- BALIND (source: BALIND)
+- NODETYPE (source: NODETYPE)
+- NODEVALUE (source: NODEVALUE)
+
+No calculated columns, measures, parameters, or placeholders are defined.
+
+SOURCE_LOGIC:
+- The Calculation View is a Projection type (outputViewType="Projection") with dataCategory="DIMENSION".
+- The source is the physical table SAP_S4.HRRP_NODE.
+- The output columns are a direct 1:1 mapping from the source table columns, as listed above.
+- The only transformation logic is a filter on MANDT: MANDT IN (120, 200).
+- No joins, unions, calculated columns, measures, aggregations, parameters, or placeholders are defined.
+- The root element's dataCategory is "DIMENSION" and outputViewType is "Projection", so the final output is row-level (no aggregation or GROUP BY is required).
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  HRYID,
+  HRYVER,
+  NODECLS,
+  HRYNODE,
+  PARNODE,
+  HRYVALTO,
+  HRYVALFROM,
+  BALIND,
+  NODETYPE,
+  NODEVALUE
+FROM
+  PROJECT.DATASET.HRRP_NODE
+WHERE
+  MANDT IN (120, 200)
+```
+
+CONVERSION_NOTES:
+- The source Calculation View is a simple projection with a filter on MANDT.
+- The filter MANDT IN (120, 200) is preserved exactly as in the HANA logic. The datatype for MANDT is not specified in the XML; the filter values are written as numeric literals to match the HANA source (which does not use quotes).
+- All output columns are mapped 1:1 from the source table SAP_S4.HRRP_NODE. No columns are renamed or aliased.
+- No calculated columns, measures, parameters, placeholders, or aggregation logic are present, so none are converted.
+- The BigQuery table reference PROJECT.DATASET.HRRP_NODE is a placeholder; the actual BigQuery project and dataset must be provided.
+- No HANA-specific functions, date/time logic, or special pattern matching is present, so no such conversion is required.
+- No CUBE or Aggregation logic is present, so no GROUP BY clause is required.
+- No datatype conversion is performed, as the source types are not specified.
+- The output columns in the SQL match exactly the attributes defined in the Calculation View's logical model (11 columns).
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.HRRP_NODE corresponds to SAP_S4.HRRP_NODE. (Actual project and dataset names must be supplied.)
+- MANDT is a numeric column, as filter values are provided as numbers (120, 200) in the Calculation View XML. If MANDT is actually a string/varchar in the source system, the filter values should be quoted accordingly. Datatype validation is required.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the HRRP_NODE table are not provided and must be mapped.
+- The datatype of MANDT is not specified; if it is not numeric, the filter values may need to be quoted (e.g., '120', '200').
+- No other unresolved items.
+
+CONFIDENCE:
+High
