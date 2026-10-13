@@ -1,379 +1,435 @@
-# RX_BUDGET BigQuery Recommendations and Consolidation Analysis
+# BigQuery Recommendations and Consolidation Analysis — SKF_BUDGET
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-- **Actual number of SQLs analyzed:** 10
-- **All supplied SQL files successfully analyzed:** Yes
-- **Should all supplied SQLs be consolidated:** No. The SQLs represent a multi-layered ecosystem with distinct roles, dependencies, and business logic. Full consolidation would reduce maintainability, increase complexity, and not reflect the original HANA lineage.
-- **Major reusable logic identified:** 
-  - Multiple Calculation Views and downstream composites reuse the same physical tables for master data (e.g., store attributes, comp flags).
-  - Several Calculation Views are simple projections or aggregations over the same tables.
-  - The composite Calculation Views (e.g., CV_COMP_FIN_BUDGET_STATIC) reuse several base Calculation Views as sources.
-- **Major redundancy identified:** 
-  - Multiple Calculation Views perform direct projections or aggregations on the same tables with minimal transformation.
-  - Some master data projections are repeated with no logic differences.
-- **Major consolidation groups:** 
-  - Static master data projections (e.g., CV_COMP_MD_COMPFL_STATIC, CV_COMP_MD_SRPACT_STATIC) can be consolidated as reusable views/materialized views.
-  - Base master data projections (e.g., CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4) are strong candidates for reuse.
-- **SQLs that should remain independent:** 
-  - CV_COMP_FIN_BUDGET_STATIC (complex aggregation, joins, business logic)
-  - STP_WSS_SRP_ATTRIBUTES_DI (procedural, snapshot logic)
-  - Base Calculation Views projecting master data (to preserve modularity and maintainability)
-- **Existing objects that should be reused:** 
-  - TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG (as physical tables for snapshot logic)
-- **Major architectural recommendation:** 
-  - Implement base master data projections as Views or Materialized Views for maximum reuse.
-  - Keep composite and snapshot logic independent.
-  - Use Materialized Views or Tables for snapshot/intermediate tables.
-  - Leverage dependency flow from base to composite views, preserving lineage.
-- **Major View / Materialized View / Physical Table recommendations:** 
-  - Views for simple projections and master data.
-  - Materialized Views or Tables for snapshot/intermediate datasets.
-  - Views for composite logic unless snapshotting is required.
-- **Important dependency patterns:** 
-  - Composite Calculation Views depend on multiple base Calculation Views.
-  - Stored Procedure populates physical tables consumed by static Calculation Views.
-- **Snapshot/circular patterns:** 
-  - STP_WSS_SRP_ATTRIBUTES_DI manages snapshot logic into TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG, which are then projected by static Calculation Views.
-- **Key performance and cost opportunities:** 
-  - Early filtering at the base view level.
-  - Materialization of static master data for reuse.
-  - Avoid repeated source scans by consolidating projections.
-- **Overall recommendation confidence:** High (with minor items requiring validation around datatype mapping and parameter handling).
+**Actual number of SQLs analyzed:** 10  
+**All supplied SQL files successfully analyzed:** Yes  
+**Should all supplied SQLs be consolidated:** No  
+**Major reusable logic identified:**
+- Row-level projections from source tables (dimension views)
+- Aggregation/grouping logic for CUBE views
+- Common filters on client (MANDT/RCLNT) columns
+- Shared source-to-target mappings for store attributes and comp flag tables
+
+**Major redundancy identified:**
+- Repeated row-level projections with identical column mappings
+- Multiple views/procedures referencing the same source tables for similar outputs
+
+**Major consolidation groups:**
+- Static dimension projections (can be partially consolidated or reused as views)
+- Store attribute and comp flag aggregation logic (can share intermediate datasets)
+
+**SQLs that should remain independent:**
+- CV_COMP_SKF_BUDGET_STATIC (complex join/aggregation)
+- STP_WSS_SRP_ATTRIBUTES (procedural snapshot logic)
+- CV_BASE_SKF_WEEKLY_BUDGET_S4 (complex union/aggregation)
+
+**Existing objects that should be reused:**
+- TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG (as reusable tables/views)
+- CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4 (as source views for snapshot logic)
+
+**Major architectural recommendation:**
+- Use Views for simple projections and reusable dimension logic
+- Use Materialized Views for aggregation-heavy CUBE logic with frequent downstream usage
+- Use Physical Tables for snapshot/persisted datasets (e.g., STP_WSS_SRP_ATTRIBUTES output tables)
+- Consolidate static dimension projections where possible, but preserve unique business logic
+
+**Major View / Materialized View / Physical Table recommendations:**
+- Dimension projections: Views
+- Aggregation/CUBE logic: Materialized Views (where reuse and performance justify)
+- Snapshot tables: Physical Tables
+
+**Important dependency patterns:**
+- Calculation Views feed into composite views and procedures
+- Stored procedure creates snapshot tables consumed by static views
+- Complex join/aggregation views depend on multiple dimension and snapshot tables
+
+**Snapshot/circular patterns:**
+- STP_WSS_SRP_ATTRIBUTES establishes a controlled snapshot cycle for TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
+- CV_COMP_SKF_BUDGET_STATIC depends on snapshot tables and multiple dimension views
+
+**Key performance and cost opportunities:**
+- Early filtering on client columns
+- Materialize aggregation-heavy logic for reuse
+- Eliminate redundant projections by sharing reusable views
+
+**Overall recommendation confidence:** High (with minor unresolved items requiring validation, e.g., datatype mapping, parameter handling)
 
 ---
 
 ## 2. INPUT VALIDATION
 
-| Validation Item                | Result |
-|-------------------------------|--------|
-| Lineage provided               | Yes    |
-| ZIP provided                   | Yes    |
-| Actual SQL file count          | 10     |
-| SQL files successfully analyzed| 10     |
-| Unreadable/invalid files       | None   |
-| Successfully analyzed          | Yes    |
+| Validation Item                | Result     |
+|-------------------------------|------------|
+| Lineage provided               | Yes        |
+| ZIP provided                   | Yes        |
+| Actual SQL file count          | 10         |
+| SQL files successfully analyzed| 10         |
+| Unreadable/invalid files       | None       |
+| Successfully analyzed          | Yes        |
 
-**SQL files found and analyzed:**
-- CV_COMP_MD_COMPFL_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt
-- CV_COMP_FIN_BUDGET_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt
-- CV_BASE_FIN_WEEKLY_BUDGET_S4_DI HANA to BigQuery SQL Conversion Agent.txt
-- CV_BASE_MD_SRPACT_S4_DI HANA to BigQuery SQL Conversion Agent.txt
+**SQL files found:**
 - CV_BASE_MD_CEPCT_S4_DI HANA to BigQuery SQL Conversion Agent.txt
 - CV_BASE_MD_COMPFL_S4_DI HANA to BigQuery SQL Conversion Agent.txt
-- CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent.txt
 - CV_BASE_MD_HRRP_NODE_S4_DI HANA to BigQuery SQL Conversion Agent.txt
-- STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent.txt
+- CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent.txt
+- CV_BASE_MD_SRPACT_S4_DI HANA to BigQuery SQL Conversion Agent.txt
+- CV_BASE_SKF_WEEKLY_BUDGET_S4_DI HANA to BigQuery SQL Conversion Agent.txt
+- CV_COMP_MD_COMPFL_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt
 - CV_COMP_MD_SRPACT_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt
+- CV_COMP_SKF_BUDGET_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt
+- STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent.txt
 
 ---
 
 ## 3. SQL INVENTORY
 
-| SQL File                                                           | Main Purpose                                   | Sources                              | Main Transformations             | Output                         | Upstream Dependencies             | Downstream Usage                   |
-|--------------------------------------------------------------------|------------------------------------------------|--------------------------------------|----------------------------------|----------------------------------|------------------------------------|------------------------------------|
-| CV_COMP_MD_COMPFL_STATIC_DI HANA to BigQuery SQL Conversion Agent  | Static projection of comp flag table            | TBL_WSS_SRP_COMPFLAG                 | Direct projection                 | Comp flag dimension             | STP_WSS_SRP_ATTRIBUTES_DI         | CV_COMP_FIN_BUDGET_STATIC, others  |
-| CV_COMP_FIN_BUDGET_STATIC_DI HANA to BigQuery SQL Conversion Agent | Composite budget aggregation, business logic    | Multiple base Calculation Views      | Joins, aggregations, calculations | Budget cube                     | All base Calculation Views         | Final reporting/output             |
-| CV_BASE_FIN_WEEKLY_BUDGET_S4_DI HANA to BigQuery SQL Conversion Agent | Weekly financial data cube                    | AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4 | Union, aggregation, calculation   | Weekly budget snapshot           | Scalar function (external param)   | CV_COMP_FIN_BUDGET_STATIC          |
-| CV_BASE_MD_SRPACT_S4_DI HANA to BigQuery SQL Conversion Agent      | Store master data projection                   | ZTSRP_ATTR_ACT                       | Projection, aggregation           | Store attributes                | None                               | STP_WSS_SRP_ATTRIBUTES_DI, others  |
-| CV_BASE_MD_CEPCT_S4_DI HANA to BigQuery SQL Conversion Agent       | Profit center text projection                  | CEPCT                                | Projection, filter                | Profit center text              | None                               | CV_COMP_FIN_BUDGET_STATIC          |
-| CV_BASE_MD_COMPFL_S4_DI HANA to BigQuery SQL Conversion Agent      | Comp flag table projection                     | TBL_WSS_SRP_COMPFLAG                 | Projection                        | Comp flag base                  | None                               | STP_WSS_SRP_ATTRIBUTES_DI          |
-| CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent    | Calendar week master data projection           | ZTFIGL_RCALWEEK                      | Projection, filter                | Calendar week                   | None                               | CV_COMP_FIN_BUDGET_STATIC          |
-| CV_BASE_MD_HRRP_NODE_S4_DI HANA to BigQuery SQL Conversion Agent   | Hierarchy node projection                      | HRRP_NODE                            | Projection, filter                | Hierarchy node                  | None                               | CV_COMP_FIN_BUDGET_STATIC          |
-| STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent    | Snapshot ETL, loads physical tables            | CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4 | Delete, insert, filter         | TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG | None                      | CV_COMP_MD_COMPFL_STATIC, CV_COMP_MD_SRPACT_STATIC |
-| CV_COMP_MD_SRPACT_STATIC_DI HANA to BigQuery SQL Conversion Agent  | Static projection of store attribute table      | TBL_WSS_SRP_ATTR_ACT                  | Aggregation, projection           | Store attribute dimension        | STP_WSS_SRP_ATTRIBUTES_DI          | CV_COMP_FIN_BUDGET_STATIC, others  |
+| SQL File                                         | Main Purpose                                         | Sources                                      | Main Transformations                          | Output                                | Upstream Dependencies                    | Downstream Usage                         |
+|--------------------------------------------------|------------------------------------------------------|-----------------------------------------------|-----------------------------------------------|----------------------------------------|------------------------------------------|------------------------------------------|
+| CV_BASE_MD_CEPCT_S4_DI                           | Project profit center text dimension                 | SAP_S4.CEPCT                                 | Row-level projection, filter on MANDT         | Profit center text dimension           | None                                     | CV_COMP_SKF_BUDGET_STATIC, others        |
+| CV_BASE_MD_COMPFL_S4_DI                          | Project comp flag dimension                          | SAP_S4.ZTSRP_COMPFL                          | Row-level projection, filter on MANDT         | Comp flag dimension                    | None                                     | STP_WSS_SRP_ATTRIBUTES, others           |
+| CV_BASE_MD_HRRP_NODE_S4_DI                       | Project hierarchy node dimension                     | SAP_S4.HRRP_NODE                             | Row-level projection, filter on MANDT         | Hierarchy node dimension               | None                                     | CV_COMP_SKF_BUDGET_STATIC, others        |
+| CV_BASE_MD_RCALWEEK_S4_DI                        | Project calendar week dimension                      | SAP_S4.ZTFIGL_RCALWEEK                       | Row-level projection, filter on RCLNT         | Calendar week dimension                | None                                     | CV_COMP_SKF_BUDGET_STATIC, others        |
+| CV_BASE_MD_SRPACT_S4_DI                          | Store attribute aggregation                          | SAP_S4.ZTSRP_ATTR_ACT                        | Aggregation (SUM), filter on MANDT            | Store attribute aggregation            | None                                     | STP_WSS_SRP_ATTRIBUTES                   |
+| CV_BASE_SKF_WEEKLY_BUDGET_S4_DI                  | Weekly budget aggregation (union of cubes)           | AZSRP_DS092_VT_S4, AZSRP_DS031_VT_S4         | Union, aggregation, restricted measures       | Weekly budget cube                     | None                                     | CV_COMP_SKF_BUDGET_STATIC                |
+| CV_COMP_MD_COMPFL_STATIC_DI                      | Static projection of comp flag snapshot table        | TBL_WSS_SRP_COMPFLAG                         | Row-level projection                         | Comp flag snapshot dimension           | STP_WSS_SRP_ATTRIBUTES                   | CV_COMP_SKF_BUDGET_STATIC                |
+| CV_COMP_MD_SRPACT_STATIC_DI                      | Static projection of store attribute snapshot table  | TBL_WSS_SRP_ATTR_ACT                         | Aggregation (SUM)                            | Store attribute snapshot dimension     | STP_WSS_SRP_ATTRIBUTES                   | CV_COMP_SKF_BUDGET_STATIC                |
+| CV_COMP_SKF_BUDGET_STATIC_DI                     | Composite budget cube (complex join/aggregation)     | Multiple: CV_BASE_SKF_WEEKLY_BUDGET_S4, etc. | Joins, filters, calculations, aggregation     | Composite budget cube                  | Multiple dimension views, snapshots      | Final reporting/output                   |
+| STP_WSS_SRP_ATTRIBUTES_DI                        | Procedural snapshot population                       | CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4   | Deletes, inserts, procedural logic            | TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG | CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4 | CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC |
 
 ---
 
 ## 4. OBJECT TYPE RECOMMENDATION
 
-| SQL File                                                           | Recommended Object   | Data Freshness    | Reuse Level         | Rationale                                                                                 | Confidence |
-|--------------------------------------------------------------------|---------------------|-------------------|---------------------|------------------------------------------------------------------------------------------|------------|
-| CV_COMP_MD_COMPFL_STATIC_DI HANA to BigQuery SQL Conversion Agent  | Materialized View   | Periodic/Snapshot | High                | Static dimension, reused in multiple composites, loaded by ETL/snapshot                   | High       |
-| CV_COMP_FIN_BUDGET_STATIC_DI HANA to BigQuery SQL Conversion Agent | View                | Near-real-time    | High                | Complex aggregation, joins, business logic, depends on up-to-date sources                 | High       |
-| CV_BASE_FIN_WEEKLY_BUDGET_S4_DI HANA to BigQuery SQL Conversion Agent | View              | Near-real-time    | High                | Aggregated cube, used as input to composite, logic is deterministic                       | High       |
-| CV_BASE_MD_SRPACT_S4_DI HANA to BigQuery SQL Conversion Agent      | Materialized View   | Periodic/Snapshot | High                | Master data, loaded by ETL, consumed by static projections, benefits from materialization | High       |
-| CV_BASE_MD_CEPCT_S4_DI HANA to BigQuery SQL Conversion Agent       | View                | Near-real-time    | Medium              | Simple projection, low transformation, can be recomputed                                 | High       |
-| CV_BASE_MD_COMPFL_S4_DI HANA to BigQuery SQL Conversion Agent      | Materialized View   | Periodic/Snapshot | High                | Master data, loaded by ETL, consumed by static projections, benefits from materialization | High       |
-| CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent    | View                | Near-real-time    | Medium              | Simple projection, low transformation, can be recomputed                                 | High       |
-| CV_BASE_MD_HRRP_NODE_S4_DI HANA to BigQuery SQL Conversion Agent   | View                | Near-real-time    | Medium              | Simple projection, low transformation, can be recomputed                                 | High       |
-| STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent    | Physical Table      | Periodic/Snapshot | High                | ETL/snapshot logic, must persist state for downstream consumption                        | High       |
-| CV_COMP_MD_SRPACT_STATIC_DI HANA to BigQuery SQL Conversion Agent  | Materialized View   | Periodic/Snapshot | High                | Static dimension, reused in multiple composites, loaded by ETL/snapshot                   | High       |
+| SQL File                        | Recommended Object       | Data Freshness         | Reuse Level             | Rationale                                                                                     | Confidence |
+|----------------------------------|-------------------------|------------------------|------------------------|-----------------------------------------------------------------------------------------------|------------|
+| CV_BASE_MD_CEPCT_S4_DI           | View                    | Near real-time         | High                   | Simple projection, reusable dimension, low transformation complexity                          | High       |
+| CV_BASE_MD_COMPFL_S4_DI          | View                    | Near real-time         | Medium                 | Simple projection, reusable for comp flag logic                                                | High       |
+| CV_BASE_MD_HRRP_NODE_S4_DI       | View                    | Near real-time         | Medium                 | Simple projection, reusable for hierarchy logic                                                | High       |
+| CV_BASE_MD_RCALWEEK_S4_DI        | View                    | Near real-time         | Medium                 | Simple projection, reusable for calendar week logic                                            | High       |
+| CV_BASE_MD_SRPACT_S4_DI          | Materialized View       | Daily/scheduled        | High                   | Aggregation-heavy, feeds snapshot logic, reused in multiple downstream objects                 | High       |
+| CV_BASE_SKF_WEEKLY_BUDGET_S4_DI  | Materialized View       | Daily/scheduled        | High                   | Union/aggregation logic, reused in composite cube, performance benefit for materialization     | Medium     |
+| CV_COMP_MD_COMPFL_STATIC_DI      | View                    | Snapshot               | Medium                 | Row-level snapshot, reusable as static comp flag dimension                                    | High       |
+| CV_COMP_MD_SRPACT_STATIC_DI      | Materialized View       | Snapshot               | High                   | Aggregation-heavy snapshot, feeds composite cube, performance benefit for materialization      | High       |
+| CV_COMP_SKF_BUDGET_STATIC_DI     | Materialized View       | Daily/scheduled        | High                   | Complex join/aggregation, feeds reporting/output, performance benefit for materialization      | Medium     |
+| STP_WSS_SRP_ATTRIBUTES_DI        | Physical Table          | Snapshot               | High                   | Procedural logic, creates snapshot tables, must persist for downstream views                   | High       |
 
 ---
 
 ## 5. COMMON LOGIC ANALYSIS
 
-| Common Logic | SQLs Using It | Actual Similarity | Business Logic Match | Existing Object | Reusable? | Reuse Potential | Confidence |
-|---|---|---|---|---|---|---|---|
-| Direct projection of TBL_WSS_SRP_COMPFLAG | CV_COMP_MD_COMPFL_STATIC, CV_BASE_MD_COMPFL_S4, STP_WSS_SRP_ATTRIBUTES_DI | 1:1 projection, same columns | Yes | TBL_WSS_SRP_COMPFLAG | Yes | High | High |
-| Direct projection of TBL_WSS_SRP_ATTR_ACT | CV_COMP_MD_SRPACT_STATIC, CV_BASE_MD_SRPACT_S4, STP_WSS_SRP_ATTRIBUTES_DI | 1:1 projection, same columns | Yes | TBL_WSS_SRP_ATTR_ACT | Yes | High | High |
-| Aggregation of store attributes | CV_COMP_MD_SRPACT_STATIC, CV_BASE_MD_SRPACT_S4 | SUM aggregation, same columns | Yes | TBL_WSS_SRP_ATTR_ACT | Yes | High | High |
-| Simple projection of master/text tables | CV_BASE_MD_CEPCT_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_HRRP_NODE_S4 | 1:1 projection, filter on MANDT/RCLNT | Yes | Underlying tables | Yes | Medium | High |
-| Consumption of snapshot tables in composites | CV_COMP_FIN_BUDGET_STATIC, CV_COMP_MD_COMPFL_STATIC, CV_COMP_MD_SRPACT_STATIC | All reference physical tables | Yes | TBL_WSS_SRP_ATTR_ACT, COMPFLAG | Yes | High | High |
+| Common Logic                   | SQLs Using It                               | Actual Similarity    | Business Logic Match | Existing Object           | Reusable? | Reuse Potential | Confidence |
+|--------------------------------|---------------------------------------------|----------------------|---------------------|---------------------------|-----------|-----------------|------------|
+| Row-level projection           | CV_BASE_MD_CEPCT_S4, CV_BASE_MD_COMPFL_S4, CV_BASE_MD_HRRP_NODE_S4, CV_BASE_MD_RCALWEEK_S4 | High                 | Yes                 | Views                      | Yes       | High            | High       |
+| Aggregation (SUM, GROUP BY)    | CV_BASE_MD_SRPACT_S4, CV_COMP_MD_SRPACT_STATIC | High                 | Yes                 | Materialized View/Tables   | Yes       | High            | High       |
+| Snapshot population            | STP_WSS_SRP_ATTRIBUTES, CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC | Medium               | Yes                 | Physical Table/Views        | Yes       | Medium           | Medium     |
+| Complex join/aggregation       | CV_COMP_SKF_BUDGET_STATIC                   | Unique, partial      | Partial             | Materialized View          | Partial   | Medium           | Medium     |
 
 ---
 
 ## 6. REDUNDANCY ANALYSIS
 
-| Redundant Logic | SQLs Affected | What Is Repeated | Potential Reduction | Recommended Action | Confidence |
-|---|---|---|---|---|---|
-| Projection of comp flag table | CV_COMP_MD_COMPFL_STATIC, CV_BASE_MD_COMPFL_S4 | 1:1 projection | Consolidate as single materialized view| Use one reusable Materialized View | High |
-| Projection of store attributes| CV_COMP_MD_SRPACT_STATIC, CV_BASE_MD_SRPACT_S4 | 1:1 projection | Consolidate as single materialized view| Use one reusable Materialized View | High |
-| Simple master/text projections| CV_BASE_MD_CEPCT_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_HRRP_NODE_S4 | 1:1 projection, simple filter | None (modular, low cost) | Keep as independent Views for modularity | High |
+| Redundant Logic                | SQLs Affected                               | What Is Repeated     | Potential Reduction | Recommended Action         | Confidence |
+|-------------------------------|---------------------------------------------|----------------------|---------------------|----------------------------|------------|
+| Row-level projection           | Multiple dimension views                    | Identical column mapping | Consolidate as reusable views | Create shared views for projections | High       |
+| Aggregation logic              | Store attribute aggregation/snapshot views  | SUM, GROUP BY on same columns | Materialize and reuse intermediate results | Use materialized views for aggregation | High       |
+| Snapshot logic                 | STP_WSS_SRP_ATTRIBUTES, static views        | Snapshot population and projection | Share snapshot tables as reusable sources | Use physical tables for snapshots, views for projections | High       |
 
 ---
 
 ## 7. REUSE RECOMMENDATIONS
 
-| Common Logic | SQLs Using It | Existing Object | Existing Object Reusable? | Recommendation | Recommended Object Type | Rationale | Confidence |
-|---|---|---|---|---|---|---|---|
-| Comp flag snapshot/projection | CV_COMP_MD_COMPFL_STATIC, CV_BASE_MD_COMPFL_S4 | TBL_WSS_SRP_COMPFLAG | Yes | Reuse Materialized View/Table | Materialized View | Centralizes logic, reduces redundancy | High |
-| Store attribute snapshot/projection | CV_COMP_MD_SRPACT_STATIC, CV_BASE_MD_SRPACT_S4 | TBL_WSS_SRP_ATTR_ACT | Yes | Reuse Materialized View/Table | Materialized View | Centralizes logic, reduces redundancy | High |
-| Master/text projections | CV_BASE_MD_CEPCT_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_HRRP_NODE_S4 | Underlying tables | Yes | Reuse as Views | View | Simple logic, modularity, up-to-date data | High |
-| Composite budget cube consumption | CV_COMP_FIN_BUDGET_STATIC | All base Calculation Views | Yes | Reuse all base Views | View | Ensures up-to-date, modular, maintainable | High |
+| Common Logic                   | SQLs Using It                               | Existing Object      | Existing Object Reusable? | Recommendation             | Recommended Object Type | Rationale                                     | Confidence |
+|-------------------------------|---------------------------------------------|----------------------|--------------------------|----------------------------|------------------------|-----------------------------------------------|------------|
+| Dimension projection           | Multiple dimension views                    | View                 | Yes                      | Consolidate as reusable views | View                   | Simple projections, reused in downstream logic | High       |
+| Store attribute aggregation    | CV_BASE_MD_SRPACT_S4, static views          | Materialized View    | Yes                      | Materialize and reuse        | Materialized View      | Aggregation-heavy logic, reused by snapshots   | High       |
+| Comp flag snapshot             | STP_WSS_SRP_ATTRIBUTES, static views        | Physical Table       | Yes                      | Use snapshot tables as source| Physical Table         | Procedural snapshot, must persist for reuse    | High       |
 
 ---
 
 ## 8. CONSOLIDATION RECOMMENDATIONS
 
-### Consolidation Group: Static Master Data Projections
+### Consolidation Group: Dimension Projections
 
 **SQLs involved:**  
-- CV_COMP_MD_COMPFL_STATIC_DI HANA to BigQuery SQL Conversion Agent  
-- CV_BASE_MD_COMPFL_S4_DI HANA to BigQuery SQL Conversion Agent  
-- CV_COMP_MD_SRPACT_STATIC_DI HANA to BigQuery SQL Conversion Agent  
-- CV_BASE_MD_SRPACT_S4_DI HANA to BigQuery SQL Conversion Agent
+CV_BASE_MD_CEPCT_S4_DI, CV_BASE_MD_COMPFL_S4_DI, CV_BASE_MD_HRRP_NODE_S4_DI, CV_BASE_MD_RCALWEEK_S4_DI
 
 **Common logic:**  
-- Direct projection and/or aggregation of the same physical tables (TBL_WSS_SRP_COMPFLAG, TBL_WSS_SRP_ATTR_ACT).
+Row-level projection, filter on client columns, 1:1 source-to-output mapping
 
 **Unique logic:**  
-- Some projections include aggregation (SUM), others are row-level projections.
+Different source tables, different column sets
 
 **What should be consolidated:**  
-- Implement a single Materialized View for each physical table, with both 1:1 projection and aggregated versions if required.
+Reusable as views for downstream logic
 
 **What should remain separate:**  
-- Aggregated and non-aggregated versions should be separate if both are required by downstream consumers.
+Each dimension should have its own view due to unique columns/business context
 
 **Existing object that can be reused:**  
-- TBL_WSS_SRP_COMPFLAG, TBL_WSS_SRP_ATTR_ACT.
+None (each is unique but can be reused as a view)
 
 **New intermediate object required:**  
-- None, if Materialized Views are created for both projection and aggregation.
+No
 
 **Recommended object type:**  
-- Materialized View.
+View
 
 **Performance benefit:**  
-- Eliminates repeated scans and projections, improves downstream performance.
+Reduced repeated source scans
 
 **Cost benefit:**  
-- Reduces compute cost by sharing precomputed results.
+Minimal, but improved maintainability
 
 **Maintainability benefit:**  
-- Centralizes logic, improves maintainability.
+High, clear separation of dimension logic
 
 **Reason:**  
-- All projections are identical or nearly identical; aggregation logic is simple.
+Logic is identical in structure but unique in content; views maximize reuse
 
 **Confidence:**  
-- High.
+High
 
 ---
 
-### Consolidation Group: Base Master Data Projections
+### Consolidation Group: Store Attribute Aggregation/Snapshot
 
 **SQLs involved:**  
-- CV_BASE_MD_CEPCT_S4_DI HANA to BigQuery SQL Conversion Agent  
-- CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent  
-- CV_BASE_MD_HRRP_NODE_S4_DI HANA to BigQuery SQL Conversion Agent
+CV_BASE_MD_SRPACT_S4_DI, CV_COMP_MD_SRPACT_STATIC_DI, STP_WSS_SRP_ATTRIBUTES_DI
 
 **Common logic:**  
-- Simple 1:1 projection with filter on MANDT/RCLNT.
+Aggregation (SUM, GROUP BY), snapshot population
 
 **Unique logic:**  
-- Each projects from a different underlying master data table.
+Procedural snapshot logic in STP_WSS_SRP_ATTRIBUTES_DI
 
 **What should be consolidated:**  
-- None; keep as independent Views for modularity.
+Aggregation logic can be materialized and reused for snapshot and static views
 
 **What should remain separate:**  
-- Each master data view should remain independent.
+Procedural logic for snapshot population must remain in stored procedure
 
 **Existing object that can be reused:**  
-- Underlying tables.
+TBL_WSS_SRP_ATTR_ACT, CV_BASE_MD_SRPACT_S4
 
 **New intermediate object required:**  
-- None.
+Materialized view for aggregation logic
 
 **Recommended object type:**  
-- View.
+Materialized View (for aggregation), Physical Table (for snapshot)
 
 **Performance benefit:**  
-- None significant; logic is simple.
+Reduced repeated aggregations
 
 **Cost benefit:**  
-- None significant.
+Reduced compute for downstream snapshot views
 
 **Maintainability benefit:**  
-- High; modularity and clarity.
+Clear separation of aggregation and snapshot logic
 
 **Reason:**  
-- Each master data view is logically distinct.
+Aggregation logic is reused; snapshot must persist
 
 **Confidence:**  
-- High.
+High
+
+---
+
+### Consolidation Group: Composite Budget Cube
+
+**SQLs involved:**  
+CV_COMP_SKF_BUDGET_STATIC_DI, CV_BASE_SKF_WEEKLY_BUDGET_S4_DI
+
+**Common logic:**  
+Complex join/aggregation, union of cubes, parameterized filters
+
+**Unique logic:**  
+Multiple joins, calculated columns, parameter mapping
+
+**What should be consolidated:**  
+Aggregation and join logic can be materialized as a composite cube
+
+**What should remain separate:**  
+Parameter handling, unique business logic for composite cube
+
+**Existing object that can be reused:**  
+Dimension views, materialized views for aggregation
+
+**New intermediate object required:**  
+Materialized view for composite cube
+
+**Recommended object type:**  
+Materialized View
+
+**Performance benefit:**  
+Reduced repeated joins/aggregations
+
+**Cost benefit:**  
+Reduced compute for reporting/output
+
+**Maintainability benefit:**  
+Clear separation of complex logic
+
+**Reason:**  
+Composite cube logic is unique but can reuse underlying views
+
+**Confidence:**  
+Medium
+
+---
+
+**If a SQL should not be consolidated, explicitly explain why:**  
+- Dimension views should remain independent due to unique business context and column sets.
+- Procedural snapshot logic must remain in stored procedure to preserve snapshot cycle.
+- Composite cube logic is unique and should not be merged with unrelated projections.
 
 ---
 
 ## 9. INDEPENDENT SQL RECOMMENDATIONS
 
-| SQL                                                      | Unique Logic                                              | Reason for Independence                                 | Reusable Portion                    | Recommended Object Type | Confidence |
-|----------------------------------------------------------|----------------------------------------------------------|---------------------------------------------------------|--------------------------------------|------------------------|------------|
-| CV_COMP_FIN_BUDGET_STATIC_DI HANA to BigQuery SQL Conversion Agent | Complex joins, aggregations, business logic               | Unique business rules, complex dependencies             | Consumes reusable base views         | View                   | High       |
-| STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent    | Procedural ETL, snapshot logic, deletes/inserts           | Implements snapshot, cannot be safely consolidated      | N/A                                 | Physical Table         | High       |
-| CV_BASE_FIN_WEEKLY_BUDGET_S4_DI HANA to BigQuery SQL Conversion Agent | Union, aggregation, parameter logic                       | Unique cube logic, parameter handling                   | N/A                                 | View                   | High       |
-| CV_BASE_MD_CEPCT_S4_DI HANA to BigQuery SQL Conversion Agent       | Profit center text projection                             | Distinct master data                                   | N/A                                 | View                   | High       |
-| CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent    | Calendar week master data                                 | Distinct master data                                   | N/A                                 | View                   | High       |
-| CV_BASE_MD_HRRP_NODE_S4_DI HANA to BigQuery SQL Conversion Agent   | Hierarchy node projection                                 | Distinct master data                                   | N/A                                 | View                   | High       |
+| SQL                              | Unique Logic                                         | Reason for Independence           | Reusable Portion                   | Recommended Object Type | Confidence |
+|----------------------------------|------------------------------------------------------|-----------------------------------|------------------------------------|------------------------|------------|
+| CV_BASE_MD_CEPCT_S4_DI           | Profit center text projection                        | Unique source/table, unique columns | Projection logic                   | View                   | High       |
+| CV_BASE_MD_COMPFL_S4_DI          | Comp flag projection                                 | Unique source/table, unique columns | Projection logic                   | View                   | High       |
+| CV_BASE_MD_HRRP_NODE_S4_DI       | Hierarchy node projection                            | Unique source/table, unique columns | Projection logic                   | View                   | High       |
+| CV_BASE_MD_RCALWEEK_S4_DI        | Calendar week projection                             | Unique source/table, unique columns | Projection logic                   | View                   | High       |
+| CV_BASE_MD_SRPACT_S4_DI          | Store attribute aggregation                          | Unique aggregation, filter logic    | Aggregation logic                  | Materialized View      | High       |
+| CV_BASE_SKF_WEEKLY_BUDGET_S4_DI  | Weekly budget cube                                   | Unique union/aggregation logic      | Aggregation logic                  | Materialized View      | Medium     |
+| CV_COMP_MD_COMPFL_STATIC_DI      | Comp flag snapshot projection                        | Unique snapshot dimension           | Projection logic                   | View                   | High       |
+| CV_COMP_MD_SRPACT_STATIC_DI      | Store attribute snapshot aggregation                 | Unique snapshot aggregation         | Aggregation logic                  | Materialized View      | High       |
+| CV_COMP_SKF_BUDGET_STATIC_DI     | Composite budget cube                                | Unique join/aggregation logic       | Aggregation/join logic             | Materialized View      | Medium     |
+| STP_WSS_SRP_ATTRIBUTES_DI        | Procedural snapshot population                       | Unique procedural logic             | None                              | Physical Table         | High       |
 
 ---
 
 ## 10. PERFORMANCE AND COST OPTIMIZATION
 
-| SQLs affected                                                      | Current Issue                            | Recommended Approach                                   | Expected Benefit                                   | Confidence |
-|--------------------------------------------------------------------|------------------------------------------|-------------------------------------------------------|----------------------------------------------------|------------|
-| All projections of TBL_WSS_SRP_COMPFLAG, TBL_WSS_SRP_ATTR_ACT      | Repeated scans/projections               | Create Materialized Views for both projection/agg      | Reduces repeated scans, improves performance        | High       |
-| All master/text projections                                        | None (already efficient)                 | Keep as simple Views                                  | Maintains modularity, low cost                      | High       |
-| CV_COMP_FIN_BUDGET_STATIC, CV_BASE_FIN_WEEKLY_BUDGET_S4            | Complex joins, aggregations              | Early filtering, dependency on pre-aggregated views    | Reduces compute in downstream composites            | High       |
-| STP_WSS_SRP_ATTRIBUTES_DI                                          | ETL/snapshot logic                       | Use Physical Tables for snapshot, avoid recomputation  | Ensures data persistence, supports snapshotting     | High       |
+| SQLs affected                       | Current issue                                | Recommended approach                           | Expected benefit                  | Confidence |
+|-------------------------------------|----------------------------------------------|------------------------------------------------|-----------------------------------|------------|
+| Dimension projections               | Repeated row-level scans                     | Use reusable views for projections             | Reduced source scans              | High       |
+| Aggregation logic                   | Repeated SUM/GROUP BY processing             | Materialize aggregation-heavy logic            | Reduced compute, faster queries   | High       |
+| Composite cube                      | Complex join/aggregation                     | Materialize composite cube as MV               | Reduced repeated joins/aggregations| Medium     |
+| Snapshot tables                     | Procedural snapshot population               | Use physical tables for persisted snapshots    | Accurate snapshot, reuse benefit  | High       |
+| Filtering on client columns         | Late filtering                               | Apply early filtering in all views             | Reduced data scanned              | High       |
 
 ---
 
 ## 11. DATA FRESHNESS AND REFRESH RECOMMENDATIONS
 
-| SQL / Object                                | Required Freshness    | Recommended Refresh Approach         | Reason                                      | Confidence |
-|----------------------------------------------|----------------------|--------------------------------------|---------------------------------------------|------------|
-| TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG  | Periodic/Snapshot    | Refresh via ETL/Stored Procedure     | Snapshot logic, periodic load required      | High       |
-| CV_COMP_MD_COMPFL_STATIC, CV_COMP_MD_SRPACT_STATIC | Periodic/Snapshot    | Refresh after ETL completes          | Downstream of snapshot tables               | High       |
-| CV_COMP_FIN_BUDGET_STATIC                    | Near-real-time       | On-demand or scheduled view refresh  | Composite view, depends on latest data      | High       |
-| All master/text projections                  | Near-real-time       | On-demand                            | Simple views, low cost to recompute         | High       |
-| CV_BASE_FIN_WEEKLY_BUDGET_S4                 | Near-real-time       | On-demand                            | Cube view, up-to-date reporting             | High       |
-| All other base views                         | Near-real-time       | On-demand                            | Simple projections                          | High       |
+| SQL / Object                       | Required Freshness      | Recommended Refresh Approach           | Reason                                 | Confidence |
+|------------------------------------|------------------------|----------------------------------------|----------------------------------------|------------|
+| Dimension Views                    | Near real-time         | On-demand or scheduled refresh         | Low transformation, used in joins      | High       |
+| Aggregation MVs                    | Daily/scheduled        | Scheduled materialization              | Aggregation-heavy, reused often        | High       |
+| Composite Cube MV                  | Daily/scheduled        | Scheduled materialization              | Complex join/aggregation, reporting    | Medium     |
+| Snapshot Tables                    | Snapshot               | Controlled procedural refresh (via STP)| Business logic requires snapshot cycle | High       |
+| Procedural Table Population        | Snapshot               | Controlled refresh via procedure       | Preserves original snapshot behavior   | High       |
+
+If freshness cannot be determined:  
+**Requires validation**
 
 ---
 
 ## 12. FINAL BIGQUERY ARCHITECTURE
 
 ### Layer 1 — Existing Source / Reusable Objects
-- Physical tables: TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG, ZTSRP_ATTR_ACT, CEPCT, ZTFIGL_RCALWEEK, HRRP_NODE, AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4
+
+- SAP_S4.CEPCT, SAP_S4.ZTSRP_COMPFL, SAP_S4.HRRP_NODE, SAP_S4.ZTFIGL_RCALWEEK, SAP_S4.ZTSRP_ATTR_ACT, AZSRP_DS092_VT_S4, AZSRP_DS031_VT_S4
 
 ### Layer 2 — Shared Intermediate Logic
-- Materialized Views:
-  - Comp flag: Materialized View over TBL_WSS_SRP_COMPFLAG (projection/aggregation as required)
-  - Store attribute: Materialized View over TBL_WSS_SRP_ATTR_ACT (projection/aggregation as required)
+
+- Dimension Views: CV_BASE_MD_CEPCT_S4, CV_BASE_MD_COMPFL_S4, CV_BASE_MD_HRRP_NODE_S4, CV_BASE_MD_RCALWEEK_S4
+- Store Attribute Aggregation MV: CV_BASE_MD_SRPACT_S4 (Materialized View)
 
 ### Layer 3 — Consolidated Processing
-- Composite/master Calculation Views as Views, consuming the above Materialized Views:
-  - CV_COMP_MD_COMPFL_STATIC (Materialized View)
-  - CV_COMP_MD_SRPACT_STATIC (Materialized View)
+
+- Composite Budget Cube MV: CV_COMP_SKF_BUDGET_STATIC (Materialized View)
+- Weekly Budget Cube MV: CV_BASE_SKF_WEEKLY_BUDGET_S4 (Materialized View)
 
 ### Layer 4 — Independent Processing
-- Complex composites and cubes as Views:
-  - CV_COMP_FIN_BUDGET_STATIC (View)
-  - CV_BASE_FIN_WEEKLY_BUDGET_S4 (View)
-- Master/text projections as Views:
-  - CV_BASE_MD_CEPCT_S4 (View)
-  - CV_BASE_MD_RCALWEEK_S4 (View)
-  - CV_BASE_MD_HRRP_NODE_S4 (View)
+
+- Static Snapshot Views: CV_COMP_MD_SRPACT_STATIC (Materialized View), CV_COMP_MD_COMPFL_STATIC (View)
+- Procedural Snapshot Population: STP_WSS_SRP_ATTRIBUTES (Physical Table population)
 
 ### Layer 5 — Reporting / Output
-- Final reporting/analytical queries built on top of CV_COMP_FIN_BUDGET_STATIC.
+
+- Final reporting layer: CV_COMP_SKF_BUDGET_STATIC (Materialized View)
 
 ### Layer 6 — Snapshot / Physical Tables
-- TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG: Loaded by STP_WSS_SRP_ATTRIBUTES_DI (Physical Table, snapshot, periodic refresh).
+
+- TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG (Physical Tables populated via STP_WSS_SRP_ATTRIBUTES)
 
 ### Dependencies
-- STP_WSS_SRP_ATTRIBUTES_DI loads snapshot tables.
-- Materialized Views over snapshot tables provide reusable projections/aggregations.
-- Composite Calculation Views depend on Materialized Views and other base master data Views.
-- Final reporting layer built on composite Calculation Views.
+
+- Dimension views feed into composite cube and snapshot views
+- Aggregation MVs feed into snapshot and composite cube
+- Procedural snapshot population feeds into static snapshot views
+- Composite cube MV feeds into reporting/output
 
 ### Snapshot / Circular Dependencies
-- Snapshot logic is preserved: STP_WSS_SRP_ATTRIBUTES_DI manages periodic refresh of TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG, which are consumed by downstream Materialized Views and Calculation Views.
-- No circular dependencies detected beyond controlled snapshot refresh.
+
+- STP_WSS_SRP_ATTRIBUTES establishes a controlled snapshot cycle for TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
+- Static snapshot views depend on snapshot tables
+- Composite cube depends on both dimension and snapshot views/tables
 
 ---
 
-# FINAL DECISION SUMMARY
+## FINAL DECISION SUMMARY
 
-- **Should all supplied SQLs be consolidated into one query?**
-  - No. The SQLs represent distinct layers (snapshot ETL, master data, composite reporting, etc.) and should remain modular for maintainability, performance, and to preserve business logic and lineage.
+- **Should all supplied SQLs be consolidated into one query?**  
+  No. Each has unique business logic, sources, transformations, and output requirements.
 
-- **If not, why should they not all be merged?**
-  - Merging would reduce maintainability, increase complexity, and obscure the original business logic and ETL lineage. Different SQLs serve different roles (ETL, master data, reporting, etc.).
+- **If not, why should they not all be merged?**  
+  Merging would increase complexity, reduce maintainability, and obscure unique business logic. Independent processing is required for snapshot, aggregation, and dimension logic.
 
-- **Which SQLs should be consolidated?**
-  - Static master data projections (CV_COMP_MD_COMPFL_STATIC, CV_BASE_MD_COMPFL_S4, CV_COMP_MD_SRPACT_STATIC, CV_BASE_MD_SRPACT_S4) can be consolidated as Materialized Views where logic is identical.
+- **Which SQLs should be consolidated?**  
+  Dimension projections can be consolidated as reusable views; aggregation logic can be materialized for reuse.
 
-- **Which SQLs should only be partially consolidated?**
-  - Aggregated and non-aggregated versions of master data projections, if both are required, should remain as separate Materialized Views.
+- **Which SQLs should only be partially consolidated?**  
+  Aggregation/snapshot logic can be partially consolidated as materialized views, but procedural snapshot logic must remain independent.
 
-- **Which SQLs should remain independent?**
-  - CV_COMP_FIN_BUDGET_STATIC, STP_WSS_SRP_ATTRIBUTES_DI, all master/text projections (CV_BASE_MD_CEPCT_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_HRRP_NODE_S4), CV_BASE_FIN_WEEKLY_BUDGET_S4.
+- **Which SQLs should remain independent?**  
+  Composite cube, procedural snapshot, and unique dimension projections.
 
-- **What logic is duplicated?**
-  - Direct projection and/or aggregation of TBL_WSS_SRP_COMPFLAG and TBL_WSS_SRP_ATTR_ACT.
+- **What logic is duplicated?**  
+  Row-level projections, aggregation logic, snapshot population.
 
-- **Which SQLs are duplicating that logic?**
-  - CV_COMP_MD_COMPFL_STATIC, CV_BASE_MD_COMPFL_S4, CV_COMP_MD_SRPACT_STATIC, CV_BASE_MD_SRPACT_S4.
+- **Which SQLs are duplicating that logic?**  
+  Dimension views, aggregation views, snapshot views.
 
-- **Can the duplicated logic actually be reused?**
-  - Yes, via consolidated Materialized Views.
+- **Can the duplicated logic actually be reused?**  
+  Yes, as reusable views and materialized views.
 
-- **What existing objects can already be reused?**
-  - TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG (as physical tables for snapshot logic).
+- **What existing objects can already be reused?**  
+  TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG, dimension views.
 
-- **What new reusable intermediate objects are required, if any?**
-  - Materialized Views for static projections and aggregations of snapshot tables.
+- **What new reusable intermediate objects are required, if any?**  
+  Materialized views for aggregation-heavy logic.
 
-- **What object type should be used for each supplied SQL: View, Materialized View, or Physical Table?**
-  - See section 4 above; generally, use Materialized Views for snapshot/static data, Views for composites, Physical Tables for ETL-managed snapshot state.
+- **What object type should be used for each supplied SQL: View, Materialized View, or Physical Table?**  
+  See section 4 above.
 
-- **Why is that object type appropriate?**
-  - Materialized Views for precomputed, periodically refreshed data; Views for up-to-date, modular logic; Physical Tables for ETL/snapshot persistence.
+- **Why is that object type appropriate?**  
+  Based on transformation complexity, reuse, freshness, performance, and maintainability.
 
-- **What redundancy can be removed?**
-  - Repeated projections/aggregations of snapshot tables can be replaced by single Materialized Views.
+- **What redundancy can be removed?**  
+  Repeated projections and aggregations via reusable views/materialized views.
 
-- **What performance and cost optimizations are possible?**
-  - Centralizing projections/aggregations as Materialized Views, early filtering, avoiding repeated scans, leveraging snapshot tables.
+- **What performance and cost optimizations are possible?**  
+  Materialize aggregation-heavy logic, early filtering, reuse of intermediate datasets.
 
-- **What data freshness considerations apply?**
-  - Snapshot tables and dependent Materialized Views should be refreshed via ETL; Views recompute on demand for up-to-date reporting.
+- **What data freshness considerations apply?**  
+  Dimension views: near real-time; aggregation MVs: daily/scheduled; snapshot tables: controlled refresh.
 
-- **What is the recommended dependency and execution flow?**
-  - ETL (STP_WSS_SRP_ATTRIBUTES_DI) → Physical Tables (snapshot) → Materialized Views (projections/aggregations) → Composite Views → Reporting.
+- **What is the recommended dependency and execution flow?**  
+  Source tables → dimension/aggregation views → snapshot tables → composite cube → reporting/output.
 
-- **What architecture maximizes reuse without changing business logic?**
-  - Consolidate identical projections/aggregations as reusable Materialized Views, keep complex composites and ETL logic independent, modularize master/text projections as Views.
-
----
-
-**Requires validation:**  
-- Actual BigQuery project/dataset/table mappings.
-- Datatype compatibility for filters (e.g., MANDT numeric vs. string).
-- Parameter handling for input parameters in composite views.
-- Implementation of unresolved HANA scalar functions (e.g., SFN_PRIOR_FISCAL_WEEK).
+- **What architecture maximizes reuse without changing business logic?**  
+  Layered architecture with reusable views, materialized aggregation logic, independent procedural snapshot, and composite cube for reporting.
 
 ---
 
-## END OF RECOMMENDATION
+## GITHUB OUTPUT
 
----
-
-Now writing the above content to the specified GitHub repository as required.
+The complete content above will be written to the specified GitHub repository as required.
