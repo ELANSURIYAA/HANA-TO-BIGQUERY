@@ -1,0 +1,69 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_RCALWEEK_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTFIGL_RCALWEEK
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- RCLNT (filtered: IN (120, 200))
+- ZZWEEK
+- ZCALYRP
+- ZRYEAR
+- ZRPERIOD
+- ZRYRP
+- ZRYRQTR
+- ZRWSTRTDATE
+- ZRWENDDATE
+
+All columns are mapped 1:1 from the source table SAP_S4.ZTFIGL_RCALWEEK to the output.  
+No calculated columns, measures, or parameters are defined.
+
+SOURCE_LOGIC:
+- The Calculation View projects the following columns from SAP_S4.ZTFIGL_RCALWEEK: RCLNT, ZZWEEK, ZCALYRP, ZRYEAR, ZRPERIOD, ZRYRP, ZRYRQTR, ZRWSTRTDATE, ZRWENDDATE.
+- A filter is applied: RCLNT IN (120, 200).
+- No joins, unions, aggregations, calculated columns, or input parameters are present.
+- Output columns are explicitly defined and mapped directly from the source table.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  RCLNT,
+  ZZWEEK,
+  ZCALYRP,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  ZRYRQTR,
+  ZRWSTRTDATE,
+  ZRWENDDATE
+FROM
+  PROJECT.DATASET.ZTFIGL_RCALWEEK
+WHERE
+  RCLNT IN (120, 200)
+```
+(Note: Replace PROJECT.DATASET with the actual BigQuery project and dataset names.)
+
+CONVERSION_NOTES:
+- The Calculation View is a simple projection with a filter on RCLNT.
+- The filter RCLNT IN (120, 200) is preserved exactly. The datatype of RCLNT is not provided; the values are assumed to be numeric because they are unquoted in the Calculation View XML. If RCLNT is a string, the filter should be RCLNT IN ('120', '200').
+- No calculated columns, measures, parameters, or placeholders are present, so no additional logic or conversion is needed.
+- The source table SAP_S4.ZTFIGL_RCALWEEK is mapped to BigQuery as PROJECT.DATASET.ZTFIGL_RCALWEEK. Actual project and dataset names must be provided.
+- No HANA-specific functions or date/time logic are present, so no special function conversion is required.
+- All source-to-target column mappings are 1:1.
+- No joins, unions, aggregations, or procedural logic are present.
+
+ASSUMPTIONS:
+- The column RCLNT is numeric, as the filter values are unquoted in the Calculation View XML. If this is incorrect, datatype validation is required.
+- PROJECT.DATASET is a placeholder for the actual BigQuery project and dataset names.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the target table are not provided and require mapping.
+- The datatype of RCLNT is assumed (numeric) based on the unquoted filter values; validation is required to ensure correct filter syntax in BigQuery.
+
+CONFIDENCE:
+High
+
+All logic in the provided Calculation View XML is explicitly and reliably converted. Only project/dataset mapping and RCLNT datatype require validation. No unresolved semantic dependencies remain regarding the transformation logic.

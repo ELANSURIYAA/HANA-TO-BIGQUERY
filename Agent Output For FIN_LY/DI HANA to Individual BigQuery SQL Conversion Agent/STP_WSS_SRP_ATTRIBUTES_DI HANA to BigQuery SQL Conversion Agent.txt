@@ -1,0 +1,275 @@
+SOURCE_ARTIFACT:
+CVS_FRIP.CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES
+
+SOURCE_TYPE:
+HANA SQLScript Procedure
+
+SOURCE_OBJECTS:
+- "CVS_FRIP"."CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK" (scalar function, definition not provided)
+- "_SYS_BIC"."CVS_FRIP.Base.Master/CV_BASE_MD_SRPACT_S4" (Calculation View, definition not provided)
+- "_SYS_BIC"."CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4" (Calculation View, definition not provided)
+- "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT" (target table)
+- "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG" (target table)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+For TBL_WSS_SRP_ATTR_ACT:
+- Explicit mapping of all columns from CV_BASE_MD_SRPACT_S4 to TBL_WSS_SRP_ATTR_ACT, with two additional columns:
+  - SNAPSHOT_TIMESTAMP: mapped to CURRENT_TIMESTAMP
+  - SNAPSHOT_CREATED_BY: mapped to SESSION_USER
+
+For TBL_WSS_SRP_COMPFLAG:
+- Explicit mapping of all columns from CV_BASE_MD_COMPFL_S4 to TBL_WSS_SRP_COMPFLAG, with two additional columns:
+  - SNAPSHOT_TIMESTAMP: mapped to CURRENT_TIMESTAMP
+  - CREATED_BY: mapped to SESSION_USER
+
+Parameters/Variables:
+- V_WEEK: initialized by calling CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK()
+- V_LY_WEEK: declared but unused
+
+SOURCE_LOGIC:
+1. Declare variables V_WEEK and V_LY_WEEK.
+2. Set V_WEEK to the result of the scalar function CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK().
+3. Delete all rows from TBL_WSS_SRP_ATTR_ACT.
+4. Delete all rows from TBL_WSS_SRP_COMPFLAG.
+5. Insert into TBL_WSS_SRP_ATTR_ACT all columns from CV_BASE_MD_SRPACT_S4, plus CURRENT_TIMESTAMP and SESSION_USER.
+6. Insert into TBL_WSS_SRP_COMPFLAG all columns from CV_BASE_MD_COMPFL_S4, plus CURRENT_TIMESTAMP and SESSION_USER, but only rows where ZWEEK = V_WEEK.
+7. Output a summary string indicating both tables were loaded for V_WEEK.
+
+CONVERTED_BIGQUERY_SQL:
+
+```sql
+-- BigQuery Multi-Statement Script
+
+-- Declare variables
+DECLARE V_WEEK STRING;
+DECLARE V_LY_WEEK STRING; -- Unused, but declared for parity
+
+-- Initialize V_WEEK to prior week using unresolved UDF/function mapping
+-- UNRESOLVED: The logic for CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK() is not available.
+-- Placeholder implementation: must be replaced with actual logic or UDF mapping in BigQuery.
+SET V_WEEK = (SELECT CVS_FRIP.CVS_FRIP_Composite_Master_SFN_PRIOR_FISCAL_WEEK() AS prior_week); -- UNRESOLVED FUNCTION
+
+-- Delete data from tables
+DELETE FROM `PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT`;
+
+DELETE FROM `PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG`;
+
+-- Insert data into table TBL_WSS_SRP_ATTR_ACT from Calculation View CV_BASE_MD_SRPACT_S4
+INSERT INTO `PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT` (
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  RX_HRS_OPER,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  FS_HRS_OPER,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  DISTRICT_MGR,
+  ZONE_CODE,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  RETAIL_SQFT_AMT,
+  TOTAL_SQFT_AMT,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  SNAPSHOT_TIMESTAMP,
+  SNAPSHOT_CREATED_BY
+)
+SELECT
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  RX_HRS_OPER,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  FS_HRS_OPER,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  DISTRICT_MGR,
+  ZONE_CODE,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  RETAIL_SQFT_AMT,
+  TOTAL_SQFT_AMT,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  CURRENT_TIMESTAMP(),
+  SESSION_USER() -- BigQuery user function
+FROM `PROJECT.DATASET.CV_BASE_MD_SRPACT_S4`;
+
+-- Insert data into table TBL_WSS_SRP_COMPFLAG from Calculation View CV_BASE_MD_COMPFL_S4
+INSERT INTO `PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG` (
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  SNAPSHOT_TIMESTAMP,
+  CREATED_BY
+)
+SELECT
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  CURRENT_TIMESTAMP(),
+  SESSION_USER()
+FROM `PROJECT.DATASET.CV_BASE_MD_COMPFL_S4`
+WHERE ZWEEK = V_WEEK;
+
+-- Output summary (BigQuery scripting: use SELECT with variable)
+SELECT CONCAT('Store attribute table loaded & Comp Flag table loaded for ', V_WEEK) AS Summary;
+```
+
+CONVERSION_NOTES:
+- The source artifact is a HANA SQLScript procedure that performs ETL-like operations (delete, insert, variable assignment, and a final summary select).
+- The HANA scalar function CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK() is not defined; in BigQuery, this is represented as a placeholder UDF call (CVS_FRIP.CVS_FRIP_Composite_Master_SFN_PRIOR_FISCAL_WEEK()), which must be implemented or mapped to equivalent logic.
+- The Calculation Views _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_SRPACT_S4 and _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4 are referenced as tables/views in BigQuery (`PROJECT.DATASET.CV_BASE_MD_SRPACT_S4` and `PROJECT.DATASET.CV_BASE_MD_COMPFL_S4`), but their actual logic is not available, so the mapping is 1:1 for columns as per the procedure.
+- SESSION_USER is mapped to BigQuery's SESSION_USER() function, which returns the email address of the user executing the query. This may not be semantically identical to HANA's SESSION_USER (which returns the database user name), so validation is required.
+- CURRENT_TIMESTAMP in HANA is mapped to CURRENT_TIMESTAMP() in BigQuery.
+- Table and dataset references are placeholders (`PROJECT.DATASET.TABLE`) and must be replaced with actual project and dataset names.
+- The summary SELECT at the end is implemented using BigQuery's SELECT and CONCAT.
+
+ASSUMPTIONS:
+- The BigQuery equivalents of the Calculation Views and the scalar function exist or will be implemented separately.
+- The data types of all columns are compatible between HANA and BigQuery (UNRESOLVED: actual types not validated).
+- The table and dataset names are placeholders and will be mapped to the actual BigQuery environment.
+- SESSION_USER() in BigQuery provides an acceptable mapping for HANA's SESSION_USER (requires validation).
+
+UNRESOLVED_ITEMS:
+- The logic for CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK() is not available; UDF implementation is required in BigQuery.
+- The definitions of Calculation Views CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4 are not available; their internal logic, column types, filters, and calculations are unresolved.
+- The actual BigQuery project, dataset, and table/view names are unknown and must be mapped.
+- Data type compatibility for all columns is not validated due to missing metadata.
+- SESSION_USER() mapping may not be semantically identical (user name vs. email address).
+
+CONFIDENCE:
+Medium
+
+(Reason: All procedural logic is preserved and mapped to BigQuery scripting, but unresolved external function and Calculation View definitions, as well as potential datatype and user identity mapping issues, require validation.)

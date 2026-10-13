@@ -1,0 +1,75 @@
+SOURCE_ARTIFACT:
+CV_COMP_MD_COMPFL_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Data Source: CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG (CDS_ARTIFACT)
+- Calculation View Node: Projection_1
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (Client): mapped from TBL_WSS_SRP_COMPFLAG.MANDT
+- PRCTR (Profit Center/Retail Store): mapped from TBL_WSS_SRP_COMPFLAG.PRCTR
+- STRNUM (Store Number): mapped from TBL_WSS_SRP_COMPFLAG.STRNUM
+- COMP_VER (Comp flag version): mapped from TBL_WSS_SRP_COMPFLAG.COMP_VER
+- ZWEEK (Week Number): mapped from TBL_WSS_SRP_COMPFLAG.ZWEEK
+- ZMONTH (Month): mapped from TBL_WSS_SRP_COMPFLAG.ZMONTH
+- ZYEAR (Year): mapped from TBL_WSS_SRP_COMPFLAG.ZYEAR
+- FS_COMP_PRE (FS Comp Flag Prelim): mapped from TBL_WSS_SRP_COMPFLAG.FS_COMP_PRE
+- RX_COMP_PRE (RX Comp Flag Prelim): mapped from TBL_WSS_SRP_COMPFLAG.RX_COMP_PRE
+- FS_COMP_MON (FS Comp Flag Final Monthly): mapped from TBL_WSS_SRP_COMPFLAG.FS_COMP_MON
+- RX_COMP_MON (RX Comp Flag Final Monthly): mapped from TBL_WSS_SRP_COMPFLAG.RX_COMP_MON
+- FS_COMP_WK (FS Comp Flag Final Weekly): mapped from TBL_WSS_SRP_COMPFLAG.FS_COMP_WK
+- RX_COMP_WK (RX Comp Flag Final Weekly): mapped from TBL_WSS_SRP_COMPFLAG.RX_COMP_WK
+
+SOURCE_LOGIC:
+- The Calculation View is a simple projection over the source table CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG.
+- All columns listed above are mapped directly from the source table to the output.
+- No calculated columns, filters, joins, unions, aggregations, or parameters are defined in this Calculation View.
+- The data category is DIMENSION, and the view serves as a wrapper for the snapshot table for Store Profile - Comp Flag.
+- No additional transformation logic is present.
+
+CONVERTED_BIGQUERY_SQL:
+-- This SQL represents the direct projection defined by the Calculation View XML.
+-- The actual BigQuery table mapping for CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG is required.
+
+SELECT
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK
+FROM
+  PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG
+
+CONVERSION_NOTES:
+- The Calculation View XML defines a simple projection node ("Projection_1") with explicit column mappings from the source table.
+- No filters, calculated columns, joins, unions, or parameters are present; thus, the BigQuery SQL is a direct SELECT statement with explicit columns.
+- The BigQuery table reference PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG is a placeholder. The actual project and dataset mapping for CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG must be provided for production use.
+- No HANA-specific functions, datatype conversions, or error handling are required or present.
+- The output columns and order are preserved exactly as defined in the Calculation View XML.
+- No session variables, procedural logic, or parameter handling are required.
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG contains columns with the same names and compatible data types as defined in the Calculation View XML.
+- No additional business logic, filters, or calculations are required beyond the explicit projection.
+- No external dependencies or parameters affect the output.
+
+UNRESOLVED_ITEMS:
+- The actual BigQuery project and dataset mapping for CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG is UNRESOLVED.
+- Source column data types are not specified; datatype compatibility is assumed but requires validation.
+- No information is provided about column nullability or constraints.
+
+CONFIDENCE:
+High
+
+All logic explicitly defined in the Calculation View XML has been converted. No unresolved external dependencies affect the conversion of this artifact.

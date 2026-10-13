@@ -1,0 +1,310 @@
+SOURCE_ARTIFACT:
+CV_COMP_FIN_ACTUAL_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- CV_BASE_FIN_WEEKLY_ACTUAL_S4 (Calculation View, external, not defined here)
+- CV_COMP_MD_SRPACT_STATIC (Calculation View, external, not defined here)
+- CV_BASE_MD_HRRP_NODE_S4 (Calculation View, external, not defined here)
+- GL_HIER$$$$CV_BASE_MD_HRRP_NODE_S4$$ (Calculation View, external, not defined here)
+- CV_BASE_MD_RCALWEEK_S4 (Calculation View, external, not defined here)
+- CV_COMP_MD_COMPFL_STATIC (Calculation View, external, not defined here)
+- CV_BASE_MD_CEPCT_S4 (Calculation View, external, not defined here)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Columns: FISCPER, FISCVARNT, FISCYEAR, FISCPER3, MANDT, _BIC_ZIO_SWEEK, _B631_S_CHRTACCT, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT, _B631_S_GL_ACCT, _BIC_ZWWPC_PA1, _BIC_ZWWSC_PA1, _B631_S_AMOUNT, CURRENCY, _BIC_ZIO_D1AMT, _BIC_ZIO_D2AMT, _BIC_ZIO_D3AMT, _BIC_ZIO_D4AMT, _BIC_ZIO_D5AMT, _BIC_ZIO_D6AMT, _BIC_ZIO_D7AMT, REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, CITY, STATE, FS_OPEN_DAT, RX_OPEN_DAT, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE, ZRWSTRTDATE, ZRWENDDATE, STRNUM, PROFIT_CENTER_TEXT, FS_COMP_WK, RX_COMP_WK, CAL_WEEK, CAL_FS_RX_FLAG, CAL_COMP_FLAG, CAL_WEEK_NUMBER.
+- Calculated Columns:
+    - CAL_FS_RX_FLAG: CASE(LEFTSTR(_BIC_ZWWPC_PA1,2),'FS','FS','RX','RX','')
+    - CAL_COMP_FLAG: CASE(CAL_FS_RX_FLAG,'FS',FS_COMP_WK,'RX',RX_COMP_WK,FS_COMP_WK)
+    - CAL_WEEK_NUMBER: RIGHTSTR('$$IP_WEEK_CY$$',2)
+    - CAL_WEEK: '$$IP_WEEK_CY$$' (constant)
+    - CAL_NODE_VALUE (in GL_HIER): ltrim(NODEVALUE,'0')
+    - _B631_S_AMOUNT (final measure): "_B631_S_AMOUNT_NEGATIVE" * -1 (i.e., negates sum of _B631_S_AMOUNT)
+- Parameters / Variables:
+    - $$IP_VERSION$$, $$IP_WEEK_LY$$, $$IP_WEEK_CY$$, $$IP_VERSION_COMP_FLAG$$ (used in filters)
+- Mappings: Extensive attribute-to-attribute mappings between projection/join nodes as per the Calculation View XML.
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE-type, tree-based scenario with multiple projections and joins.
+- Data is sourced from several Calculation Views, joined and filtered through projection and join nodes.
+- WEEKLY_SNAPSHOT_DS05 projects from CV_BASE_FIN_WEEKLY_ACTUAL_S4 with filter:
+    - FISCVARNT = 'K4'
+    - _BIC_ZIO_VER = $$IP_VERSION$$
+    - _BIC_ZIO_SWEEK = $$IP_WEEK_LY$$
+    - _BIC_ZIO_SAUDT IN ('1','10')
+- PC_HIER projects from CV_BASE_MD_HRRP_NODE_S4 with filters:
+    - PARNODE LIKE '%CORE_RET%'
+    - HRYVALTO = '99991231'
+- Join_4: INNER JOIN of WEEKLY_SNAPSHOT_DS05 and PC_HIER on (_B631_S_PROFTCTR, MANDT), mapping NODEVALUE from PC_HIER to _B631_S_PROFTCTR.
+- GL_HIER projects from GL_HIER$$$$CV_BASE_MD_HRRP_NODE_S4$$ with filters:
+    - PARNODE LIKE '%181'
+    - HRYVALTO = '99991231'
+    - HRYID = 'CVS2'
+    - Also calculates CAL_NODE_VALUE as ltrim(NODEVALUE,'0')
+- Join_6: INNER JOIN Join_4 and GL_HIER on (_B631_S_GL_ACCT, MANDT), mapping NODEVALUE from GL_HIER to _B631_S_GL_ACCT.
+- Projection_1: Adds CAL_WEEK as '$$IP_WEEK_CY$$' (constant) to Join_6 output.
+- STORE_ATTR_ACTUAL projects from CV_COMP_MD_SRPACT_STATIC.
+- Join_2: LEFT OUTER JOIN of Projection_1 and STORE_ATTR_ACTUAL on (_B631_S_PROFTCTR/PRCTR, MANDT), bringing in store attributes.
+- RETAIL_CAL projects from CV_BASE_MD_RCALWEEK_S4.
+- Join_1: LEFT OUTER JOIN of Join_2 and RETAIL_CAL on (CAL_WEEK/ZZWEEK, MANDT/RCLNT), adds week start/end dates.
+- WEEK_NUMBER: Projection of Join_1 (no additional logic).
+- COMP_FLAG_LY: Projects from CV_COMP_MD_COMPFL_STATIC with filter:
+    - ZWEEK = $$IP_WEEK_CY$$
+    - COMP_VER = $$IP_VERSION_COMP_FLAG$$
+- Join_3: LEFT OUTER JOIN of WEEK_NUMBER and COMP_FLAG_LY on (_B631_S_PROFTCTR/PRCTR, MANDT).
+- PROFIT_CENTER_TEXT: Projects from CV_BASE_MD_CEPCT_S4, mapping LTEXT to PROFIT_CENTER_TEXT.
+- Join_5: LEFT OUTER JOIN of Join_3 and PROFIT_CENTER_TEXT on (_B631_S_PROFTCTR/PRCTR, MANDT).
+- FLAGS: Final projection with calculated columns:
+    - CAL_FS_RX_FLAG: CASE(LEFTSTR(_BIC_ZWWPC_PA1,2),'FS','FS','RX','RX','')
+    - CAL_COMP_FLAG: CASE(CAL_FS_RX_FLAG,'FS',FS_COMP_WK,'RX',RX_COMP_WK,FS_COMP_WK)
+    - CAL_WEEK_NUMBER: RIGHTSTR('$$IP_WEEK_CY$$',2)
+- Logical Model: Defines output columns and measures, with _B631_S_AMOUNT as a calculated measure (negation of sum).
+
+CONVERTED_BIGQUERY_SQL:
+```-- =====================================================================
+-- CV_COMP_FIN_ACTUAL_STATIC → BigQuery Standard SQL (CORRECTED)
+-- Source: SAP HANA Calculation View (CUBE, outputViewType=Aggregation)
+-- All CTEs verified against source XML. Final step corrected to include
+-- the GROUP BY + SUM aggregation the original view actually performs.
+-- =====================================================================
+
+-- UNRESOLVED: Replace PROJECT.DATASET with actual BigQuery project/dataset.
+-- UNRESOLVED: The following HANA scalar functions provide DEFAULT values
+--   for parameters when not explicitly supplied by the caller. Their logic
+--   is NOT available and is NOT reproduced here:
+--     - CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK  (used by IP_WEEK_CY, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO)
+--     - CVS_FRIP.Composite.Master::SFN_LY_COMPARISON_WEEK (used by IP_WEEK_LY)
+--     - CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG  (used by IP_VERSION_COMP_FLAG)
+--   If callers don't supply @IP_WEEK_CY, @IP_WEEK_LY, @IP_VERSION_COMP_FLAG
+--   explicitly, this query will NOT replicate HANA's default-derivation behavior.
+
+WITH WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    FISCPER, FISCVARNT, FISCYEAR, FISCPER3, MANDT, _BIC_ZIO_SWEEK,
+    _B631_S_CHRTACCT, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT,
+    _B631_S_GL_ACCT, _BIC_ZWWPC_PA1, _BIC_ZWWSC_PA1, _B631_S_AMOUNT,
+    CURRENCY, _BIC_ZIO_D1AMT, _BIC_ZIO_D2AMT, _BIC_ZIO_D3AMT,
+    _BIC_ZIO_D4AMT, _BIC_ZIO_D5AMT, _BIC_ZIO_D6AMT, _BIC_ZIO_D7AMT
+  FROM PROJECT.DATASET.CV_BASE_FIN_WEEKLY_ACTUAL_S4
+  WHERE FISCVARNT = 'K4'
+    AND _BIC_ZIO_VER = @IP_VERSION
+    AND _BIC_ZIO_SWEEK = @IP_WEEK_LY
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+),
+
+PC_HIER AS (
+  SELECT MANDT, PARNODE, HRYVALTO, NODEVALUE
+  FROM PROJECT.DATASET.CV_BASE_MD_HRRP_NODE_S4
+  WHERE PARNODE LIKE '%CORE_RET%'
+    AND HRYVALTO = '99991231'
+),
+
+Join_4 AS (
+  SELECT
+    ws.* EXCEPT (_B631_S_PROFTCTR),
+    pc.NODEVALUE AS _B631_S_PROFTCTR
+  FROM WEEKLY_SNAPSHOT_DS05 ws
+  INNER JOIN PC_HIER pc
+    ON ws._B631_S_PROFTCTR = pc.NODEVALUE
+    AND ws.MANDT = pc.MANDT
+),
+
+GL_HIER AS (
+  SELECT
+    MANDT, PARNODE, HRYVALTO, NODEVALUE, HRYID,
+    LTRIM(NODEVALUE, '0') AS CAL_NODE_VALUE
+  FROM PROJECT.DATASET.`GL_HIER$$$$CV_BASE_MD_HRRP_NODE_S4$$`
+  WHERE PARNODE LIKE '%181'
+    AND HRYVALTO = '99991231'
+    AND HRYID = 'CVS2'
+),
+
+Join_6 AS (
+  SELECT
+    j4.* EXCEPT (_B631_S_GL_ACCT),
+    gl.NODEVALUE AS _B631_S_GL_ACCT
+  FROM Join_4 j4
+  INNER JOIN GL_HIER gl
+    ON j4._B631_S_GL_ACCT = gl.NODEVALUE
+    AND j4.MANDT = gl.MANDT
+),
+
+Projection_1 AS (
+  SELECT *, @IP_WEEK_CY AS CAL_WEEK
+  FROM Join_6
+),
+
+STORE_ATTR_ACTUAL AS (
+  SELECT
+    MANDT, STRNUM, PRCTR, REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND,
+    DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE,
+    REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, CITY, STATE,
+    FS_OPEN_DAT, RX_OPEN_DAT, RX_DIVISION_CODE, RX_AREA_CODE,
+    RX_REGION_CODE, RX_DISTRICT_CODE
+  FROM PROJECT.DATASET.CV_COMP_MD_SRPACT_STATIC
+),
+
+Join_2 AS (
+  SELECT
+    p1.*,
+    sa.REP_MKT_CODE, sa.REP_MKT_DESC, sa.EMERG_MKT_IND,
+    sa.DIVISION_CODE, sa.DIVISION_DESC, sa.AREA_CODE, sa.AREA_DESC,
+    sa.REGION_CODE, sa.REGION_DESC, sa.DISTRICT_CODE, sa.DISTRICT_DESC,
+    sa.CITY, sa.STATE, sa.FS_OPEN_DAT, sa.RX_OPEN_DAT, sa.STRNUM,
+    sa.RX_DIVISION_CODE, sa.RX_AREA_CODE, sa.RX_REGION_CODE,
+    sa.RX_DISTRICT_CODE
+  FROM Projection_1 p1
+  LEFT JOIN STORE_ATTR_ACTUAL sa
+    ON p1._B631_S_PROFTCTR = sa.PRCTR
+    AND p1.MANDT = sa.MANDT
+),
+
+RETAIL_CAL AS (
+  SELECT ZRWSTRTDATE, ZRWENDDATE, ZZWEEK, RCLNT
+  FROM PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4
+),
+
+Join_1 AS (
+  SELECT
+    j2.*,
+    rc.ZRWSTRTDATE,
+    rc.ZRWENDDATE
+  FROM Join_2 j2
+  LEFT JOIN RETAIL_CAL rc
+    ON j2.CAL_WEEK = rc.ZZWEEK
+    AND j2.MANDT = rc.RCLNT
+),
+
+WEEK_NUMBER AS (
+  SELECT * FROM Join_1
+),
+
+COMP_FLAG_LY AS (
+  SELECT
+    MANDT, PRCTR, STRNUM, FS_COMP_WK, RX_COMP_WK,
+    ZWEEK, ZMONTH, ZYEAR, COMP_VER
+  FROM PROJECT.DATASET.CV_COMP_MD_COMPFL_STATIC
+  WHERE ZWEEK = @IP_WEEK_CY
+    AND COMP_VER = @IP_VERSION_COMP_FLAG
+),
+
+Join_3 AS (
+  SELECT
+    wn.*,
+    cf.FS_COMP_WK,
+    cf.RX_COMP_WK
+  FROM WEEK_NUMBER wn
+  LEFT JOIN COMP_FLAG_LY cf
+    ON wn._B631_S_PROFTCTR = cf.PRCTR
+    AND wn.MANDT = cf.MANDT
+),
+
+PROFIT_CENTER_TEXT AS (
+  SELECT MANDT, PRCTR, LTEXT AS PROFIT_CENTER_TEXT
+  FROM PROJECT.DATASET.CV_BASE_MD_CEPCT_S4
+),
+
+Join_5 AS (
+  SELECT
+    j3.*,
+    pct.PROFIT_CENTER_TEXT
+  FROM Join_3 j3
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON j3._B631_S_PROFTCTR = pct.PRCTR
+    AND j3.MANDT = pct.MANDT
+),
+
+FLAGS AS (
+  SELECT
+    *,
+    CASE
+      WHEN LEFT(_BIC_ZWWPC_PA1, 2) = 'FS' THEN 'FS'
+      WHEN LEFT(_BIC_ZWWPC_PA1, 2) = 'RX' THEN 'RX'
+      ELSE ''
+    END AS CAL_FS_RX_FLAG,
+    RIGHT(@IP_WEEK_CY, 2) AS CAL_WEEK_NUMBER
+  FROM Join_5
+),
+
+FLAGS_FINAL AS (
+  -- CAL_COMP_FLAG depends on CAL_FS_RX_FLAG, computed in a separate step
+  -- to avoid referencing an alias from the same SELECT list (not valid in standard SQL)
+  SELECT
+    *,
+    CASE
+      WHEN CAL_FS_RX_FLAG = 'FS' THEN FS_COMP_WK
+      WHEN CAL_FS_RX_FLAG = 'RX' THEN RX_COMP_WK
+      ELSE FS_COMP_WK
+    END AS CAL_COMP_FLAG
+  FROM FLAGS
+)
+
+-- FINAL AGGREGATION — this is the step the original conversion was missing.
+-- The source view is dataCategory=CUBE, outputViewType=Aggregation with
+-- 8 measures marked aggregationType="sum" in the logical model, so the
+-- real HANA behavior groups by every non-measure attribute and sums each measure.
+SELECT
+  MANDT, FISCPER, FISCVARNT, FISCYEAR, FISCPER3, _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR,
+  CAL_FS_RX_FLAG      AS FS_RX_FLAG,
+  _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT,
+  _B631_S_GL_ACCT, _BIC_ZWWPC_PA1, _BIC_ZWWSC_PA1, CURRENCY,
+  REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, FS_COMP_WK, RX_COMP_WK,
+  CAL_COMP_FLAG       AS COMP_FLAG,
+  DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE,
+  REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, CITY, STATE,
+  ZRWSTRTDATE, ZRWENDDATE, CAL_WEEK_NUMBER, PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT, RX_OPEN_DAT, CAL_WEEK, STRNUM,
+  RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE,
+  SUM(_B631_S_AMOUNT) * -1   AS _B631_S_AMOUNT,
+  SUM(_BIC_ZIO_D1AMT)        AS _BIC_ZIO_D1AMT,
+  SUM(_BIC_ZIO_D2AMT)        AS _BIC_ZIO_D2AMT,
+  SUM(_BIC_ZIO_D3AMT)        AS _BIC_ZIO_D3AMT,
+  SUM(_BIC_ZIO_D4AMT)        AS _BIC_ZIO_D4AMT,
+  SUM(_BIC_ZIO_D5AMT)        AS _BIC_ZIO_D5AMT,
+  SUM(_BIC_ZIO_D6AMT)        AS _BIC_ZIO_D6AMT,
+  SUM(_BIC_ZIO_D7AMT)        AS _BIC_ZIO_D7AMT
+FROM FLAGS_FINAL
+GROUP BY
+  MANDT, FISCPER, FISCVARNT, FISCYEAR, FISCPER3, _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR,
+  CAL_FS_RX_FLAG, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT, _B631_S_GL_ACCT, _BIC_ZWWPC_PA1, _BIC_ZWWSC_PA1,
+  CURRENCY, REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, FS_COMP_WK,
+  RX_COMP_WK, CAL_COMP_FLAG, DIVISION_CODE, DIVISION_DESC, AREA_CODE,
+  AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC,
+  CITY, STATE, ZRWSTRTDATE, ZRWENDDATE, CAL_WEEK_NUMBER,
+  PROFIT_CENTER_TEXT, FS_OPEN_DAT, RX_OPEN_DAT, CAL_WEEK, STRNUM,
+  RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+;
+```
+
+CONVERSION_NOTES:
+- All referenced Calculation Views (CV_BASE_FIN_WEEKLY_ACTUAL_S4, etc.) are external and must be mapped to BigQuery tables or views. Their internal logic is not available.
+- Input parameters such as $$IP_VERSION$$, $$IP_WEEK_LY$$, $$IP_WEEK_CY$$, $$IP_VERSION_COMP_FLAG$$ are mapped to BigQuery query parameters (@IP_VERSION, etc.).
+- CASE and string functions (LEFTSTR, RIGHTSTR, ltrim) are mapped to BigQuery equivalents: LEFT, RIGHT, LTRIM.
+- All joins, projections, and calculated columns are mapped as per the Calculation View node graph.
+- The final _B631_S_AMOUNT is calculated as the negation of the sum, as per the logical model formula.
+- Filters and mappings are preserved as per the XML logic.
+- The SQL is written as a series of CTEs to reflect the Calculation View node structure, preserving the stepwise logic.
+
+ASSUMPTIONS:
+- All referenced Calculation Views (CV_BASE_FIN_WEEKLY_ACTUAL_S4, etc.) are available in BigQuery as tables or views with the same column names.
+- BigQuery query parameters (@IP_VERSION, etc.) are supplied at runtime.
+- Data types for columns match those expected by the Calculation View logic.
+- String slicing and CASE logic in BigQuery behave as in HANA for the given use cases.
+
+UNRESOLVED_ITEMS:
+- Definitions and internal logic of all referenced Calculation Views are unavailable.
+- Data type mapping for columns is assumed based on names; actual types may differ.
+- Placeholder/parameter mapping for HANA input parameters to BigQuery is assumed; actual usage may require adjustment.
+- The exact aggregation (SUM) for measures is only represented as a calculation in the SELECT; full aggregation logic may require GROUP BY if used in an analytic/reporting context.
+- Any HANA-specific session, context, or privilege logic is not represented.
+
+CONFIDENCE:
+Medium
+
+(Reason: The main Calculation View logic is mapped, but all source Calculation Views are unresolved, parameter/placeholder handling is assumed, and datatype mapping is not fully validated.)

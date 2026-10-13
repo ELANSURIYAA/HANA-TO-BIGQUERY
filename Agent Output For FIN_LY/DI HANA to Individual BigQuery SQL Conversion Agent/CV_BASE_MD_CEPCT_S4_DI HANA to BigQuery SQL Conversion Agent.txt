@@ -1,0 +1,67 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.CEPCT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: MANDT, output: MANDT, filter: IN (120, 200))
+- SPRAS (source: SPRAS, output: SPRAS)
+- PRCTR (source: PRCTR, output: PRCTR)
+- DATBI (source: DATBI, output: DATBI)
+- KOKRS (source: KOKRS, output: KOKRS)
+- KTEXT (source: KTEXT, output: KTEXT)
+- LTEXT (source: LTEXT, output: LTEXT)
+- MCTXT (source: MCTXT, output: MCTXT)
+
+SOURCE_LOGIC:
+- Data is sourced from the base table SAP_S4.CEPCT.
+- Only rows where MANDT is in (120, 200) are included (filter at the projection node).
+- The output columns are: MANDT, SPRAS, PRCTR, DATBI, KOKRS, KTEXT, LTEXT, MCTXT.
+- No calculated columns, joins, aggregations, measures, parameters, or placeholders are defined.
+- The view is a simple projection with a filter on MANDT.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  SPRAS,
+  PRCTR,
+  DATBI,
+  KOKRS,
+  KTEXT,
+  LTEXT,
+  MCTXT
+FROM
+  PROJECT.DATASET.CEPCT
+WHERE
+  MANDT IN (120, 200)
+```
+
+CONVERSION_NOTES:
+- The Calculation View is a simple projection over the SAP_S4.CEPCT table with a filter on MANDT.
+- The filter on MANDT uses numeric values (120, 200). The datatype of MANDT is not specified in the XML; in SAP S/4HANA, MANDT is typically a CHAR(3), but the Calculation View filter uses unquoted numeric values. The BigQuery SQL preserves the numeric literal as in the source logic, but this requires datatype validation.
+- No calculated columns, joins, or aggregations are present.
+- No parameters or placeholders are defined or used.
+- The BigQuery table reference PROJECT.DATASET.CEPCT is a placeholder; the actual BigQuery project and dataset names must be provided during implementation.
+- No HANA-specific functions or date/time logic are present.
+- All source-to-target column mappings are direct (no renaming or transformation).
+- No session or analytic privilege logic is used.
+
+ASSUMPTIONS:
+- The MANDT column is compatible with numeric literals 120 and 200 in the target BigQuery table. If MANDT is a string/CHAR type, the filter may require quoting as '120', '200'.
+- The BigQuery table PROJECT.DATASET.CEPCT corresponds to SAP_S4.CEPCT.
+- No additional filters, joins, or logic are required beyond what is specified in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names (PROJECT.DATASET) are not provided; placeholder used.
+- MANDT datatype mapping is UNRESOLVED: If MANDT is string/CHAR, the filter should use quoted values ('120', '200'). Datatype validation is required.
+- No information on column datatypes or further constraints is available in the Calculation View XML.
+
+CONFIDENCE:
+Medium
+
+(Confidence is Medium due to the unresolved datatype mapping for MANDT and the placeholder BigQuery table reference. All explicit source logic has been converted.)

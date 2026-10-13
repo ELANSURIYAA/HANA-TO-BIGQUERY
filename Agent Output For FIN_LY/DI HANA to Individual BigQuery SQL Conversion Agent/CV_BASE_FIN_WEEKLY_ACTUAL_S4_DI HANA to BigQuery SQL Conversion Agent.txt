@@ -1,0 +1,127 @@
+SOURCE_ARTIFACT:
+CV_BASE_FIN_WEEKLY_ACTUAL_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.AZSRP_DS072_VT_S4
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- FISCPER (source: FISCPER)
+- FISCVARNT (source: FISCVARNT)
+- _BIC_ZIO_SWEEK (source: _BIC_ZIO_SWEEK)
+- FISCYEAR (source: FISCYEAR)
+- FISCPER3 (source: FISCPER3)
+- _B631_S_CHRTACCT (source: _B631_S_CHRTACCT)
+- _B631_S_CO_AREA (source: _B631_S_CO_AREA)
+- _BIC_ZIO_CMPCD (source: _BIC_ZIO_CMPCD)
+- _B631_S_PROFTCTR (source: _B631_S_PROFTCTR)
+- _B631_S_COSTCNTR (source: _B631_S_COSTCNTR)
+- _B631_S_FUNCAREA (source: _B631_S_FUNCAREA)
+- _BIC_ZIO_VER (source: _BIC_ZIO_VER)
+- _BIC_ZIO_SAUDT (source: _BIC_ZIO_SAUDT)
+- MANDT (source: MANDT, filter: IN (110, 200))
+- RECORDMODE (source: RECORDMODE)
+- _B631_S_GL_ACCT (source: _B631_S_GL_ACCT)
+- _BIC_ZWWPC_PA1 (source: _BIC_ZWWPC_PA1)
+- _BIC_ZWWSC_PA1 (source: _BIC_ZWWSC_PA1)
+- _B631_S_AMOUNT (source: _B631_S_AMOUNT, measure: SUM)
+- CURRENCY (source: CURRENCY)
+- _BIC_ZIO_D1AMT (source: _BIC_ZIO_D1AMT, measure: SUM)
+- _BIC_ZIO_D2AMT (source: _BIC_ZIO_D2AMT, measure: SUM)
+- _BIC_ZIO_D3AMT (source: _BIC_ZIO_D3AMT, measure: SUM)
+- _BIC_ZIO_D4AMT (source: _BIC_ZIO_D4AMT, measure: SUM)
+- _BIC_ZIO_D5AMT (source: _BIC_ZIO_D5AMT, measure: SUM)
+- _BIC_ZIO_D6AMT (source: _BIC_ZIO_D6AMT, measure: SUM)
+- _BIC_ZIO_D7AMT (source: _BIC_ZIO_D7AMT, measure: SUM)
+- _B631_S_LEDGER (source: _B631_S_LEDGER)
+
+SOURCE_LOGIC:
+- The Calculation View projects columns directly from the table CVS_FRIP.AZSRP_DS072_VT_S4.
+- Only rows where MANDT IN (110, 200) are included (MANDT filter).
+- Output columns are explicitly defined, with direct source-to-target mapping.
+- Measures (_B631_S_AMOUNT, _BIC_ZIO_D1AMT, ..., _BIC_ZIO_D7AMT) are aggregated using SUM.
+- The output is an aggregation (GROUP BY) on all non-measure columns.
+- No calculated columns, joins, variables, parameters, placeholders, or unions are present.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  FISCPER,
+  FISCVARNT,
+  _BIC_ZIO_SWEEK,
+  FISCYEAR,
+  FISCPER3,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  MANDT,
+  RECORDMODE,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  CURRENCY,
+  _B631_S_LEDGER,
+  SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT,
+  SUM(_BIC_ZIO_D1AMT) AS _BIC_ZIO_D1AMT,
+  SUM(_BIC_ZIO_D2AMT) AS _BIC_ZIO_D2AMT,
+  SUM(_BIC_ZIO_D3AMT) AS _BIC_ZIO_D3AMT,
+  SUM(_BIC_ZIO_D4AMT) AS _BIC_ZIO_D4AMT,
+  SUM(_BIC_ZIO_D5AMT) AS _BIC_ZIO_D5AMT,
+  SUM(_BIC_ZIO_D6AMT) AS _BIC_ZIO_D6AMT,
+  SUM(_BIC_ZIO_D7AMT) AS _BIC_ZIO_D7AMT
+FROM
+  PROJECT.DATASET.AZSRP_DS072_VT_S4
+WHERE
+  MANDT IN (110, 200)
+GROUP BY
+  FISCPER,
+  FISCVARNT,
+  _BIC_ZIO_SWEEK,
+  FISCYEAR,
+  FISCPER3,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  MANDT,
+  RECORDMODE,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  CURRENCY,
+  _B631_S_LEDGER
+```
+
+CONVERSION_NOTES:
+- The source is a simple Calculation View with a single projection node and no calculated columns or joins.
+- The filter on MANDT (IN 110, 200) is preserved as a WHERE clause.
+- All output columns are explicitly projected.
+- Measures are aggregated using SUM, as per the Calculation View's aggregation definition.
+- All non-measure columns are included in the GROUP BY clause, matching Calculation View semantics.
+- The source table name (CVS_FRIP.AZSRP_DS072_VT_S4) is mapped to the placeholder PROJECT.DATASET.AZSRP_DS072_VT_S4; actual BigQuery project/dataset mapping is required.
+- No parameters, placeholders, or calculated attributes/measures exist in this view.
+- No datatype conversion is performed, as datatypes are not specified in the Calculation View XML.
+- No HANA-specific functions needed conversion.
+
+ASSUMPTIONS:
+- The BigQuery target table is PROJECT.DATASET.AZSRP_DS072_VT_S4; actual project and dataset must be mapped.
+- The filter values 110 and 200 for MANDT are assumed to be integers, based on typical SAP client usage, but datatype validation is required.
+- No hidden logic, calculated columns, or joins exist beyond what is present in the provided Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset for the table AZSRP_DS072_VT_S4 must be provided (PROJECT.DATASET placeholder used).
+- Datatype of MANDT and other columns should be validated against the BigQuery schema to ensure correct filter and aggregation behavior.
+
+CONFIDENCE:
+High

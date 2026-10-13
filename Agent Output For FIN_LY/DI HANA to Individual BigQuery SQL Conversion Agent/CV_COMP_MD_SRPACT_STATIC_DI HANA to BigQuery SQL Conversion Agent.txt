@@ -1,0 +1,204 @@
+SOURCE_ARTIFACT:
+CV_COMP_MD_SRPACT_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns are mapped 1:1 from the source table to the output via the Projection_1 node. There are no calculated attributes or columns.
+- Output columns (explicitly mapped):
+    - MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT, RX_HRS_OPER, FS_OPEN_DAT, FS_CLOSE_DAT, FS_HRS_OPER, REP_MKT_CODE, REP_MKT_DESC, ADDRESS, CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC, DIVISION_MGR, AREA_CODE, AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR, DISTRICT_CODE, DISTRICT_DESC, ZONE_CODE, DISTRICT_MGR, ZONE_DESC, MAJOR_REGION_CODE, MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC, RX_STORE, RX_STORE_DESC, DISTRIBUTION_CNTR, DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT, CONST_OPEN_DAT, CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT, EMERG_MKT_IND, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC, ORIGINAL_FS_OPEN_DAT, ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER, COUNTY_CODE, COUNTY_DESC, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE, ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND, CREATEDBY, CREATED_ON, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+- Measures (aggregated as SUM in the output view):
+    - RX_HRS_OPER, FS_HRS_OPER, RX_STORE, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT
+
+SOURCE_LOGIC:
+- The Calculation View is a simple projection (Projection_1) over the table CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT.
+- All columns from the source are included in the projection and mapped directly to the output.
+- No filters, calculated columns, joins, or unions are defined.
+- The logical model defines five measures (RX_HRS_OPER, FS_HRS_OPER, RX_STORE, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT) with SUM aggregation.
+- The output view type is "Aggregation", indicating that the final output is grouped by all non-measure columns and measures are aggregated as SUM.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+  SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+  SUM(RX_STORE) AS RX_STORE,
+  SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+  SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+FROM
+  PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT
+GROUP BY
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+_Note: Replace `PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT` with the actual BigQuery project and dataset as appropriate._
+
+CONVERSION_NOTES:
+- The Calculation View is a pure projection with no calculated columns, filters, joins, or unions.
+- All columns are projected 1:1 from the source table, as specified in the Calculation View XML.
+- The only transformation is aggregation: five columns (RX_HRS_OPER, FS_HRS_OPER, RX_STORE, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT) are defined as measures with SUM aggregation. All other columns are group-by columns.
+- No parameters, placeholders, or special HANA functions are present, so no special conversion is required.
+- The BigQuery SQL uses explicit column lists for both SELECT and GROUP BY to preserve the Calculation View's explicit output mapping.
+- No datatype conversions are performed; source datatypes are UNRESOLVED and must be validated in the target BigQuery schema.
+- No session or system functions are present.
+- The source table name is mapped as a placeholder (`PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT`) since the Calculation View only references the HANA table by logical name.
+
+ASSUMPTIONS:
+- The BigQuery table structure matches the HANA table structure 1:1 for all columns listed.
+- The five measure columns are numeric and compatible with SUM aggregation in BigQuery.
+- No filters, calculated columns, or joins are required because none are defined in the Calculation View.
+- No column names require escaping in BigQuery; if any column names are reserved keywords, they must be quoted in the actual implementation.
+- The BigQuery dataset and project names are not provided and must be supplied during deployment.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table name mapping for CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT is required.
+- Source column datatypes are not defined in the Calculation View XML; datatype compatibility with BigQuery SUM aggregation must be validated.
+- If any source columns are nullable, BigQuery SUM will return NULL for all-NULL groups (same as HANA), but this should be validated for business logic equivalence.
+- No information is available about column constraints, indexes, or performance optimization in the target BigQuery environment.
+
+CONFIDENCE:
+High
+
+_This conversion covers all logic explicitly available in the provided Calculation View XML. No external dependencies, parameters, or unresolved logic remain except for the required mapping of the source table to the correct BigQuery dataset and validation of column datatypes._
