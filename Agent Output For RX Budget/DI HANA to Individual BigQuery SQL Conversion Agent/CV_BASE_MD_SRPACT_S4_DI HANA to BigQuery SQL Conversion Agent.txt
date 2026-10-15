@@ -1,0 +1,213 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_SRPACT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- SAP_S4.ZTSRP_ATTR_ACT (database table)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns listed in <viewAttributes> and <logicalModel><attributes>, mapped one-to-one from SAP_S4.ZTSRP_ATTR_ACT via the Projection node.
+- Measures: RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT, each with aggregationType="sum".
+- Filter: MANDT IN (120, 200)
+- No calculated columns, calculated measures, or restricted measures defined.
+- No joins, unions, or additional nodes; only a single projection.
+
+SOURCE_LOGIC:
+- The Calculation View is defined as a CUBE with outputViewType="Aggregation", meaning the output must be aggregated.
+- The only transformation is a filter on the MANDT column (MANDT IN (120, 200)).
+- All columns from SAP_S4.ZTSRP_ATTR_ACT are projected, with no renaming or calculation.
+- Measures RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT are to be aggregated using SUM().
+- All other columns are output as non-aggregated attributes and must be included in the GROUP BY clause.
+- No joins, unions, calculated columns, input parameters, or placeholders are present.
+- The final output requires GROUP BY and aggregation due to dataCategory="CUBE" and outputViewType="Aggregation".
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_Store_Profile_Attributes AS (
+  SELECT
+    *
+  FROM
+    `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE
+    MANDT IN (120, 200)
+)
+SELECT
+  -- Non-measure attributes (all except the four measures)
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  -- Aggregated measures
+  SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+  SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+  SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+  SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+FROM
+  Filtered_Store_Profile_Attributes
+GROUP BY
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The SAP HANA Calculation View is a simple projection with a filter and aggregation (CUBE with Aggregation output).
+- The only transformation is filtering MANDT to values 120 and 200. This is implemented in the CTE Filtered_Store_Profile_Attributes.
+- All columns are projected as-is; there are no calculated columns or renames.
+- The four measures are aggregated using SUM() in the SELECT and not included in the GROUP BY.
+- All other columns (non-measures) are included in the GROUP BY as required for CUBE/Aggregation views.
+- The CTE name "Filtered_Store_Profile_Attributes" replaces the generic "Projection_1" to reflect its function (projection with a filter), as per functional CTE naming rules.
+- The source table reference is written as `PROJECT.DATASET.ZTSRP_ATTR_ACT` as a placeholder; replace with the actual BigQuery project and dataset as appropriate.
+- No parameters, placeholders, joins, unions, or calculated columns/measures are present, so none are converted or represented.
+- No datatype conversions or function conversions are required as all columns are directly mapped.
+- All output columns are explicitly listed to avoid SELECT * in the aggregation output, as per Calculation View best practices and conversion requirements.
+
+ASSUMPTIONS:
+- The BigQuery dataset and project names are unknown and must be supplied for deployment.
+- All columns in SAP_S4.ZTSRP_ATTR_ACT are available and have compatible data types for aggregation and grouping.
+- The values 120 and 200 for MANDT are of the correct type (numeric or string) as required by the target schema.
+
+UNRESOLVED_ITEMS:
+- The actual BigQuery project and dataset names for the ZTSRP_ATTR_ACT table are unknown and must be provided.
+- Data types of columns are assumed to be compatible with SUM() and GROUP BY, but this should be validated against the actual schema in BigQuery.
+- No information is available regarding column nullability or constraints.
+
+CONFIDENCE:
+High

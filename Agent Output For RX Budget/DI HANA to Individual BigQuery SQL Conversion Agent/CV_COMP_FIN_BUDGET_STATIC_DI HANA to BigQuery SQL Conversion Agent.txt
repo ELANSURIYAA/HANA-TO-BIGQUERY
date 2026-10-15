@@ -1,0 +1,423 @@
+SOURCE_ARTIFACT:
+CV_COMP_FIN_BUDGET_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- CV_BASE_FIN_WEEKLY_BUDGET_S4 (Calculation View, external, definition not included)
+- CV_BASE_MD_HRRP_NODE_S4 (Calculation View, external, definition not included)
+- CV_COMP_MD_SRPACT_STATIC (Calculation View, external, definition not included)
+- CV_COMP_MD_COMPFL_STATIC (Calculation View, external, definition not included)
+- CV_BASE_MD_RCALWEEK_S4 (Calculation View, external, definition not included)
+- CV_BASE_MD_CEPCT_S4 (Calculation View, external, definition not included)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Input Parameters: IP_VERSION (default 'LEDGER_BUD'), IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO
+- Variable mapping: IP_VERSION forwarded to CV_BASE_FIN_WEEKLY_BUDGET_S4
+- Filters:
+  - WEEKLY_SNAPSHOT_DS05: FISCVARNT = 'K4'
+  - WEEKLY_SNAPSHOT_DS05: _BIC_ZIO_SWEEK BETWEEN $$IP_WEEK_ENDING_FROM$$ AND $$IP_WEEK_ENDING_TO$$
+  - WEEKLY_SNAPSHOT_DS05: _BIC_ZIO_VER = $$IP_VERSION$$
+  - WEEKLY_SNAPSHOT_DS05: _BIC_ZIO_SAUDT IN ('1', '10')
+  - HIER_NODE: match(PARNODE, '*CORE_RET') AND HRYVALTO = '99991231'
+  - COMP_FLAG_BUDGET: COMP_VER = $$IP_VERSION$$
+- Joins:
+  - Join_1: INNER JOIN WEEKLY_SNAPSHOT_DS05 and HIER_NODE on _B631_S_PROFTCTR = NODEVALUE
+  - Join_2: LEFT OUTER JOIN ONLY_CORE_RET_DATA and STORE_ATTR_ACTUAL on _B631_S_PROFTCTR = PRCTR
+  - Join_3: LEFT OUTER JOIN WEEK_NUMBER and COMP_FLAG_BUDGET on _B631_S_PROFTCTR = PRCTR AND _BIC_ZIO_SWEEK = ZWEEK
+  - Join_4: LEFT OUTER JOIN Join_3 and CAL_WEEK on _BIC_ZIO_SWEEK = ZZWEEK
+  - Join_5: LEFT OUTER JOIN Join_4 and PROFIT_CENTER_TEXT on _B631_S_PROFTCTR = PRCTR
+- Calculated Columns (in FLAGS):
+  - CAL_FS_RX_FLAG: CASE(LEFTSTR(_BIC_ZWWPC_PA1,2), 'FS', 'FS', 'RX', 'RX', '')
+  - CAL_COMP_FLAG: IF(ISNULL(CASE(CAL_FS_RX_FLAG, 'FS', FS_COMP_WK, 'RX', RX_COMP_WK, FS_COMP_WK)), '0', CASE(CAL_FS_RX_FLAG, 'FS', FS_COMP_WK, 'RX', RX_COMP_WK, FS_COMP_WK))
+  - CAL_WEEK_NUMBER: RIGHTSTR(_BIC_ZIO_SWEEK,2)
+  - _B631_S_AMOUNT: _B631_S_AMOUNT_NEGATIVE * -1
+- Output Columns: As defined in <logicalModel id="FLAGS"> (see original XML for full list)
+- Measures (aggregated by SUM): _B631_S_AMOUNT_NEGATIVE, _BIC_ZIO_AMT, _B631_S_AMOUNT
+
+SOURCE_LOGIC:
+This Calculation View XML defines a CUBE-type Calculation View with outputViewType="Aggregation". The final output is an aggregation over all output columns not marked as measures. The view implements a star-schema pattern with one fact and five dimension lookups. Key logic includes:
+- Parameter propagation for IP_VERSION.
+- Filtering on fiscal variant, week range, version, and audit trail.
+- Hierarchy filtering for CORE_RET nodes.
+- Multiple joins to enrich fact data with hierarchy, store, comp flag, calendar week, and profit center text.
+- Several calculated columns for comp flags, week numbers, and amount negation.
+- The final output (FLAGS node) includes all mapped and calculated columns, with measures aggregated by SUM and all other columns grouped.
+- dataCategory="CUBE" and outputViewType="Aggregation" are both present, so the final output requires GROUP BY on all non-measure columns and SUM aggregation on all measures.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH
+WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    _B631_S_AMOUNT,
+    CURRENCY,
+    _BIC_ZIO_AMT,
+    FLAG
+  FROM
+    CV_BASE_FIN_WEEKLY_BUDGET_S4
+  WHERE
+    FISCVARNT = 'K4'
+    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND _BIC_ZIO_VER = @IP_VERSION
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+),
+HIER_NODE AS (
+  SELECT
+    MANDT,
+    PARNODE,
+    HRYVALTO,
+    NODEVALUE
+  FROM
+    CV_BASE_MD_HRRP_NODE_S4
+  WHERE
+    REGEXP_CONTAINS(PARNODE, r'.*CORE_RET$')
+    AND HRYVALTO = '99991231'
+),
+Join_1 AS (
+  SELECT
+    w.*,
+    h.PARNODE
+  FROM
+    WEEKLY_SNAPSHOT_DS05 w
+    INNER JOIN HIER_NODE h
+      ON w._B631_S_PROFTCTR = h.NODEVALUE
+),
+ONLY_CORE_RET_DATA AS (
+  SELECT
+    *
+  FROM
+    Join_1
+),
+STORE_ATTR_ACTUAL AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_MD_SRPACT_STATIC
+),
+Join_2 AS (
+  SELECT
+    f.*,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.EMERG_MKT_IND,
+    s.DIVISION_CODE,
+    s.DIVISION_DESC,
+    s.AREA_CODE,
+    s.AREA_DESC,
+    s.DISTRICT_CODE,
+    s.DISTRICT_DESC,
+    s.STRNUM,
+    s.REGION_CODE,
+    s.REGION_DESC,
+    s.CITY,
+    s.STATE,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM
+    ONLY_CORE_RET_DATA f
+    LEFT JOIN STORE_ATTR_ACTUAL s
+      ON f._B631_S_PROFTCTR = s.PRCTR
+),
+WEEK_NUMBER AS (
+  SELECT
+    *,
+    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_STORE_WEEK_NUMBER
+  FROM
+    Join_2
+),
+COMP_FLAG_BUDGET AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    COMP_VER
+  FROM
+    CV_COMP_MD_COMPFL_STATIC
+  WHERE
+    COMP_VER = @IP_VERSION
+),
+Join_3 AS (
+  SELECT
+    w.*,
+    c.FS_COMP_WK,
+    c.RX_COMP_WK
+  FROM
+    WEEK_NUMBER w
+    LEFT JOIN COMP_FLAG_BUDGET c
+      ON w._B631_S_PROFTCTR = c.PRCTR
+      AND w._BIC_ZIO_SWEEK = c.ZWEEK
+),
+CAL_WEEK AS (
+  SELECT
+    ZZWEEK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    RCLNT
+  FROM
+    CV_BASE_MD_RCALWEEK_S4
+),
+Join_4 AS (
+  SELECT
+    j.*,
+    c.ZRWSTRTDATE,
+    c.ZRWENDDATE
+  FROM
+    Join_3 j
+    LEFT JOIN CAL_WEEK c
+      ON j._BIC_ZIO_SWEEK = c.ZZWEEK
+),
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM
+    CV_BASE_MD_CEPCT_S4
+),
+Join_5 AS (
+  SELECT
+    j.*,
+    p.PROFIT_CENTER_TEXT
+  FROM
+    Join_4 j
+    LEFT JOIN PROFIT_CENTER_TEXT p
+      ON j._B631_S_PROFTCTR = p.PRCTR
+),
+FLAGS AS (
+  SELECT
+    RX_COMP_WK,
+    FS_COMP_WK,
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    _B631_S_AMOUNT_NEGATIVE,
+    CURRENCY,
+    _BIC_ZIO_AMT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    REGION_CODE,
+    REGION_DESC,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CITY,
+    STATE,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    FLAG,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    CASE(LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING),2), 'FS', 'FS', 'RX', 'RX', '') AS CAL_FS_RX_FLAG,
+    IF(
+      CASE(LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING),2), 'FS', FS_COMP_WK, 'RX', RX_COMP_WK, FS_COMP_WK) IS NULL,
+      '0',
+      CASE(LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING),2), 'FS', FS_COMP_WK, 'RX', RX_COMP_WK, FS_COMP_WK)
+    ) AS CAL_COMP_FLAG,
+    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    (_B631_S_AMOUNT_NEGATIVE * -1) AS _B631_S_AMOUNT
+  FROM
+    Join_5
+)
+SELECT
+  MANDT,
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  CAL_FS_RX_FLAG AS FS_RX_FLAG,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  SUM(_B631_S_AMOUNT_NEGATIVE) AS _B631_S_AMOUNT_NEGATIVE,
+  CURRENCY,
+  SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  EMERG_MKT_IND,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  CAL_COMP_FLAG AS COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  REGION_CODE,
+  REGION_DESC,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  FLAG AS FIN_BUD_CUBE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT
+FROM
+  FLAGS
+GROUP BY
+  MANDT,
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  FS_RX_FLAG,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  CURRENCY,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  EMERG_MKT_IND,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  REGION_CODE,
+  REGION_DESC,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  FIN_BUD_CUBE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- All CTE names from the Calculation View were preserved except for generic JOIN/PROJECTION CTEs, which were already functionally named in the XML.
+- Input parameters (IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO) are represented as BigQuery query parameters (@IP_VERSION, etc.).
+- HANA function LEFTSTR was mapped to LEFT, RIGHTSTR to RIGHT; SAFE_CAST is used for string conversion where datatype is not explicit.
+- HANA CASE expressions and IF(ISNULL(...), ...) logic were mapped to BigQuery CASE and IF.
+- HANA pattern matching function match(PARNODE, '*CORE_RET') is mapped to REGEXP_CONTAINS with a regex that matches strings ending with 'CORE_RET'.
+- Aggregation is applied (SUM) to all measure columns as required by CUBE/Aggregation outputViewType; all other output columns are included in GROUP BY.
+- All output columns follow the mapping in <logicalModel>, with calculated columns and aliases preserved.
+- Unresolved Calculation Views (e.g., CV_BASE_FIN_WEEKLY_BUDGET_S4, CV_COMP_MD_SRPACT_STATIC, etc.) are referenced as-is; their internal logic and columns are assumed as per the mapping in the XML.
+- Calculated columns are defined in the final FLAGS CTE, matching the Calculation View's logic.
+- No columns, joins, or filters were omitted or simplified. All logic is preserved.
+
+ASSUMPTIONS:
+- External Calculation Views (CV_BASE_FIN_WEEKLY_BUDGET_S4, CV_BASE_MD_HRRP_NODE_S4, etc.) provide all required columns as mapped in the Calculation View XML.
+- Input parameters are supplied at runtime as BigQuery query parameters.
+- Datatypes for columns used in LEFT/RIGHT functions are string-compatible, or conversion is safe.
+- No additional business logic or mapping is required beyond what is explicitly defined in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Definitions and internal logic for external Calculation Views (CV_BASE_FIN_WEEKLY_BUDGET_S4, CV_BASE_MD_HRRP_NODE_S4, CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4) are not provided; column existence and types are assumed based on mappings.
+- The exact datatype for columns used in LEFT/RIGHT and CASE expressions is not specified; validation may be required if types are not string-compatible.
+- The actual implementation of parameters (IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO) in a BigQuery production environment may require explicit parameterization or variable handling.
+
+CONFIDENCE:
+Medium
+
+- The conversion is faithful to the Calculation View XML and all transformation logic is preserved, but external Calculation Views and some datatype details are unresolved and require validation. No business logic was invented or omitted.

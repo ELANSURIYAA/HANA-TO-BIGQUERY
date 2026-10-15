@@ -1,0 +1,122 @@
+SOURCE_ARTIFACT:
+CV_COMP_MD_COMPFL_STATIC
+
+SOURCE_TYPE:
+Calculation View XML (dataCategory="DIMENSION", outputViewType="Projection")
+
+SOURCE_OBJECTS:
+CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG | replaced by procedure logic
+
+PROCEDURE_CHECK:
+CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES | CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG | READ BY REACHABLE ARTIFACT: YES
+CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES | CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT | READ BY REACHABLE ARTIFACT: NO
+CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES | READS _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4 | predicates applied to target load: WHERE ZWEEK = :V_WEEK
+CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES | READS _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_SRPACT_S4 | predicates applied to target load: none
+
+PROCEDURE_LOGIC_APPLIED:
+CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG -> SELECT from _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4
+| filters kept: WHERE ZWEEK = :V_WEEK
+| columns exposed: MANDT, PRCTR, STRNUM, COMP_VER, ZWEEK, ZMONTH, ZYEAR, FS_COMP_PRE, RX_COMP_PRE, FS_COMP_MON, RX_COMP_MON, FS_COMP_WK, RX_COMP_WK, SNAPSHOT_TIMESTAMP, CREATED_BY
+| variables: @V_WEEK (unresolved, set by CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK())
+| steps not converted: DELETE statements omitted (full-delete snapshot equivalence); audit columns (SNAPSHOT_TIMESTAMP, CREATED_BY) omitted as not read by Calculation View; summary SELECT from DUMMY omitted (operational/logging only)
+
+DEPENDENCY_EXPANSION:
+CV_COMP_MD_COMPFL_STATIC -> CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG | resolution: procedure-replaced | parameter binding: N/A
+CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG -> _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4 | resolution: unresolved external dependency | parameter binding: ZWEEK = @V_WEEK
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+Calculation View exposes the following columns, mapped 1:1 from the procedure-populated table:
+- MANDT (Client)
+- PRCTR (Profit Center/Retail Store)
+- STRNUM (Store Number)
+- COMP_VER (Comp flag version)
+- ZWEEK (Week Number)
+- ZMONTH (Month)
+- ZYEAR (Year)
+- FS_COMP_PRE (FS Comp Flag Prelim)
+- RX_COMP_PRE (RX Comp Flag Prelim)
+- FS_COMP_MON (FS Comp Flag Final Monthly)
+- RX_COMP_MON (RX Comp Flag Final Monthly)
+- FS_COMP_WK (FS Comp Flag Final Weekly)
+- RX_COMP_WK (RX Comp Flag Final Weekly)
+
+No calculated columns, measures, or restricted measures are defined. All columns are mapped directly.
+
+SOURCE_LOGIC:
+The Calculation View CV_COMP_MD_COMPFL_STATIC is a simple wrapper (dataCategory="DIMENSION", outputViewType="Projection") over the table CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG, exposing a direct projection of 13 columns. The underlying table is not a physical source but is instead fully replaced by the output of a procedure (CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES), which deletes all rows and reloads it from the Calculation View _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4, filtered by ZWEEK = :V_WEEK. The variable :V_WEEK is set by calling an external function CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK(), whose definition is not supplied and thus remains unresolved. Only the columns required by the Calculation View are exposed; audit columns (SNAPSHOT_TIMESTAMP, CREATED_BY) are omitted as they are not referenced. No aggregation or additional transformation is performed.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+-- Origin: CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG | procedure-replaced by CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES
+WITH TBL_WSS_SRP_COMPFLAG_FROM_STP_WSS_SRP_ATTRIBUTES AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+  FROM `PROJECT.DATASET._SYS_BIC_CVS_FRIP_Base_Master_CV_BASE_MD_COMPFL_S4`
+  WHERE ZWEEK = @V_WEEK
+)
+
+-- Origin: CV_COMP_MD_COMPFL_STATIC.Projection_1 | Calculation View output contract
+SELECT
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK
+FROM TBL_WSS_SRP_COMPFLAG_FROM_STP_WSS_SRP_ATTRIBUTES
+```
+
+FILTER_TRACE:
+ZWEEK = @V_WEEK
+| origin: CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES (INSERT SELECT WHERE clause)
+| CTE: TBL_WSS_SRP_COMPFLAG_FROM_STP_WSS_SRP_ATTRIBUTES
+
+OUTPUT_COLUMN_COUNT:
+attributes=13, measures=0, total=13, SELECT columns=13
+
+PARAMETERS:
+@V_WEEK
+| BigQuery type: STRING
+| origin: procedure variable, set by CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK()
+| source expression/default: CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK()
+| controls: WHERE predicate on ZWEEK in procedure-derived CTE
+
+CONVERSION_NOTES:
+- The Calculation View is a simple projection with no calculated columns, measures, or aggregations.
+- The underlying table is not a physical source but is replaced by the procedure's INSERT SELECT, which is inlined as a CTE.
+- The procedure variable @V_WEEK is unresolved as the function CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK() is not supplied; it must be provided as a query parameter.
+- The filter ZWEEK = @V_WEEK is preserved exactly as in the procedure.
+- Audit columns SNAPSHOT_TIMESTAMP and CREATED_BY are omitted from the output as they are not referenced by the Calculation View.
+- The reference to _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4 is mapped to a BigQuery placeholder table; its definition is not supplied.
+- No aggregation or GROUP BY is required, as the Calculation View is of type Projection and dataCategory DIMENSION.
+- All output columns are mapped 1:1 from the source CTE.
+
+ASSUMPTIONS:
+N/A: no conversion assumptions were required
+
+UNRESOLVED_ITEMS:
+U1 | ITEM: _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4 | REFERENCED IN: TBL_WSS_SRP_COMPFLAG_FROM_STP_WSS_SRP_ATTRIBUTES | REASON: external Calculation View definition not supplied | NEEDED: Definition of _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4 to expand logic
+U2 | ITEM: CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK() | REFERENCED IN: procedure variable V_WEEK | REASON: function definition not supplied | NEEDED: Function definition or explicit value for @V_WEEK
+U3 | ITEM: PROJECT.DATASET._SYS_BIC_CVS_FRIP_Base_Master_CV_BASE_MD_COMPFL_S4 | REFERENCED IN: BigQuery SQL FROM clause | REASON: Deployment mapping to actual BigQuery table not supplied | NEEDED: Actual BigQuery table name for _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4
+
+CONFIDENCE:
+Medium: Main logic is converted, but the external Calculation View and procedure variable function are unresolved and require validation.

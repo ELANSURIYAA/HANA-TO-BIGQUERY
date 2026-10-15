@@ -1,0 +1,75 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.CEPCT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: CEPCT.MANDT → output: MANDT; filter: IN (120, 200))
+- SPRAS (source: CEPCT.SPRAS → output: SPRAS)
+- PRCTR (source: CEPCT.PRCTR → output: PRCTR)
+- DATBI (source: CEPCT.DATBI → output: DATBI)
+- KOKRS (source: CEPCT.KOKRS → output: KOKRS)
+- KTEXT (source: CEPCT.KTEXT → output: KTEXT)
+- LTEXT (source: CEPCT.LTEXT → output: LTEXT)
+- MCTXT (source: CEPCT.MCTXT → output: MCTXT)
+- No calculated columns, measures, parameters, or placeholders are defined.
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single projection node (PROJECTION_1) over the SAP_S4.CEPCT table.
+- Only rows where MANDT is IN (120, 200) are included, as defined by the filter on the MANDT column.
+- All columns from the source table are mapped directly to the output, with explicit column mappings.
+- No calculated columns, aggregations, joins, unions, or parameters are present.
+- The root element specifies dataCategory="DIMENSION" and outputViewType="Projection".
+- As a result, the final output is row-level (not aggregated), and no GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+WITH Projected_Profit_Center_Texts AS (
+  SELECT
+    MANDT,
+    SPRAS,
+    PRCTR,
+    DATBI,
+    KOKRS,
+    KTEXT,
+    LTEXT,
+    MCTXT
+  FROM PROJECT.DATASET.CEPCT
+  WHERE MANDT IN (120, 200)
+)
+SELECT
+  MANDT,
+  SPRAS,
+  PRCTR,
+  DATBI,
+  KOKRS,
+  KTEXT,
+  LTEXT,
+  MCTXT
+FROM Projected_Profit_Center_Texts
+
+CONVERSION_NOTES:
+- The SAP HANA Calculation View XML was interpreted semantically, not as ordinary SQL.
+- The generic intermediate CTE name "PROJECTION_1" was replaced with the functional name "Projected_Profit_Center_Texts", reflecting its purpose as a projection of profit center texts filtered by client (MANDT).
+- All output columns are explicitly listed as per the Calculation View's logical model.
+- The filter on MANDT (IN (120, 200)) is preserved exactly as defined.
+- No calculated columns, measures, parameters, or placeholders were present, so none were converted.
+- No aggregation, grouping, joins, or unions were required because dataCategory="DIMENSION" and outputViewType="Projection".
+- The target BigQuery table reference is set as PROJECT.DATASET.CEPCT, as the actual mapping is not provided in the source artifact.
+- No datatype conversions were performed; values are preserved as numeric literals because the source filter values are numeric in the XML.
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.CEPCT corresponds to SAP_S4.CEPCT.
+- MANDT is a numeric column, as suggested by the filter values (120, 200).
+- All column names and mappings are preserved exactly as in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table names are not provided and must be mapped.
+- Datatype validation for all columns is assumed based on XML but not explicitly confirmed.
+- No external dependencies, parameters, or placeholders are unresolved.
+
+CONFIDENCE:
+High

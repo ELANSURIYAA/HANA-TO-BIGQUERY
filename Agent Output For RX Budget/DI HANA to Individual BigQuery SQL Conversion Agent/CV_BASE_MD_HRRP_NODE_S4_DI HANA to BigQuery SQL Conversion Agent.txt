@@ -1,0 +1,84 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_HRRP_NODE_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- SAP_S4.HRRP_NODE (physical table)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Columns: MANDT, HRYID, HRYVER, NODECLS, HRYNODE, PARNODE, HRYVALTO, HRYVALFROM, BALIND, NODETYPE, NODEVALUE
+- Source-to-target mapping: All columns are mapped 1:1 from SAP_S4.HRRP_NODE to the output
+- Filter: MANDT IN (120, 200)
+- No calculated columns, measures, parameters, or placeholders defined
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single Projection node (Projection_1) that selects all columns from the physical table SAP_S4.HRRP_NODE.
+- A filter is applied: MANDT IN (120, 200).
+- Output columns are explicitly defined as MANDT, HRYID, HRYVER, NODECLS, HRYNODE, PARNODE, HRYVALTO, HRYVALFROM, BALIND, NODETYPE, NODEVALUE.
+- No calculated columns, joins, aggregations, parameters, placeholders, or procedural logic are present.
+- Root element attributes: dataCategory="DIMENSION", outputViewType="Projection".
+- Because dataCategory is "DIMENSION" and outputViewType is "Projection", the final output is row-level, NOT aggregated. No GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+-- This SQL converts the Calculation View XML logic to BigQuery Standard SQL.
+-- Only generic intermediate CTE names are eligible for functional renaming.
+-- Here, the Projection_1 node is renamed to Projected_HRRP_Node_Records for clarity.
+-- All mappings, filters, columns, and output structure are preserved.
+
+WITH Projected_HRRP_Node_Records AS (
+  SELECT
+    MANDT,
+    HRYID,
+    HRYVER,
+    NODECLS,
+    HRYNODE,
+    PARNODE,
+    HRYVALTO,
+    HRYVALFROM,
+    BALIND,
+    NODETYPE,
+    NODEVALUE
+  FROM
+    PROJECT.DATASET.HRRP_NODE
+  WHERE
+    MANDT IN (120, 200)
+)
+SELECT
+  MANDT,
+  HRYID,
+  HRYVER,
+  NODECLS,
+  HRYNODE,
+  PARNODE,
+  HRYVALTO,
+  HRYVALFROM,
+  BALIND,
+  NODETYPE,
+  NODEVALUE
+FROM
+  Projected_HRRP_Node_Records;
+
+CONVERSION_NOTES:
+- The SAP_S4.HRRP_NODE table was mapped to PROJECT.DATASET.HRRP_NODE as a placeholder; actual BigQuery dataset/table mapping must be provided.
+- The filter MANDT IN (120, 200) is preserved as-is. Datatype for MANDT is assumed numeric based on typical SAP usage but is UNRESOLVED and requires validation.
+- All columns are mapped 1:1. No calculated columns, measures, parameters, or placeholders exist in the source.
+- The intermediate CTE name "Projection_1" was renamed to "Projected_HRRP_Node_Records" for functional clarity, as per strict CTE naming rules. All references updated accordingly.
+- No business meaning was invented; naming reflects the actual operation (projection and filter).
+- No aggregation or grouping logic is present, as the Calculation View is a row-level projection (not a CUBE/Aggregation).
+- No joins, unions, or procedural steps are present.
+- No HANA-specific functions required conversion.
+
+ASSUMPTIONS:
+- PROJECT.DATASET.HRRP_NODE is a placeholder for the actual BigQuery dataset/table mapping.
+- MANDT is assumed to be numeric, but datatype validation is required.
+- No additional business logic, parameters, or placeholders exist outside the provided XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAP_S4.HRRP_NODE is required.
+- Datatype for MANDT is not explicitly defined and requires validation.
+- If SAP_S4.HRRP_NODE contains additional columns, only the specified columns are projected; others are intentionally omitted.
+
+CONFIDENCE:
+High

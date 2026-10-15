@@ -1,0 +1,60 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_RCALWEEK_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTFIGL_RCALWEEK
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- RCLNT (Client): mapped from ZTFIGL_RCALWEEK.RCLNT; filter: RCLNT IN (120, 200)
+- ZZWEEK (Week Number): mapped from ZTFIGL_RCALWEEK.ZZWEEK
+- ZCALYRP (Calendar Year Period): mapped from ZTFIGL_RCALWEEK.ZCALYRP
+- ZRYEAR (Retail Year): mapped from ZTFIGL_RCALWEEK.ZRYEAR
+- ZRPERIOD (Retail Period): mapped from ZTFIGL_RCALWEEK.ZRPERIOD
+- ZRYRP (Retail Period/Year): mapped from ZTFIGL_RCALWEEK.ZRYRP
+- ZRYRQTR (Retail Year Quarter): mapped from ZTFIGL_RCALWEEK.ZRYRQTR
+- ZRWSTRTDATE (Retail Week Start Date): mapped from ZTFIGL_RCALWEEK.ZRWSTRTDATE
+- ZRWENDDATE (Retail Week End Date): mapped from ZTFIGL_RCALWEEK.ZRWENDDATE
+
+SOURCE_LOGIC:
+This Calculation View XML defines a single projection node over the base table SAP_S4.ZTFIGL_RCALWEEK. The projection selects and outputs the following columns: RCLNT, ZZWEEK, ZCALYRP, ZRYEAR, ZRPERIOD, ZRYRP, ZRYRQTR, ZRWSTRTDATE, ZRWENDDATE. A filter is applied to RCLNT, restricting the output to rows where RCLNT IN (120, 200). There are no joins, calculated columns, aggregations, parameters, placeholders, or unions. The root <Calculation:scenario> element has dataCategory="DIMENSION" and outputViewType="Projection", so the final output is row-level and does not require GROUP BY or aggregation.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  RCLNT,
+  ZZWEEK,
+  ZCALYRP,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  ZRYRQTR,
+  ZRWSTRTDATE,
+  ZRWENDDATE
+FROM
+  PROJECT.DATASET.ZTFIGL_RCALWEEK
+WHERE
+  RCLNT IN (120, 200)
+```
+
+CONVERSION_NOTES:
+- The source Calculation View is a simple projection with a filter on the RCLNT column.
+- The table SAP_S4.ZTFIGL_RCALWEEK is mapped to PROJECT.DATASET.ZTFIGL_RCALWEEK in BigQuery. The actual project and dataset names must be supplied.
+- All column names are preserved exactly as defined in the Calculation View output and source table.
+- The filter RCLNT IN (120, 200) is preserved. The datatype of RCLNT is assumed to be numeric as the XML supplies values without quotes, but this should be validated against the actual schema.
+- No calculated columns, parameters, placeholders, joins, or aggregation logic were present or required conversion.
+- Since outputViewType="Projection" and dataCategory="DIMENSION", no GROUP BY or aggregation is required or present in the SQL.
+- No generic intermediate CTEs were generated or required, so no CTE renaming was performed.
+
+ASSUMPTIONS:
+- PROJECT.DATASET.ZTFIGL_RCALWEEK is a placeholder for the actual BigQuery table mapping of SAP_S4.ZTFIGL_RCALWEEK.
+- The column RCLNT is numeric. If it is actually a string, the filter values should be quoted (e.g., '120', '200'). This should be validated against the schema.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the table SAP_S4.ZTFIGL_RCALWEEK are not provided and must be supplied.
+- The datatype of RCLNT should be confirmed to ensure the filter values are correct (numeric vs. string).
+
+CONFIDENCE:
+High

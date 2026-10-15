@@ -1,0 +1,69 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_COMPFL_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTSRP_COMPFL
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: MANDT, filter: IN (110, 200))
+- PRCTR (source: PRCTR)
+- STRNUM (source: STRNUM)
+- COMP_VER (source: COMP_VER)
+- ZWEEK (source: ZWEEK)
+- ZMONTH (source: ZMONTH)
+- ZYEAR (source: ZYEAR)
+- FS_COMP_PRE (source: FS_COMP_PRE)
+- RX_COMP_PRE (source: RX_COMP_PRE)
+- FS_COMP_MON (source: FS_COMP_MON)
+- RX_COMP_MON (source: RX_COMP_MON)
+- FS_COMP_WK (source: FS_COMP_WK)
+- RX_COMP_WK (source: RX_COMP_WK)
+
+SOURCE_LOGIC:
+This Calculation View XML defines a single projection node ("Projection_1") based on the SAP HANA table SAP_S4.ZTSRP_COMPFL. The projection selects 13 columns directly from the source table, with a filter applied to the MANDT column (MANDT IN (110, 200)). There are no joins, unions, calculated columns, aggregations, measures, parameters, or placeholders defined. The output columns are explicitly mapped one-to-one from the source table. The root <Calculation:scenario> element specifies dataCategory="DIMENSION" and outputViewType="Projection", meaning the output is at the row level (no aggregation or GROUP BY is required).
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK
+FROM
+  PROJECT.DATASET.ZTSRP_COMPFL
+WHERE
+  MANDT IN (110, 200)
+```
+
+CONVERSION_NOTES:
+- The Calculation View is a simple row-level projection with a filter on MANDT.
+- The source table SAP_S4.ZTSRP_COMPFL is mapped to PROJECT.DATASET.ZTSRP_COMPFL in BigQuery. The actual project and dataset names must be supplied.
+- All column names and mappings are preserved exactly as defined in the Calculation View logical model.
+- The filter on MANDT is translated as-is; the numeric values are assumed to be integers, but datatype validation may be required if MANDT is a string in the source system.
+- No intermediate CTEs were generated because there is only a single projection node and no calculated columns, joins, or unions.
+- No parameters, placeholders, calculated columns, or aggregation logic are present.
+- No generic CTE renaming was required.
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.ZTSRP_COMPFL exists and contains columns matching the names and semantics of the SAP_S4.ZTSRP_COMPFL table.
+- The MANDT column is either integer or string and the IN clause values match the source datatype. If MANDT is a string, the values should be quoted accordingly.
+- No additional transformation logic, joins, or calculated columns are present outside what is defined in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the target table are unknown and must be supplied.
+- Datatype of MANDT is not specified. Validation is required to ensure the filter values are compatible with the column's datatype.
+
+CONFIDENCE:
+High
