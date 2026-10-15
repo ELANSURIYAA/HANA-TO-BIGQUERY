@@ -1,0 +1,487 @@
+=====================================================================
+CONSOLIDATION DESCRIPTION AND ANALYSIS
+RX_BUDGET CONVERTED BIGQUERY FILES
+Final Consumer Artifact: CV_COMP_FIN_BUDGET_STATIC
+=====================================================================
+
+1. CONSOLIDATION TRACEABILITY
+=====================================================================
+
+The consolidation process analyzed the File Relationships Table and all 9 converted BigQuery SQL files to produce a single, fully expanded, execution-ready BigQuery SQL implementation.
+
+1.1 LINEAGE ANALYSIS
+---------------------------------------------------------------------
+Based on the File Relationships Table, the following dependency tree was identified:
+
+FINAL CONSUMER ARTIFACT:
+  CV_COMP_FIN_BUDGET_STATIC (CUBE/Aggregation)
+
+DIRECT DEPENDENCIES (Level 1):
+  - CV_BASE_FIN_WEEKLY_BUDGET_S4 (referenced in FACT_WEEKLY_BUDGET)
+  - CV_BASE_MD_HRRP_NODE_S4 (referenced in CORE_RETAIL_PROFIT_CENTERS)
+  - CV_COMP_MD_SRPACT_STATIC (referenced in STORE_ATTRIBUTES)
+  - CV_COMP_MD_COMPFL_STATIC (referenced in COMP_WEEK_FLAGS)
+  - CV_BASE_MD_RCALWEEK_S4 (referenced in RETAIL_CALENDAR_WEEKS)
+  - CV_BASE_MD_CEPCT_S4 (referenced in PROFIT_CENTER_DESCRIPTIONS)
+
+INDIRECT DEPENDENCIES (Level 2):
+  - CV_BASE_MD_SRPACT_S4 (referenced by CV_COMP_MD_SRPACT_STATIC)
+  - CV_BASE_MD_COMPFL_S4 (referenced by CV_COMP_MD_COMPFL_STATIC)
+
+STORED PROCEDURE LOGIC:
+  - STP_WSS_SRP_ATTRIBUTES populates:
+    * TBL_WSS_SRP_ATTR_ACT (consumed by CV_COMP_MD_SRPACT_STATIC)
+    * TBL_WSS_SRP_COMPFLAG (consumed by CV_COMP_MD_COMPFL_STATIC)
+
+1.2 FILE USAGE CLASSIFICATION
+---------------------------------------------------------------------
+
+USED FILES (9 of 9):
+---------------------------------------------------------------------
+1. CV_BASE_FIN_WEEKLY_BUDGET_S4.sql
+   STATUS: USED
+   ROLE: Primary fact data source
+   INLINED AS: FACT_WEEKLY_BUDGET CTE
+   LOGIC APPLIED: Filters on FISCVARNT='K4', _BIC_ZIO_SWEEK range, _BIC_ZIO_VER, _BIC_ZIO_SAUDT, MANDT
+   DEPENDENCY LEVEL: Level 1 (direct dependency of final artifact)
+
+2. CV_BASE_MD_CEPCT_S4.sql
+   STATUS: USED
+   ROLE: Profit center text master data
+   INLINED AS: PROFIT_CENTER_TEXTS_MANDT_FILTERED CTE
+   LOGIC APPLIED: Filter on MANDT IN (120, 200)
+   DEPENDENCY LEVEL: Level 1 (direct dependency of final artifact)
+
+3. CV_BASE_MD_COMPFL_S4.sql
+   STATUS: USED
+   ROLE: Store profile comp flags base table
+   INLINED AS: STORE_PROFILE_COMP_FLAGS CTE
+   LOGIC APPLIED: Filter on MANDT IN (110, 200)
+   DEPENDENCY LEVEL: Level 2 (indirect via CV_COMP_MD_COMPFL_STATIC)
+
+4. CV_BASE_MD_HRRP_NODE_S4.sql
+   STATUS: USED
+   ROLE: Hierarchy node master data for profit center filtering
+   INLINED AS: HRRP_NODE_HIERARCHY_MASTER_DATA CTE
+   LOGIC APPLIED: Filter on MANDT IN (120, 200)
+   DEPENDENCY LEVEL: Level 1 (direct dependency of final artifact)
+
+5. CV_BASE_MD_RCALWEEK_S4.sql
+   STATUS: USED
+   ROLE: Retail calendar week master data
+   INLINED AS: RETAIL_CALENDAR_WEEKS_WITH_CLIENT_FILTER CTE
+   LOGIC APPLIED: Filter on RCLNT IN (120, 200)
+   DEPENDENCY LEVEL: Level 1 (direct dependency of final artifact)
+
+6. CV_BASE_MD_SRPACT_S4.sql
+   STATUS: USED
+   ROLE: Store profile attributes actuals (base aggregation)
+   INLINED AS: STORE_PROFILE_ACTUALS_AGGREGATED CTE
+   LOGIC APPLIED: Filter on MANDT IN (120, 200), aggregation of measures (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT)
+   DEPENDENCY LEVEL: Level 2 (indirect via CV_COMP_MD_SRPACT_STATIC)
+
+7. CV_COMP_FIN_BUDGET_STATIC.sql
+   STATUS: USED
+   ROLE: Final consumer artifact (top-level CUBE)
+   INLINED AS: Complete consolidation with all upstream dependencies resolved
+   LOGIC APPLIED: All joins, filters, calculated columns, aggregations
+   DEPENDENCY LEVEL: Level 0 (final artifact)
+
+8. CV_COMP_MD_COMPFL_STATIC.sql
+   STATUS: USED
+   ROLE: Composite comp flag view with procedure logic
+   INLINED AS: COMP_FLAG_SNAPSHOT_FROM_STP_WSS_SRP_ATTRIBUTES CTE
+   LOGIC APPLIED: Procedure logic from STP_WSS_SRP_ATTRIBUTES, filter on ZWEEK = @V_WEEK
+   DEPENDENCY LEVEL: Level 1 (direct dependency of final artifact)
+
+9. CV_COMP_MD_SRPACT_STATIC.sql
+   STATUS: USED
+   ROLE: Composite store profile attributes with aggregation
+   INLINED AS: STORE_PROFILE_ATTRIBUTES_ACTUALS CTE
+   LOGIC APPLIED: Procedure logic from STP_WSS_SRP_ATTRIBUTES, aggregation of measures
+   DEPENDENCY LEVEL: Level 1 (direct dependency of final artifact)
+
+NOT USED FILES: NONE
+All 9 supplied SQL files were incorporated into the final consolidated SQL.
+
+1.3 DEPENDENCY RESOLUTION STRATEGY
+---------------------------------------------------------------------
+
+The consolidation followed a bottom-up recursive expansion strategy:
+
+STEP 1: Identify all physical base tables
+  - CEPCT (SAP_S4.CEPCT)
+  - ZTSRP_COMPFL (SAP_S4.ZTSRP_COMPFL)
+  - HRRP_NODE (SAP_S4.HRRP_NODE)
+  - ZTFIGL_RCALWEEK (SAP_S4.ZTFIGL_RCALWEEK)
+  - ZTSRP_ATTR_ACT (SAP_S4.ZTSRP_ATTR_ACT)
+  - CVS_FRIP_Composite_Master_SFN_FC_FLAG (unresolved upstream view)
+
+STEP 2: Resolve Level 2 dependencies (base calculation views)
+  - CV_BASE_MD_CEPCT_S4 → reads CEPCT
+  - CV_BASE_MD_COMPFL_S4 → reads ZTSRP_COMPFL
+  - CV_BASE_MD_HRRP_NODE_S4 → reads HRRP_NODE
+  - CV_BASE_MD_RCALWEEK_S4 → reads ZTFIGL_RCALWEEK
+  - CV_BASE_MD_SRPACT_S4 → reads ZTSRP_ATTR_ACT
+
+STEP 3: Resolve Level 1 dependencies (composite views)
+  - CV_COMP_MD_SRPACT_STATIC → reads CV_BASE_MD_SRPACT_S4 (via procedure)
+  - CV_COMP_MD_COMPFL_STATIC → reads CV_BASE_MD_COMPFL_S4 (via procedure)
+
+STEP 4: Resolve Level 0 (final artifact)
+  - CV_COMP_FIN_BUDGET_STATIC → joins all Level 1 dependencies
+
+STEP 5: Inline all CTEs into single SQL
+  - All intermediate views replaced with their SQL definitions
+  - All joins, filters, and calculations preserved exactly
+  - All aggregations applied at correct grain
+
+2. CONSOLIDATION LOGIC DETAILS
+=====================================================================
+
+2.1 FILTERS APPLIED
+---------------------------------------------------------------------
+The following filters were preserved from the source artifacts:
+
+FROM CV_BASE_FIN_WEEKLY_BUDGET_S4:
+  - FISCVARNT = 'K4'
+  - _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+  - _BIC_ZIO_VER = @IP_VERSION
+  - _BIC_ZIO_SAUDT IN ('1','10')
+  - MANDT IN ('110', '200')
+
+FROM CV_BASE_MD_HRRP_NODE_S4:
+  - MANDT IN (120, 200)
+  - PARNODE LIKE '%CORE_RET'
+  - HRYVALTO = '99991231'
+
+FROM CV_BASE_MD_CEPCT_S4:
+  - MANDT IN (120, 200)
+
+FROM CV_BASE_MD_COMPFL_S4:
+  - MANDT IN (110, 200)
+  - ZWEEK = @V_WEEK (applied in CV_COMP_MD_COMPFL_STATIC)
+
+FROM CV_BASE_MD_RCALWEEK_S4:
+  - RCLNT IN (120, 200)
+
+FROM CV_BASE_MD_SRPACT_S4:
+  - MANDT IN (120, 200)
+
+FROM CV_COMP_MD_COMPFL_STATIC:
+  - COMP_VER = @IP_VERSION
+
+2.2 JOINS APPLIED
+---------------------------------------------------------------------
+The following joins were preserved from CV_COMP_FIN_BUDGET_STATIC:
+
+JOIN 1: FACT_WEEKLY_BUDGET INNER JOIN CORE_RETAIL_PROFIT_CENTERS
+  ON _B631_S_PROFTCTR = NODEVALUE
+
+JOIN 2: FACT_CORE_RETAIL LEFT JOIN STORE_ATTRIBUTES
+  ON _B631_S_PROFTCTR = PRCTR
+
+JOIN 3: FACT_WITH_WEEK_NUMBER LEFT JOIN COMP_WEEK_FLAGS
+  ON _B631_S_PROFTCTR = PRCTR AND _BIC_ZIO_SWEEK = ZWEEK
+
+JOIN 4: FACT_WITH_COMP_FLAGS LEFT JOIN RETAIL_CALENDAR_WEEKS
+  ON _BIC_ZIO_SWEEK = ZZWEEK
+
+JOIN 5: FACT_WITH_CALENDAR LEFT JOIN PROFIT_CENTER_DESCRIPTIONS
+  ON _B631_S_PROFTCTR = PRCTR
+
+2.3 CALCULATED COLUMNS
+---------------------------------------------------------------------
+The following calculated columns were preserved:
+
+CAL_WEEK_NUMBER:
+  RIGHT(_BIC_ZIO_SWEEK, 2)
+
+CAL_FS_RX_FLAG:
+  CASE
+    WHEN LEFT(_BIC_ZWWPC_PA1,2) = 'FS' THEN 'FS'
+    WHEN LEFT(_BIC_ZWWPC_PA1,2) = 'RX' THEN 'RX'
+    ELSE ''
+  END
+
+CAL_COMP_FLAG:
+  CASE
+    WHEN IFNULL(
+      CASE
+        WHEN LEFT(_BIC_ZWWPC_PA1,2) = 'FS' THEN FS_COMP_WK
+        WHEN LEFT(_BIC_ZWWPC_PA1,2) = 'RX' THEN RX_COMP_WK
+        ELSE FS_COMP_WK
+      END, '0'
+    ) IS NULL THEN '0'
+    ELSE
+      CASE
+        WHEN LEFT(_BIC_ZWWPC_PA1,2) = 'FS' THEN FS_COMP_WK
+        WHEN LEFT(_BIC_ZWWPC_PA1,2) = 'RX' THEN RX_COMP_WK
+        ELSE FS_COMP_WK
+      END
+  END
+
+_B631_S_AMOUNT_NEGATIVE:
+  _B631_S_AMOUNT * -1
+
+_B631_S_AMOUNT (final):
+  _B631_S_AMOUNT_NEGATIVE (sign already flipped)
+
+2.4 AGGREGATIONS
+---------------------------------------------------------------------
+The following aggregations were preserved:
+
+FROM CV_BASE_MD_SRPACT_S4:
+  - SUM(RX_HRS_OPER)
+  - SUM(FS_HRS_OPER)
+  - SUM(RETAIL_SQFT_AMT)
+  - SUM(TOTAL_SQFT_AMT)
+  GROUP BY: all 71 attributes
+
+FROM CV_COMP_MD_SRPACT_STATIC:
+  - SUM(RX_HRS_OPER)
+  - SUM(FS_HRS_OPER)
+  - SUM(RX_STORE)
+  - SUM(RETAIL_SQFT_AMT)
+  - SUM(TOTAL_SQFT_AMT)
+  GROUP BY: all 70 attributes
+
+FROM CV_COMP_FIN_BUDGET_STATIC (FINAL):
+  - SUM(_B631_S_AMOUNT_NEGATIVE)
+  - SUM(_BIC_ZIO_AMT)
+  - SUM(_B631_S_AMOUNT)
+  GROUP BY: all 43 attributes
+
+2.5 PARAMETERS
+---------------------------------------------------------------------
+The following parameters are required for execution:
+
+@IP_VERSION (STRING, default 'LEDGER_BUD')
+  - Controls _BIC_ZIO_VER filter in FACT_WEEKLY_BUDGET
+  - Controls COMP_VER filter in COMP_WEEK_FLAGS
+  - Origin: CV_COMP_FIN_BUDGET_STATIC input parameter
+
+@IP_WEEK_ENDING_FROM (STRING)
+  - Controls _BIC_ZIO_SWEEK BETWEEN lower bound
+  - Origin: CV_COMP_FIN_BUDGET_STATIC input parameter
+
+@IP_WEEK_ENDING_TO (STRING)
+  - Controls _BIC_ZIO_SWEEK BETWEEN upper bound
+  - Origin: CV_COMP_FIN_BUDGET_STATIC input parameter
+
+@V_WEEK (STRING)
+  - Controls ZWEEK filter in COMP_FLAG_SNAPSHOT_FROM_STP_WSS_SRP_ATTRIBUTES
+  - Origin: STP_WSS_SRP_ATTRIBUTES procedure variable
+
+3. VALIDATION ITEMS
+=====================================================================
+
+The following items require validation due to unresolved dependencies or missing information in the supplied inputs:
+
+3.1 UNRESOLVED UPSTREAM VIEW
+---------------------------------------------------------------------
+ITEM: CVS_FRIP.Composite.Master::SFN_FC_FLAG
+REFERENCED IN: FACT_WEEKLY_BUDGET CTE (CV_BASE_FIN_WEEKLY_BUDGET_S4)
+REASON: CV_BASE_FIN_WEEKLY_BUDGET_S4 references this calculation view as its data source, but the definition was not supplied in the converted SQL files
+IMPACT: The consolidated SQL references `PROJECT.DATASET.CVS_FRIP_Composite_Master_SFN_FC_FLAG` as a placeholder table
+NEEDED: Full definition of SFN_FC_FLAG calculation view to inline its logic
+REQUIRES VALIDATION: UNRESOLVED UPSTREAM DEPENDENCY
+
+3.2 PHYSICAL TABLE MAPPINGS
+---------------------------------------------------------------------
+The following physical tables are referenced with PROJECT.DATASET placeholders and must be mapped to actual BigQuery project and dataset names:
+
+ITEM: PROJECT.DATASET.CEPCT
+REFERENCED IN: PROFIT_CENTER_TEXTS_MANDT_FILTERED CTE
+HANA SOURCE: SAP_S4.CEPCT
+NEEDED: Actual BigQuery project and dataset for CEPCT table
+
+ITEM: PROJECT.DATASET.ZTSRP_COMPFL
+REFERENCED IN: STORE_PROFILE_COMP_FLAGS CTE
+HANA SOURCE: SAP_S4.ZTSRP_COMPFL
+NEEDED: Actual BigQuery project and dataset for ZTSRP_COMPFL table
+
+ITEM: PROJECT.DATASET.HRRP_NODE
+REFERENCED IN: HRRP_NODE_HIERARCHY_MASTER_DATA CTE
+HANA SOURCE: SAP_S4.HRRP_NODE
+NEEDED: Actual BigQuery project and dataset for HRRP_NODE table
+
+ITEM: PROJECT.DATASET.ZTFIGL_RCALWEEK
+REFERENCED IN: RETAIL_CALENDAR_WEEKS_WITH_CLIENT_FILTER CTE
+HANA SOURCE: SAP_S4.ZTFIGL_RCALWEEK
+NEEDED: Actual BigQuery project and dataset for ZTFIGL_RCALWEEK table
+
+ITEM: PROJECT.DATASET.ZTSRP_ATTR_ACT
+REFERENCED IN: STORE_PROFILE_ACTUALS_AGGREGATED CTE
+HANA SOURCE: SAP_S4.ZTSRP_ATTR_ACT
+NEEDED: Actual BigQuery project and dataset for ZTSRP_ATTR_ACT table
+
+ITEM: PROJECT.DATASET.CVS_FRIP_Composite_Master_SFN_FC_FLAG
+REFERENCED IN: FACT_WEEKLY_BUDGET CTE
+HANA SOURCE: CVS_FRIP.Composite.Master::SFN_FC_FLAG
+NEEDED: Actual BigQuery project and dataset for SFN_FC_FLAG view or table
+
+3.3 FILTER COLUMN DATATYPES
+---------------------------------------------------------------------
+The following filter columns have unresolved datatypes and must be validated against the actual BigQuery schema:
+
+ITEM: MANDT datatype
+REFERENCED IN: Multiple CTEs (PROFIT_CENTER_TEXTS_MANDT_FILTERED, STORE_PROFILE_COMP_FLAGS, HRRP_NODE_HIERARCHY_MASTER_DATA, STORE_PROFILE_ACTUALS_AGGREGATED, FACT_WEEKLY_BUDGET)
+REASON: HANA XML does not specify datatype; filter values are mixed (120, 200, '110', '200')
+NEEDED: Confirm MANDT datatype (INT64 or STRING) in BigQuery tables
+REQUIRES VALIDATION: DATATYPE INCONSISTENCY
+
+ITEM: RCLNT datatype
+REFERENCED IN: RETAIL_CALENDAR_WEEKS_WITH_CLIENT_FILTER CTE
+REASON: HANA XML does not specify datatype; filter values are unquoted (120, 200)
+NEEDED: Confirm RCLNT datatype in ZTFIGL_RCALWEEK table
+
+ITEM: FISCVARNT datatype
+REFERENCED IN: FACT_WEEKLY_BUDGET CTE
+REASON: HANA XML does not specify datatype; filter value is 'K4'
+NEEDED: Confirm FISCVARNT datatype in SFN_FC_FLAG view
+
+ITEM: _BIC_ZIO_SWEEK datatype
+REFERENCED IN: FACT_WEEKLY_BUDGET CTE
+REASON: HANA XML does not specify datatype; used in BETWEEN predicate with STRING parameters
+NEEDED: Confirm _BIC_ZIO_SWEEK datatype in SFN_FC_FLAG view
+
+ITEM: _BIC_ZIO_VER datatype
+REFERENCED IN: FACT_WEEKLY_BUDGET CTE
+REASON: HANA XML does not specify datatype; compared to @IP_VERSION (STRING)
+NEEDED: Confirm _BIC_ZIO_VER datatype in SFN_FC_FLAG view
+
+ITEM: _BIC_ZIO_SAUDT datatype
+REFERENCED IN: FACT_WEEKLY_BUDGET CTE
+REASON: HANA XML does not specify datatype; filter values are ('1','10')
+NEEDED: Confirm _BIC_ZIO_SAUDT datatype in SFN_FC_FLAG view
+
+ITEM: PARNODE datatype
+REFERENCED IN: CORE_RETAIL_PROFIT_CENTERS CTE
+REASON: HANA XML does not specify datatype; used in LIKE predicate
+NEEDED: Confirm PARNODE datatype in HRRP_NODE table
+
+ITEM: HRYVALTO datatype
+REFERENCED IN: CORE_RETAIL_PROFIT_CENTERS CTE
+REASON: HANA XML does not specify datatype; filter value is '99991231'
+NEEDED: Confirm HRYVALTO datatype in HRRP_NODE table
+
+ITEM: ZWEEK datatype
+REFERENCED IN: COMP_FLAG_SNAPSHOT_FROM_STP_WSS_SRP_ATTRIBUTES CTE
+REASON: HANA procedure does not specify datatype; compared to @V_WEEK (STRING)
+NEEDED: Confirm ZWEEK datatype in ZTSRP_COMPFL table
+
+ITEM: COMP_VER datatype
+REFERENCED IN: COMP_WEEK_FLAGS CTE
+REASON: HANA XML does not specify datatype; compared to @IP_VERSION (STRING)
+NEEDED: Confirm COMP_VER datatype in ZTSRP_COMPFL table
+
+3.4 CALCULATED COLUMN VALIDATION
+---------------------------------------------------------------------
+ITEM: _B631_S_AMOUNT sign flip
+REFERENCED IN: FACT_WITH_PROFIT_CENTER_TEXT CTE and BUDGET_FLAGS_CUBE CTE
+REASON: CV_COMP_FIN_BUDGET_STATIC applies _B631_S_AMOUNT * -1 to create _B631_S_AMOUNT_NEGATIVE, then uses _B631_S_AMOUNT_NEGATIVE as the final _B631_S_AMOUNT
+LOGIC APPLIED: _B631_S_AMOUNT_NEGATIVE = _B631_S_AMOUNT * -1, then _B631_S_AMOUNT (final) = _B631_S_AMOUNT_NEGATIVE
+REQUIRES VALIDATION: Confirm that the final _B631_S_AMOUNT should be the negated value, not the original value
+
+3.5 AGGREGATION GRAIN VALIDATION
+---------------------------------------------------------------------
+ITEM: CV_COMP_MD_SRPACT_STATIC aggregation grain
+REFERENCED IN: STORE_PROFILE_ATTRIBUTES_ACTUALS CTE
+REASON: CV_COMP_MD_SRPACT_STATIC is a CUBE/Aggregation view that reads from CV_BASE_MD_SRPACT_S4 (also a CUBE/Aggregation view)
+LOGIC APPLIED: Two levels of aggregation are preserved (base aggregation in STORE_PROFILE_ACTUALS_AGGREGATED, then re-aggregation in STORE_PROFILE_ATTRIBUTES_ACTUALS)
+REQUIRES VALIDATION: Confirm that the double aggregation is intentional and that the grain is correct
+
+3.6 PROCEDURE LOGIC VALIDATION
+---------------------------------------------------------------------
+ITEM: STP_WSS_SRP_ATTRIBUTES procedure variable V_WEEK
+REFERENCED IN: COMP_FLAG_SNAPSHOT_FROM_STP_WSS_SRP_ATTRIBUTES CTE
+REASON: The procedure uses a variable V_WEEK to filter ZWEEK, but the variable's value is derived from a composite function and is not supplied as an input parameter
+LOGIC APPLIED: V_WEEK is mapped to @V_WEEK parameter in BigQuery
+REQUIRES VALIDATION: Confirm how @V_WEEK should be supplied at runtime
+
+4. CONSOLIDATION COMPLETENESS CHECKLIST
+=====================================================================
+
+✓ All 9 supplied SQL files analyzed
+✓ All 9 supplied SQL files incorporated into final SQL
+✓ All lineage relationships from File Relationships Table applied
+✓ All filters preserved exactly as in source
+✓ All joins preserved with correct join types
+✓ All calculated columns preserved with exact logic
+✓ All aggregations preserved at correct grain
+✓ All parameters mapped to BigQuery syntax
+✓ All CTEs named with business-meaningful names
+✓ All intermediate views recursively inlined
+✓ No placeholders (e.g., <CTE_NAME>) in final SQL
+✓ No abbreviations or omissions in final SQL
+✓ No pseudocode in final SQL
+✓ Final SQL is executable (pending validation items)
+
+✗ Unresolved upstream dependency: SFN_FC_FLAG
+✗ Physical table mappings require PROJECT.DATASET resolution
+✗ Filter column datatypes require validation
+✗ Calculated column sign flip requires validation
+✗ Aggregation grain requires validation
+✗ Procedure parameter @V_WEEK requires runtime value
+
+5. EXECUTION READINESS
+=====================================================================
+
+The consolidated SQL is EXECUTION-READY pending the following actions:
+
+1. Replace PROJECT.DATASET placeholders with actual BigQuery project and dataset names for all physical tables
+2. Resolve the unresolved upstream dependency SFN_FC_FLAG by either:
+   a. Providing the converted SQL definition for SFN_FC_FLAG and re-running consolidation, OR
+   b. Confirming that `PROJECT.DATASET.CVS_FRIP_Composite_Master_SFN_FC_FLAG` is a valid BigQuery table or view
+3. Validate all filter column datatypes and adjust filter literals if needed (e.g., MANDT IN (120, 200) vs MANDT IN ('120', '200'))
+4. Confirm the sign flip logic for _B631_S_AMOUNT
+5. Confirm the double aggregation logic for CV_COMP_MD_SRPACT_STATIC
+6. Supply runtime value for @V_WEEK parameter
+
+Once these validation items are resolved, the SQL can be executed directly in BigQuery.
+
+6. CONVERSION NOTES
+=====================================================================
+
+- All HANA-specific syntax (RIGHTSTR, LEFTSTR) converted to BigQuery (RIGHT, LEFT)
+- All HANA NVARCHAR parameters converted to BigQuery STRING
+- All HANA IN predicates preserved exactly
+- All HANA LIKE predicates preserved exactly
+- All HANA CASE/IFNULL logic preserved exactly
+- All HANA SUM aggregations preserved exactly
+- All HANA GROUP BY logic preserved exactly
+- All HANA JOIN types preserved exactly (INNER JOIN, LEFT JOIN)
+- All HANA filters preserved exactly
+- All HANA calculated columns preserved exactly
+- No HANA-specific functions remain in final SQL
+- No HANA-specific syntax remains in final SQL
+
+7. CONFIDENCE ASSESSMENT
+=====================================================================
+
+OVERALL CONFIDENCE: MEDIUM-HIGH
+
+CONSOLIDATION LOGIC: HIGH
+  - All supplied SQL files analyzed and incorporated
+  - All lineage relationships applied
+  - All filters, joins, calculations, and aggregations preserved exactly
+  - No logic invented or inferred
+
+EXECUTION READINESS: MEDIUM
+  - Unresolved upstream dependency (SFN_FC_FLAG)
+  - Physical table mappings require resolution
+  - Filter column datatypes require validation
+  - Calculated column sign flip requires validation
+  - Aggregation grain requires validation
+  - Procedure parameter requires runtime value
+
+RECOMMENDATION:
+  - Resolve validation items before production deployment
+  - Test with sample data to confirm aggregation grain
+  - Validate filter column datatypes against actual BigQuery schema
+  - Confirm sign flip logic with business stakeholders
+
+=====================================================================
+END OF CONSOLIDATION DESCRIPTION
+=====================================================================
