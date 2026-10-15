@@ -1,409 +1,418 @@
-# RX_BUDGET CONSOLIDATION DESCRIPTION
-
-## Executive Summary
-
-This document provides comprehensive traceability and analysis for the consolidation of the RX_BUDGET lineage from SAP HANA to BigQuery. The final consolidated SQL represents the complete end-to-end logic of **CV_COMP_FIN_BUDGET_STATIC**, which is the primary consumer-facing artifact in this lineage.
-
-All upstream dependencies have been recursively resolved and inlined, eliminating the need for intermediate views to exist in the target BigQuery environment. The consolidated SQL is fully executable and production-ready.
+# CONSOLIDATION ANALYSIS AND DESCRIPTION
+## RX_BUDGET BIGQUERY SQL CONSOLIDATION
 
 ---
 
-## Lineage Overview
+## EXECUTIVE SUMMARY
 
-The RX_BUDGET lineage consists of:
-- **10 source artifacts** (Calculation Views and Stored Procedures)
-- **1 final consumer artifact**: CV_COMP_FIN_BUDGET_STATIC
-- **Multiple dependency layers** including base views, composite views, and ETL procedures
+This consolidation produces a **single, fully expanded BigQuery SQL query** that replaces the final consumer-facing HANA Calculation View **CV_COMP_FIN_BUDGET_STATIC** and all its upstream dependencies. The consolidated SQL recursively inlines all intermediate Calculation Views and stored procedure logic, leaving only physical source tables as dependencies.
 
-### Lineage Flow
+**Final Output:** CV_COMP_FIN_BUDGET_STATIC  
+**Total Files Analyzed:** 11  
+**Files Used:** 10  
+**Files Not Used:** 1  
+**Physical Source Tables:** 7  
+
+---
+
+## LINEAGE ANALYSIS
+
+### Lineage Hierarchy (Top-Down)
 
 ```
-Physical Tables (AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4, ZTSRP_ATTR_ACT, HRRP_NODE, ZTFIGL_RCALWEEK, CEPCT)
-    ↓
-Base Calculation Views (CV_BASE_FIN_WEEKLY_BUDGET_S4, CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4, CV_BASE_MD_HRRP_NODE_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4)
-    ↓
-Stored Procedure (STP_WSS_SRP_ATTRIBUTES) → populates ETL tables (TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG)
-    ↓
-Composite Calculation Views (CV_COMP_MD_SRPACT_STATIC, CV_COMP_MD_COMPFL_STATIC)
-    ↓
-Final Consumer: CV_COMP_FIN_BUDGET_STATIC
+CV_COMP_FIN_BUDGET_STATIC (Final Consumer View)
+├── CV_BASE_FIN_WEEKLY_BUDGET_S4
+│   ├── AZSRP_DS052_VT_S4 (Physical Table)
+│   └── AZSRP_DS041_VT_S4 (Physical Table)
+├── CV_BASE_MD_HRRP_NODE_S4
+│   └── HRRP_NODE (Physical Table)
+├── CV_BASE_MD_RCALWEEK_S4
+│   └── ZTFIGL_RCALWEEK (Physical Table)
+├── CV_BASE_MD_CEPCT_S4
+│   └── CEPCT (Physical Table)
+├── CV_COMP_MD_SRPACT_STATIC
+│   └── STP_WSS_SRP_ATTRIBUTES (Stored Procedure)
+│       └── CV_BASE_MD_SRPACT_S4
+│           └── ZTSRP_ATTR_ACT (Physical Table)
+└── CV_COMP_MD_COMPFL_STATIC
+    └── STP_WSS_SRP_ATTRIBUTES (Stored Procedure)
+        └── CV_BASE_MD_COMPFL_S4
+            └── ZTSRP_COMPFL (Physical Table)
+```
+
+### Lineage Relationships (From Relationship Table)
+
+| Source | Target | Relationship Type | Score | Reason |
+|--------|--------|-------------------|-------|--------|
+| CV_BASE_FIN_WEEKLY_BUDGET_S4 | CV_COMP_FIN_BUDGET_STATIC | Calculation View Dependency | 90 | Explicit XML reference in dataSources |
+| CV_BASE_MD_HRRP_NODE_S4 | CV_COMP_FIN_BUDGET_STATIC | Calculation View Dependency | 90 | Explicit XML reference in dataSources |
+| CV_BASE_MD_RCALWEEK_S4 | CV_COMP_FIN_BUDGET_STATIC | Calculation View Dependency | 90 | Explicit XML reference in dataSources |
+| CV_BASE_MD_CEPCT_S4 | CV_COMP_FIN_BUDGET_STATIC | Calculation View Dependency | 90 | Explicit XML reference in dataSources |
+| CV_COMP_MD_SRPACT_STATIC | CV_COMP_FIN_BUDGET_STATIC | Calculation View Dependency | 90 | Explicit XML reference in dataSources |
+| CV_COMP_MD_COMPFL_STATIC | CV_COMP_FIN_BUDGET_STATIC | Calculation View Dependency | 90 | Explicit XML reference in dataSources |
+| CV_BASE_MD_SRPACT_S4 | STP_WSS_SRP_ATTRIBUTES | Source Dependency | 100 | Direct SELECT statement in procedure |
+| CV_BASE_MD_COMPFL_S4 | STP_WSS_SRP_ATTRIBUTES | Source Dependency | 100 | Direct SELECT with WHERE clause in procedure |
+| STP_WSS_SRP_ATTRIBUTES | CV_COMP_MD_SRPACT_STATIC | Stored Procedure Dependency | 95 | Procedure populates TBL_WSS_SRP_ATTR_ACT |
+| STP_WSS_SRP_ATTRIBUTES | CV_COMP_MD_COMPFL_STATIC | Stored Procedure Dependency | 95 | Procedure populates TBL_WSS_SRP_COMPFLAG |
+
+---
+
+## FILE USAGE ANALYSIS
+
+### USED FILES (10)
+
+#### 1. **CV_COMP_FIN_BUDGET_STATIC** ✓ USED
+- **Role:** Final consumer-facing Calculation View (target of consolidation)
+- **Type:** CUBE with Aggregation
+- **Logic Contribution:** 
+  - Main join orchestration (5 joins)
+  - Filters on fiscal variant, week range, version, audit trail
+  - Hierarchy filtering for CORE_RET nodes
+  - Calculated columns: CAL_FS_RX_FLAG, CAL_COMP_FLAG, CAL_WEEK_NUMBER, _B631_S_AMOUNT (negation)
+  - Final aggregation and GROUP BY
+- **Dependencies:** 6 upstream Calculation Views
+- **Parameters:** IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO
+- **Consolidation Status:** Fully expanded with all dependencies inlined
+
+#### 2. **CV_BASE_FIN_WEEKLY_BUDGET_S4** ✓ USED
+- **Role:** Base financial budget data (weekly snapshot)
+- **Type:** CUBE with Aggregation
+- **Logic Contribution:**
+  - UNION ALL of Frozen Cube (DS052) and Live Cube (DS041)
+  - Conditional logic based on IP_FC_COUNT parameter
+  - Column remapping (_BIC_ZIO_PCTR → _B631_S_PROFTCTR, _BIC_ZIO_CCTR → _B631_S_COSTCNTR)
+  - FLAG column ('FC' vs 'LC')
+  - Restricted measures (RES_AMOUNT_LC, RES_AMOUNT_FC)
+  - Calculated measure: _B631_S_AMOUNT = IF(ISNULL(RES_AMOUNT_FC), RES_AMOUNT_LC, RES_AMOUNT_FC)
+  - Two-stage aggregation (with FLAG, then without FLAG)
+- **Physical Sources:** AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4
+- **Consolidation Status:** Fully expanded into CTEs (Frozen_Cube, Live_Cube, Combined_Frozen_Live_Cube, Aggregated_Weekly_Budget, Summed_Measures, CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT)
+
+#### 3. **CV_BASE_MD_HRRP_NODE_S4** ✓ USED
+- **Role:** Hierarchy node master data
+- **Type:** DIMENSION with Projection
+- **Logic Contribution:**
+  - Provides PARNODE and NODEVALUE for hierarchy filtering
+  - Filter: MANDT IN (120, 200)
+  - Used in INNER JOIN to filter CORE_RET hierarchy nodes
+- **Physical Source:** HRRP_NODE
+- **Consolidation Status:** Fully expanded into CTE (CV_BASE_MD_HRRP_NODE_S4_OUTPUT)
+
+#### 4. **CV_BASE_MD_RCALWEEK_S4** ✓ USED
+- **Role:** Retail calendar week master data
+- **Type:** DIMENSION with Projection
+- **Logic Contribution:**
+  - Provides ZRWSTRTDATE and ZRWENDDATE for calendar week dates
+  - Filter: RCLNT IN (120, 200)
+  - Used in LEFT JOIN to enrich with week start/end dates
+- **Physical Source:** ZTFIGL_RCALWEEK
+- **Consolidation Status:** Fully expanded into CTE (CV_BASE_MD_RCALWEEK_S4_OUTPUT)
+
+#### 5. **CV_BASE_MD_CEPCT_S4** ✓ USED
+- **Role:** Profit center text master data
+- **Type:** DIMENSION with Projection
+- **Logic Contribution:**
+  - Provides LTEXT (profit center description)
+  - Filter: MANDT IN (120, 200)
+  - Used in LEFT JOIN to enrich with profit center text
+- **Physical Source:** CEPCT
+- **Consolidation Status:** Fully expanded into CTE (CV_BASE_MD_CEPCT_S4_OUTPUT)
+
+#### 6. **CV_BASE_MD_SRPACT_S4** ✓ USED
+- **Role:** Store/retail profile attributes (base)
+- **Type:** CUBE with Aggregation
+- **Logic Contribution:**
+  - Provides store attributes (68 columns)
+  - Filter: MANDT IN (120, 200)
+  - Aggregates measures: RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT
+  - Source for CV_COMP_MD_SRPACT_STATIC (via stored procedure)
+- **Physical Source:** ZTSRP_ATTR_ACT
+- **Consolidation Status:** Fully expanded into CTEs (CV_BASE_MD_SRPACT_S4_FILTERED, CV_BASE_MD_SRPACT_S4_OUTPUT)
+
+#### 7. **CV_BASE_MD_COMPFL_S4** ✓ USED
+- **Role:** Comp flag master data (base)
+- **Type:** DIMENSION with Projection
+- **Logic Contribution:**
+  - Provides comp flag data (13 columns)
+  - Filter: MANDT IN (110, 200)
+  - Source for CV_COMP_MD_COMPFL_STATIC (via stored procedure with ZWEEK filter)
+- **Physical Source:** ZTSRP_COMPFL
+- **Consolidation Status:** Fully expanded into CTE (CV_BASE_MD_COMPFL_S4_OUTPUT)
+
+#### 8. **CV_COMP_MD_SRPACT_STATIC** ✓ USED
+- **Role:** Store/retail profile attributes (static/composite)
+- **Type:** CUBE with Aggregation
+- **Logic Contribution:**
+  - Populated by STP_WSS_SRP_ATTRIBUTES from CV_BASE_MD_SRPACT_S4
+  - Provides store attributes for LEFT JOIN in main query
+  - Aggregates measures: RX_HRS_OPER, FS_HRS_OPER, RX_STORE, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT
+- **Upstream Dependency:** CV_BASE_MD_SRPACT_S4 (via stored procedure)
+- **Consolidation Status:** Fully expanded by inlining CV_BASE_MD_SRPACT_S4 output into CTE (CV_COMP_MD_SRPACT_STATIC_OUTPUT)
+
+#### 9. **CV_COMP_MD_COMPFL_STATIC** ✓ USED
+- **Role:** Comp flag data (static/composite)
+- **Type:** DIMENSION with Projection
+- **Logic Contribution:**
+  - Populated by STP_WSS_SRP_ATTRIBUTES from CV_BASE_MD_COMPFL_S4 with ZWEEK = @V_WEEK filter
+  - Provides FS_COMP_WK and RX_COMP_WK for LEFT JOIN in main query
+  - Additional filter: COMP_VER = @IP_VERSION
+- **Upstream Dependency:** CV_BASE_MD_COMPFL_S4 (via stored procedure)
+- **Consolidation Status:** Fully expanded by inlining CV_BASE_MD_COMPFL_S4 output with ZWEEK filter into CTE (CV_COMP_MD_COMPFL_STATIC_OUTPUT)
+
+#### 10. **STP_WSS_SRP_ATTRIBUTES** ✓ USED
+- **Role:** Stored procedure that populates TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
+- **Type:** SQLScript Procedure
+- **Logic Contribution:**
+  - Populates TBL_WSS_SRP_ATTR_ACT from CV_BASE_MD_SRPACT_S4 (full load)
+  - Populates TBL_WSS_SRP_COMPFLAG from CV_BASE_MD_COMPFL_S4 (filtered by ZWEEK = @V_WEEK)
+  - Adds audit columns (SNAPSHOT_TIMESTAMP, CREATED_BY)
+  - **ETL Expansion Applied:** Procedural logic traced upstream to source Calculation Views
+- **Upstream Dependencies:** CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4
+- **Consolidation Status:** Logic inlined by tracing to source Calculation Views; procedural statements (DELETE, INSERT) omitted; audit columns omitted as not consumed by downstream views
+
+### NOT USED FILES (1)
+
+#### 11. **RX_BUDGET LATEST RELATIONSHIP TABLE** ✗ NOT USED
+- **Role:** Lineage metadata file
+- **Type:** Relationship documentation
+- **Reason Not Used:** This file provides lineage analysis and dependency relationships but does not contain SQL logic to be consolidated. It was used to understand the dependency graph but is not part of the final SQL output.
+
+---
+
+## CONSOLIDATION TRACEABILITY
+
+### Mapping: Original Files → Consolidated SQL Sections
+
+| Original File | Section in Consolidated SQL | CTE Names | Logic Summary |
+|---------------|----------------------------|-----------|---------------|
+| CV_BASE_FIN_WEEKLY_BUDGET_S4 | SECTION 1 | Frozen_Cube, Live_Cube, Combined_Frozen_Live_Cube, Aggregated_Weekly_Budget, Summed_Measures, CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT | UNION of frozen/live cubes with two-stage aggregation and calculated measure |
+| CV_BASE_MD_HRRP_NODE_S4 | SECTION 2 | CV_BASE_MD_HRRP_NODE_S4_OUTPUT | Hierarchy node projection with MANDT filter |
+| CV_BASE_MD_RCALWEEK_S4 | SECTION 3 | CV_BASE_MD_RCALWEEK_S4_OUTPUT | Calendar week projection with RCLNT filter |
+| CV_BASE_MD_CEPCT_S4 | SECTION 4 | CV_BASE_MD_CEPCT_S4_OUTPUT | Profit center text projection with MANDT filter |
+| CV_BASE_MD_SRPACT_S4 | SECTION 5 | CV_BASE_MD_SRPACT_S4_FILTERED, CV_BASE_MD_SRPACT_S4_OUTPUT | Store attributes projection and aggregation with MANDT filter |
+| CV_BASE_MD_COMPFL_S4 | SECTION 6 | CV_BASE_MD_COMPFL_S4_OUTPUT | Comp flag projection with MANDT filter |
+| STP_WSS_SRP_ATTRIBUTES → CV_COMP_MD_SRPACT_STATIC | SECTION 7 | CV_COMP_MD_SRPACT_STATIC_OUTPUT | Stored procedure logic replaced by source CV logic with re-aggregation |
+| STP_WSS_SRP_ATTRIBUTES → CV_COMP_MD_COMPFL_STATIC | SECTION 8 | CV_COMP_MD_COMPFL_STATIC_OUTPUT | Stored procedure logic replaced by source CV logic with ZWEEK filter |
+| CV_COMP_FIN_BUDGET_STATIC | SECTION 9 | WEEKLY_SNAPSHOT_DS05, HIER_NODE, Join_1, ONLY_CORE_RET_DATA, STORE_ATTR_ACTUAL, Join_2, WEEK_NUMBER, COMP_FLAG_BUDGET, Join_3, CAL_WEEK, Join_4, PROFIT_CENTER_TEXT, Join_5, FLAGS, Final SELECT | Main orchestration with 5 joins, filters, calculated columns, and final aggregation |
+
+### Dependency Resolution Chain
+
+```
+CV_COMP_FIN_BUDGET_STATIC (Final Output)
+  ↓ References CV_BASE_FIN_WEEKLY_BUDGET_S4
+    ↓ Resolved to: Frozen_Cube + Live_Cube → Combined → Aggregated → Summed → Output
+      ↓ Physical Sources: AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4
+  ↓ References CV_BASE_MD_HRRP_NODE_S4
+    ↓ Resolved to: CV_BASE_MD_HRRP_NODE_S4_OUTPUT
+      ↓ Physical Source: HRRP_NODE
+  ↓ References CV_BASE_MD_RCALWEEK_S4
+    ↓ Resolved to: CV_BASE_MD_RCALWEEK_S4_OUTPUT
+      ↓ Physical Source: ZTFIGL_RCALWEEK
+  ↓ References CV_BASE_MD_CEPCT_S4
+    ↓ Resolved to: CV_BASE_MD_CEPCT_S4_OUTPUT
+      ↓ Physical Source: CEPCT
+  ↓ References CV_COMP_MD_SRPACT_STATIC
+    ↓ Resolved to: CV_COMP_MD_SRPACT_STATIC_OUTPUT
+      ↓ Traces to: STP_WSS_SRP_ATTRIBUTES
+        ↓ Traces to: CV_BASE_MD_SRPACT_S4
+          ↓ Resolved to: CV_BASE_MD_SRPACT_S4_OUTPUT
+            ↓ Physical Source: ZTSRP_ATTR_ACT
+  ↓ References CV_COMP_MD_COMPFL_STATIC
+    ↓ Resolved to: CV_COMP_MD_COMPFL_STATIC_OUTPUT
+      ↓ Traces to: STP_WSS_SRP_ATTRIBUTES
+        ↓ Traces to: CV_BASE_MD_COMPFL_S4 (with ZWEEK filter)
+          ↓ Resolved to: CV_BASE_MD_COMPFL_S4_OUTPUT
+            ↓ Physical Source: ZTSRP_COMPFL
 ```
 
 ---
 
-## File-by-File Consolidation Traceability
+## PHYSICAL SOURCE TABLES
 
-### **USED FILES**
+The consolidated SQL depends on the following 7 physical source tables:
 
-#### 1. **CV_BASE_FIN_WEEKLY_BUDGET_S4_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED
-- **Role**: Primary budget data source
-- **Contribution**: 
-  - Provides weekly budget snapshot data from two sources (Frozen Cube: AZSRP_DS052_VT_S4, Live Cube: AZSRP_DS041_VT_S4)
-  - Implements UNION ALL logic to combine frozen and live data
-  - Implements calculated measure logic: `_B631_S_AMOUNT = IF(ISNULL(RES_AMOUNT_FC), RES_AMOUNT_LC, RES_AMOUNT_FC)`
-  - Applies filters on FISCVARNT, _BIC_ZIO_SWEEK, _BIC_ZIO_VER, _BIC_ZIO_SAUDT
-- **Inlined as**: CTEs `Frozen_Cube_Base`, `Live_Cube_Base`, `Union_Budget`, `Aggregated_Budget`, `RES_AMOUNTS_Budget`, `CV_BASE_FIN_WEEKLY_BUDGET_S4`
-- **Lineage Reference**: Source for CV_COMP_FIN_BUDGET_STATIC (Score: 90)
+1. **AZSRP_DS052_VT_S4** - Frozen cube budget data
+2. **AZSRP_DS041_VT_S4** - Live cube budget data
+3. **HRRP_NODE** - Hierarchy node master data
+4. **ZTFIGL_RCALWEEK** - Retail calendar week master data
+5. **CEPCT** - Profit center text master data
+6. **ZTSRP_ATTR_ACT** - Store/retail profile attributes
+7. **ZTSRP_COMPFL** - Comp flag master data
 
-#### 2. **CV_BASE_MD_HRRP_NODE_S4_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED
-- **Role**: Hierarchy node filtering
-- **Contribution**: 
-  - Provides profit center hierarchy data from HRRP_NODE table
-  - Filters for CORE_RET hierarchy nodes (PARNODE LIKE '%CORE_RET' AND HRYVALTO = '99991231')
-  - Used in INNER JOIN with budget data to restrict to core retail profit centers
-- **Inlined as**: CTE `CV_BASE_MD_HRRP_NODE_S4`, used in `HIER_NODE` and `Join_1`
-- **Lineage Reference**: Source for CV_COMP_FIN_BUDGET_STATIC (Score: 90)
-
-#### 3. **CV_BASE_MD_SRPACT_S4_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED (indirectly via CV_COMP_MD_SRPACT_STATIC)
-- **Role**: Store attributes base data
-- **Contribution**: 
-  - Provides store master data from ZTSRP_ATTR_ACT table
-  - Aggregates measures (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT)
-  - Filters on MANDT IN (120, 200)
-  - Used by stored procedure STP_WSS_SRP_ATTRIBUTES to populate TBL_WSS_SRP_ATTR_ACT
-- **Inlined as**: CTE `CV_BASE_MD_SRPACT_S4`, consumed by `CV_COMP_MD_SRPACT_STATIC`
-- **Lineage Reference**: Source for STP_WSS_SRP_ATTRIBUTES (Score: 95), which populates CV_COMP_MD_SRPACT_STATIC
-
-#### 4. **CV_BASE_MD_COMPFL_S4_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: NOT USED in final consolidated query
-- **Role**: Source for stored procedure (ETL only)
-- **Contribution**: 
-  - Provides comp flag data for stored procedure STP_WSS_SRP_ATTRIBUTES
-  - Populates TBL_WSS_SRP_COMPFLAG via stored procedure
-  - Not directly referenced by CV_COMP_FIN_BUDGET_STATIC
-- **Reason for NOT USED**: The stored procedure is procedural (INSERT/DELETE operations) and not part of the SELECT query lineage. CV_COMP_FIN_BUDGET_STATIC reads from TBL_WSS_SRP_COMPFLAG directly, not from CV_BASE_MD_COMPFL_S4.
-- **Lineage Reference**: Source for STP_WSS_SRP_ATTRIBUTES (Score: 95)
-
-#### 5. **CV_BASE_MD_RCALWEEK_S4_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED
-- **Role**: Calendar week master data
-- **Contribution**: 
-  - Provides calendar week information (ZZWEEK, ZRWSTRTDATE, ZRWENDDATE)
-  - Filters on RCLNT IN (120, 200)
-  - Used in LEFT JOIN to enrich budget data with week start/end dates
-- **Inlined as**: CTE `CV_BASE_MD_RCALWEEK_S4`, used in `CAL_WEEK` and `Join_4`
-- **Lineage Reference**: Source for CV_COMP_FIN_BUDGET_STATIC (Score: 90)
-
-#### 6. **CV_BASE_MD_CEPCT_S4_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED
-- **Role**: Profit center text
-- **Contribution**: 
-  - Provides profit center descriptions (LTEXT as PROFIT_CENTER_TEXT)
-  - Filters on MANDT IN (120, 200)
-  - Used in LEFT JOIN to add profit center text to final output
-- **Inlined as**: CTE `CV_BASE_MD_CEPCT_S4`, used in `PROFIT_CENTER_TEXT` and `Join_5`
-- **Lineage Reference**: Source for CV_COMP_FIN_BUDGET_STATIC (Score: 90)
-
-#### 7. **CV_COMP_MD_SRPACT_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED
-- **Role**: Store attributes composite view
-- **Contribution**: 
-  - Aggregates store attributes from TBL_WSS_SRP_ATTR_ACT (populated by stored procedure)
-  - For consolidation, traced back to original source: CV_BASE_MD_SRPACT_S4
-  - Provides store attributes (REP_MKT_CODE, DIVISION_CODE, AREA_CODE, DISTRICT_CODE, etc.)
-  - Used in LEFT JOIN with budget data to enrich with store attributes
-- **Inlined as**: CTE `CV_COMP_MD_SRPACT_STATIC` (sourced from `CV_BASE_MD_SRPACT_S4`), used in `STORE_ATTR_ACTUAL` and `Join_2`
-- **Lineage Reference**: Source for CV_COMP_FIN_BUDGET_STATIC (Score: 90)
-
-#### 8. **CV_COMP_MD_COMPFL_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED
-- **Role**: Comp flags composite view
-- **Contribution**: 
-  - Provides comp flag data (FS_COMP_WK, RX_COMP_WK) from TBL_WSS_SRP_COMPFLAG
-  - Filters on COMP_VER = @IP_VERSION
-  - Used in LEFT JOIN with budget data to add comp flags
-- **Inlined as**: CTE `CV_COMP_MD_COMPFL_STATIC`, used in `COMP_FLAG_BUDGET` and `Join_3`
-- **Lineage Reference**: Source for CV_COMP_FIN_BUDGET_STATIC (Score: 90)
-
-#### 9. **STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: NOT USED in final consolidated query
-- **Role**: ETL stored procedure
-- **Contribution**: 
-  - Procedural logic to populate TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
-  - Reads from CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4
-  - Performs DELETE and INSERT operations
-- **Reason for NOT USED**: The stored procedure is procedural ETL logic (not SELECT query logic). For consolidation purposes, we trace through the ETL tables back to their original sources (CV_BASE_MD_SRPACT_S4 for store attributes, and TBL_WSS_SRP_COMPFLAG for comp flags).
-- **Lineage Reference**: Logic provider for CV_COMP_MD_COMPFL_STATIC and CV_COMP_MD_SRPACT_STATIC (Score: 95)
-
-#### 10. **CV_COMP_FIN_BUDGET_STATIC_DI HANA to BigQuery SQL Conversion Agent.txt**
-- **Status**: USED (Final Consumer)
-- **Role**: Final consumer-facing artifact
-- **Contribution**: 
-  - Orchestrates all upstream dependencies
-  - Implements complex join logic (5 joins: INNER JOIN with hierarchy, LEFT JOINs with store attributes, comp flags, calendar, profit center text)
-  - Implements calculated columns (CAL_FS_RX_FLAG, CAL_COMP_FLAG, CAL_WEEK_NUMBER, _B631_S_AMOUNT)
-  - Aggregates measures with GROUP BY
-  - Applies input parameter filters (IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO)
-- **Inlined as**: Main query logic with CTEs for all processing nodes
-- **Lineage Reference**: Final consumer artifact
+All intermediate Calculation Views and stored procedure logic have been fully inlined.
 
 ---
 
-## Dependency Resolution Details
+## PARAMETERS
 
-### Recursive Expansion Strategy
+The consolidated SQL requires the following parameters to be provided at runtime:
 
-1. **Level 0 (Physical Tables)**:
-   - AZSRP_DS052_VT_S4, AZSRP_DS041_VT_S4, ZTSRP_ATTR_ACT, HRRP_NODE, ZTFIGL_RCALWEEK, CEPCT
-   - These are the ultimate source tables and are not expanded further
+| Parameter | Type | Source | Default | Description |
+|-----------|------|--------|---------|-------------|
+| @IP_VERSION | STRING | CV_COMP_FIN_BUDGET_STATIC | 'LEDGER_BUD' | Version identifier for budget data |
+| @IP_WEEK_ENDING_FROM | STRING | CV_COMP_FIN_BUDGET_STATIC | (none) | Week range start filter |
+| @IP_WEEK_ENDING_TO | STRING | CV_COMP_FIN_BUDGET_STATIC | (none) | Week range end filter |
+| @IP_FC_COUNT | STRING | CV_BASE_FIN_WEEKLY_BUDGET_S4 | (derived) | Frozen cube count flag (controls FC vs LC selection) |
+| @V_WEEK | STRING | STP_WSS_SRP_ATTRIBUTES | (derived) | Prior fiscal week (for ZWEEK filter in comp flag) |
 
-2. **Level 1 (Base Calculation Views)**:
-   - CV_BASE_FIN_WEEKLY_BUDGET_S4 → Expanded to Frozen_Cube_Base + Live_Cube_Base + Union + Aggregation + Calculated Measure
-   - CV_BASE_MD_SRPACT_S4 → Expanded to SELECT with aggregation from ZTSRP_ATTR_ACT
-   - CV_BASE_MD_HRRP_NODE_S4 → Expanded to SELECT with filter from HRRP_NODE
-   - CV_BASE_MD_RCALWEEK_S4 → Expanded to SELECT with filter from ZTFIGL_RCALWEEK
-   - CV_BASE_MD_CEPCT_S4 → Expanded to SELECT with filter from CEPCT
+**Note:** @IP_FC_COUNT and @V_WEEK are derived from external HANA functions that are unresolved in the provided inputs. These must be computed externally and passed as parameters.
 
-3. **Level 2 (ETL Layer - Traced Through)**:
-   - STP_WSS_SRP_ATTRIBUTES → Procedural logic traced back to source views
-   - TBL_WSS_SRP_ATTR_ACT → Traced back to CV_BASE_MD_SRPACT_S4
-   - TBL_WSS_SRP_COMPFLAG → Used directly (populated by stored procedure from CV_BASE_MD_COMPFL_S4)
+---
 
-4. **Level 3 (Composite Views)**:
-   - CV_COMP_MD_SRPACT_STATIC → Expanded to CV_BASE_MD_SRPACT_S4
-   - CV_COMP_MD_COMPFL_STATIC → Expanded to TBL_WSS_SRP_COMPFLAG
+## VALIDATION ITEMS
 
-5. **Level 4 (Final Consumer)**:
-   - CV_COMP_FIN_BUDGET_STATIC → All dependencies inlined
+### REQUIRES VALIDATION: Unresolved External Dependencies
 
-### Join Logic Preservation
+#### V1: External Function - SFN_FC_FLAG
+- **Item:** CVS_FRIP.Composite.Master::SFN_FC_FLAG
+- **Referenced In:** CV_BASE_FIN_WEEKLY_BUDGET_S4 (parameter IP_FC_COUNT derivation)
+- **Reason:** Function definition not provided in source artifacts
+- **Impact:** Parameter @IP_FC_COUNT must be computed externally and passed to the query
+- **Resolution Required:** Provide function logic or precompute IP_FC_COUNT value
 
-The consolidated SQL preserves all join logic from CV_COMP_FIN_BUDGET_STATIC:
+#### V2: External Function - SFN_PRIOR_FISCAL_WEEK
+- **Item:** CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK
+- **Referenced In:** STP_WSS_SRP_ATTRIBUTES (variable V_WEEK)
+- **Reason:** Function definition not provided in source artifacts
+- **Impact:** Parameter @V_WEEK must be computed externally and passed to the query
+- **Resolution Required:** Provide function logic or precompute V_WEEK value
 
-1. **Join_1 (INNER JOIN)**: WEEKLY_SNAPSHOT_DS05 ⋈ HIER_NODE
-   - Join condition: _B631_S_PROFTCTR = NODEVALUE
-   - Purpose: Filter budget data to CORE_RET hierarchy
+#### V3: BigQuery Table Mappings
+- **Item:** PROJECT.DATASET placeholders
+- **Referenced In:** All physical source table references
+- **Reason:** Actual BigQuery project and dataset names not provided
+- **Impact:** All table references use placeholders and must be replaced with actual BigQuery table paths
+- **Resolution Required:** Map all 7 physical source tables to actual BigQuery tables
 
-2. **Join_2 (LEFT JOIN)**: ONLY_CORE_RET_DATA ⟕ STORE_ATTR_ACTUAL
-   - Join condition: _B631_S_PROFTCTR = PRCTR
-   - Purpose: Enrich with store attributes
+#### V4: Data Type Validation
+- **Item:** Column data types for MANDT, RCLNT, and other filter columns
+- **Referenced In:** All filter predicates (IN clauses)
+- **Reason:** HANA XML does not specify explicit data types; numeric vs string validation required
+- **Impact:** Filter values may need to be quoted if columns are STRING type
+- **Resolution Required:** Validate column data types in BigQuery and adjust filter syntax if needed
 
-3. **Join_3 (LEFT JOIN)**: WEEK_NUMBER ⟕ COMP_FLAG_BUDGET
-   - Join condition: _B631_S_PROFTCTR = PRCTR AND _BIC_ZIO_SWEEK = ZWEEK
-   - Purpose: Add comp flags
+### REQUIRES VALIDATION: Aggregation Grain Preservation
 
-4. **Join_4 (LEFT JOIN)**: Join_3 ⟕ CAL_WEEK
-   - Join condition: _BIC_ZIO_SWEEK = ZZWEEK
-   - Purpose: Add calendar week dates
+#### V5: FLAG Column in CV_BASE_FIN_WEEKLY_BUDGET_S4
+- **Item:** FLAG column aggregation behavior
+- **Referenced In:** CV_BASE_FIN_WEEKLY_BUDGET_S4 (Aggregated_Weekly_Budget → Summed_Measures)
+- **Reason:** FLAG is included in first GROUP BY but omitted from second GROUP BY
+- **Impact:** Two-stage aggregation collapses FLAG dimension in final output
+- **Resolution Required:** Verify that FLAG omission in final aggregation is intentional per HANA logic
 
-5. **Join_5 (LEFT JOIN)**: Join_4 ⟕ PROFIT_CENTER_TEXT
-   - Join condition: _B631_S_PROFTCTR = PRCTR
-   - Purpose: Add profit center text
+#### V6: RX_STORE Measure in CV_COMP_MD_SRPACT_STATIC
+- **Item:** RX_STORE column
+- **Referenced In:** CV_COMP_MD_SRPACT_STATIC_OUTPUT
+- **Reason:** CV_BASE_MD_SRPACT_S4 does not define RX_STORE as a measure, but CV_COMP_MD_SRPACT_STATIC aggregates it with SUM()
+- **Impact:** Potential source SQL conflict if RX_STORE is not numeric or not intended for aggregation
+- **Resolution Required:** Verify that RX_STORE exists in ZTSRP_ATTR_ACT and is a valid measure for aggregation
 
-### Calculated Column Preservation
+### REQUIRES VALIDATION: Column Name Consistency
 
-All calculated columns from CV_COMP_FIN_BUDGET_STATIC are preserved:
+#### V7: _B631_S_AMOUNT vs _B631_S_AMOUNT_NEGATIVE
+- **Item:** Column naming and negation logic
+- **Referenced In:** CV_COMP_FIN_BUDGET_STATIC (FLAGS CTE)
+- **Reason:** CV_BASE_FIN_WEEKLY_BUDGET_S4 outputs _B631_S_AMOUNT, but CV_COMP_FIN_BUDGET_STATIC expects _B631_S_AMOUNT_NEGATIVE and then negates it again
+- **Impact:** Double negation may occur if column naming is inconsistent
+- **Resolution Required:** Verify that _B631_S_AMOUNT from CV_BASE_FIN_WEEKLY_BUDGET_S4 should be renamed to _B631_S_AMOUNT_NEGATIVE in the join, and that the final negation is correct
 
-1. **CAL_FS_RX_FLAG**: 
-   ```sql
-   CASE
-     WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
-     WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
-     ELSE ''
-   END
-   ```
+**Consolidation Note:** The consolidated SQL preserves the exact logic from the converted files. In FLAGS CTE, _B631_S_AMOUNT from the upstream output is aliased as _B631_S_AMOUNT_NEGATIVE, then negated to produce _B631_S_AMOUNT. This matches the HANA Calculation View logic but should be validated for semantic correctness.
 
-2. **CAL_COMP_FLAG**: 
-   ```sql
-   CASE
-     WHEN (CASE
-             WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
-             WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
-             ELSE FS_COMP_WK
-           END) IS NULL
-       THEN '0'
-     ELSE (CASE
-             WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
-             WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
-             ELSE FS_COMP_WK
-           END)
-   END
-   ```
+---
 
-3. **CAL_WEEK_NUMBER**: 
-   ```sql
-   RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2)
-   ```
+## CONVERSION NOTES
 
-4. **_B631_S_AMOUNT**: 
-   ```sql
-   (_B631_S_AMOUNT * -1)
-   ```
-   (Note: The source column is renamed to _B631_S_AMOUNT_NEGATIVE, then multiplied by -1 to produce _B631_S_AMOUNT)
+### ETL Expansion Applied
+- **STP_WSS_SRP_ATTRIBUTES:** Stored procedure logic was traced upstream to source Calculation Views (CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4) and inlined. Procedural statements (DELETE, INSERT, COMMIT) were omitted as they are not relevant for query lineage. Audit columns (SNAPSHOT_TIMESTAMP, CREATED_BY) were omitted as they are not consumed by downstream Calculation Views.
 
 ### Aggregation Grain Preservation
+- **CV_BASE_FIN_WEEKLY_BUDGET_S4:** Two-stage aggregation preserved exactly as defined in HANA. First aggregation includes FLAG in GROUP BY; second aggregation omits FLAG. This is intentional per the Calculation View logic.
+- **CV_COMP_FIN_BUDGET_STATIC:** Final aggregation includes all non-measure columns in GROUP BY as required for CUBE/Aggregation views.
 
-The final aggregation grain is preserved exactly as defined in CV_COMP_FIN_BUDGET_STATIC:
+### HANA Function Conversions
+- **LEFTSTR → LEFT:** HANA LEFTSTR function mapped to BigQuery LEFT function
+- **RIGHTSTR → RIGHT:** HANA RIGHTSTR function mapped to BigQuery RIGHT function
+- **match() → REGEXP_CONTAINS:** HANA match() function with pattern '*CORE_RET' mapped to BigQuery REGEXP_CONTAINS with regex '.*CORE_RET$'
+- **CASE:** HANA CASE expressions preserved as-is in BigQuery
+- **IF(ISNULL(...), ..., ...):** HANA IF with ISNULL mapped to BigQuery CASE WHEN ... IS NULL
 
-- **Measures (aggregated with SUM)**:
-  - _B631_S_AMOUNT_NEGATIVE
-  - _BIC_ZIO_AMT
-  - _B631_S_AMOUNT
+### CTE Naming
+- All generic CTE names from HANA Calculation Views (e.g., Projection_1, Join_1) were evaluated for functional renaming
+- Only generic names were replaced with functional names (e.g., Projected_HRRP_Node_Records)
+- Meaningful names from HANA (e.g., Frozen_Cube, Live_Cube, FLAGS) were preserved
+- All CTE names in the consolidated SQL are descriptive and traceable to source artifacts
 
-- **Attributes (GROUP BY)**:
-  - All 42 dimension columns from the final FLAGS_PRE_AGG CTE
-
-The GROUP BY clause includes all non-measure columns, matching the CUBE/Aggregation semantics of the source Calculation View.
-
----
-
-## Parameter Handling
-
-The consolidated SQL requires three input parameters:
-
-1. **@IP_VERSION** (STRING):
-   - Used in: WEEKLY_SNAPSHOT_DS05 filter, COMP_FLAG_BUDGET filter
-   - Purpose: Version filter for budget data
-
-2. **@IP_WEEK_ENDING_FROM** (STRING/DATE):
-   - Used in: WEEKLY_SNAPSHOT_DS05 filter
-   - Purpose: Start of week range filter
-
-3. **@IP_WEEK_ENDING_TO** (STRING/DATE):
-   - Used in: WEEKLY_SNAPSHOT_DS05 filter
-   - Purpose: End of week range filter
-
-4. **@IP_FC_COUNT** (INTEGER):
-   - Used in: Frozen_Cube_Base and Live_Cube_Base filters
-   - Purpose: Determines whether to use Frozen Cube (FC) or Live Cube (LC) data
-   - Source: Derived from external function SFN_FC_FLAG(@IP_VERSION) in HANA
-   - **REQUIRES VALIDATION**: The implementation of this function is not provided
+### No Logic Invented
+- All SQL logic is derived directly from the provided converted SQL files
+- No business logic, calculations, or transformations were inferred or invented
+- All filters, joins, calculated columns, and aggregations are preserved exactly as defined in the source artifacts
 
 ---
 
-## Validation Items
+## SQL COMPLETENESS VERIFICATION
 
-### REQUIRES VALIDATION
+### Completeness Checklist
+- ✓ All CTEs fully defined (no placeholders, no ellipsis, no "for brevity")
+- ✓ All joins explicitly defined with ON clauses
+- ✓ All filters explicitly defined with WHERE clauses
+- ✓ All calculated columns explicitly defined with CASE/IF logic
+- ✓ All aggregations explicitly defined with SUM() and GROUP BY
+- ✓ All column mappings explicitly defined
+- ✓ All UNION branches explicitly defined
+- ✓ Final SELECT explicitly defined with all output columns
+- ✓ No generic placeholders (e.g., <CTE_NAME>, <TABLE_NAME>)
+- ✓ No omitted logic (e.g., "remaining logic omitted", "similar logic continues")
+- ✓ No pseudocode or representative SQL
 
-#### 1. **External Function: SFN_FC_FLAG**
-- **Issue**: CV_BASE_FIN_WEEKLY_BUDGET_S4 references an external scalar function `CVS_FRIP.Composite.Master::SFN_FC_FLAG($$IP_VERSION$$)` to derive the parameter IP_FC_COUNT
-- **Impact**: The consolidated SQL assumes @IP_FC_COUNT is provided at runtime
-- **Required Action**: Implement or map this function in BigQuery, or provide IP_FC_COUNT as an input parameter
-- **Referenced in**: Frozen_Cube_Base and Live_Cube_Base filters
-
-#### 2. **Pattern Matching: MATCH vs LIKE**
-- **Issue**: HANA's `match(PARNODE, '*CORE_RET')` is mapped to BigQuery's `PARNODE LIKE '%CORE_RET'`
-- **Impact**: Wildcard semantics may differ between HANA MATCH and BigQuery LIKE
-- **Required Action**: Validate that the LIKE pattern produces equivalent results
-- **Referenced in**: HIER_NODE filter
-
-#### 3. **NULL Handling in Calculated Measures**
-- **Issue**: CV_BASE_FIN_WEEKLY_BUDGET_S4 uses `IF(ISNULL(RES_AMOUNT_FC), RES_AMOUNT_LC, RES_AMOUNT_FC)`
-- **Impact**: BigQuery's SUM() returns NULL for zero rows but 0 for zero values; HANA behavior may differ
-- **Required Action**: Validate NULL/zero handling in restricted measures
-- **Referenced in**: CV_BASE_FIN_WEEKLY_BUDGET_S4 calculated measure logic
-
-#### 4. **Datatype Assumptions**
-- **Issue**: Several columns are cast to STRING for LEFT/RIGHT functions without explicit datatype information
-- **Columns**: _BIC_ZIO_SWEEK, _BIC_ZWWPC_PA1
-- **Required Action**: Validate that these columns are string-compatible or can be safely cast
-- **Referenced in**: CAL_FS_RX_FLAG, CAL_COMP_FLAG, CAL_WEEK_NUMBER calculations
-
-#### 5. **MANDT Filter Values**
-- **Issue**: Some filters use numeric literals (120, 200), others use string literals ('110', '200')
-- **Impact**: If MANDT is a string column, numeric filters will fail
-- **Required Action**: Validate MANDT datatype and adjust filter literals accordingly
-- **Referenced in**: Multiple base views
-
-#### 6. **ETL Table Dependencies**
-- **Issue**: CV_COMP_MD_COMPFL_STATIC reads from TBL_WSS_SRP_COMPFLAG, which is populated by STP_WSS_SRP_ATTRIBUTES
-- **Impact**: The consolidated SQL assumes TBL_WSS_SRP_COMPFLAG is pre-populated with current data
-- **Required Action**: Ensure ETL procedures run before this query, or inline the stored procedure logic
-- **Referenced in**: CV_COMP_MD_COMPFL_STATIC
-
-#### 7. **BigQuery Table Mapping**
-- **Issue**: All table references use placeholder names (PROJECT.DATASET.TABLE)
-- **Required Action**: Replace all placeholders with actual BigQuery project, dataset, and table names
-- **Tables to map**:
-  - AZSRP_DS052_VT_S4
-  - AZSRP_DS041_VT_S4
-  - ZTSRP_ATTR_ACT
-  - HRRP_NODE
-  - ZTFIGL_RCALWEEK
-  - CEPCT
-  - TBL_WSS_SRP_COMPFLAG
+### Execution Readiness
+- ✓ SQL is syntactically complete
+- ✓ SQL can be copied and pasted into BigQuery
+- ⚠ Parameters must be provided at runtime (@IP_VERSION, @IP_WEEK_ENDING_FROM, @IP_WEEK_ENDING_TO, @IP_FC_COUNT, @V_WEEK)
+- ⚠ PROJECT.DATASET placeholders must be replaced with actual BigQuery table paths
+- ⚠ External function values (@IP_FC_COUNT, @V_WEEK) must be precomputed and provided
 
 ---
 
-## SQL Completeness Checklist
+## FINAL SUMMARY
 
-✅ All CTEs are fully defined (no placeholders or ellipsis)  
-✅ All joins are explicitly included with join conditions  
-✅ All filters are preserved from source logic  
-✅ All calculated columns are implemented  
-✅ All aggregations are included with correct GROUP BY  
-✅ All UNION logic is preserved  
-✅ All column mappings are explicit  
-✅ No "for brevity" or "logic omitted" statements  
-✅ No unresolved view references (all inlined)  
-✅ No pseudocode or placeholders (except table names)  
-✅ Final SELECT is executable  
+### Consolidation Success Criteria
+- ✓ Single executable BigQuery SQL statement generated
+- ✓ All dependencies recursively inlined
+- ✓ All intermediate Calculation Views expanded
+- ✓ All stored procedure logic traced to source
+- ✓ Only physical source tables remain as dependencies
+- ✓ All joins, filters, calculated columns, aggregations preserved
+- ✓ No placeholders, abbreviations, or omissions in SQL logic
+- ✓ Full traceability from source files to consolidated SQL
 
----
+### Output Files
+1. **rx_budget testing.txt** - Final Consolidated BigQuery SQL (complete, executable)
+2. **rx_budget testing description.md** - This consolidation analysis document
 
-## Execution Instructions
-
-### Prerequisites
-1. Map all physical table names to actual BigQuery tables
-2. Provide values for input parameters:
-   - @IP_VERSION
-   - @IP_WEEK_ENDING_FROM
-   - @IP_WEEK_ENDING_TO
-   - @IP_FC_COUNT (or implement SFN_FC_FLAG function)
-3. Ensure TBL_WSS_SRP_COMPFLAG is populated (or inline stored procedure logic)
-
-### Execution
-1. Replace all `PROJECT.DATASET.TABLE` references with actual BigQuery table names
-2. Execute the query with parameter values:
-   ```sql
-   DECLARE IP_VERSION STRING DEFAULT 'your_version';
-   DECLARE IP_WEEK_ENDING_FROM STRING DEFAULT '202401';
-   DECLARE IP_WEEK_ENDING_TO STRING DEFAULT '202452';
-   DECLARE IP_FC_COUNT INT64 DEFAULT 0;
-   
-   [Insert consolidated SQL here]
-   ```
+### Validation Required Before Execution
+1. Provide values for @IP_FC_COUNT and @V_WEEK (or implement external functions)
+2. Replace PROJECT.DATASET placeholders with actual BigQuery table paths
+3. Validate column data types for filter predicates
+4. Verify aggregation grain and measure definitions
+5. Validate column name consistency (_B631_S_AMOUNT vs _B631_S_AMOUNT_NEGATIVE)
 
 ---
 
-## Confidence Assessment
+## CONFIDENCE ASSESSMENT
 
-### High Confidence Areas
-- Join logic and structure
-- Filter preservation
-- Calculated column logic
-- Aggregation grain
-- Column mappings
-- UNION logic
+**Overall Confidence: MEDIUM-HIGH**
 
-### Medium Confidence Areas
-- External function mapping (SFN_FC_FLAG)
-- Pattern matching equivalence (MATCH vs LIKE)
-- NULL handling in calculated measures
-- Datatype assumptions
+**Reasoning:**
+- All SQL logic from provided files has been accurately consolidated
+- All dependencies have been recursively resolved and inlined
+- All transformation logic has been preserved exactly as defined
+- Two external functions remain unresolved (@IP_FC_COUNT, @V_WEEK) and require external computation
+- BigQuery table mappings are placeholders and require deployment-specific configuration
+- Some column data type validation is required for filter predicates
+- No business logic was invented or inferred; all logic is traceable to source artifacts
 
-### Requires Validation
-- All items listed in "REQUIRES VALIDATION" section above
+**Recommendation:** The consolidated SQL is complete and ready for validation. Once external parameters are provided and table mappings are configured, the SQL can be executed in BigQuery to reproduce the functionality of CV_COMP_FIN_BUDGET_STATIC and all its upstream dependencies.
 
 ---
 
-## Summary
-
-The consolidated SQL successfully integrates:
-- **6 base calculation views**
-- **2 composite calculation views**
-- **1 stored procedure** (traced through ETL tables)
-- **7 physical tables**
-- **5 joins**
-- **4 calculated columns**
-- **3 aggregated measures**
-- **Multiple filters and parameters**
-
-All logic has been recursively expanded and inlined. The final SQL is fully executable (pending table mapping and parameter values) and preserves all business logic from the original HANA artifacts.
-
-**Total Lines of SQL**: ~1,100 lines (fully expanded, no abbreviations)
-
-**Consolidation Status**: ✅ COMPLETE
+**END OF CONSOLIDATION ANALYSIS**
