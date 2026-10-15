@@ -1,19 +1,28 @@
 -- =====================================================================================
--- CONSOLIDATED BIGQUERY SQL FOR RX_BUDGET
--- Final Consumer Artifact: CV_COMP_FIN_BUDGET_STATIC
+-- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_FIN_BUDGET_STATIC
 -- =====================================================================================
--- This SQL consolidates all upstream dependencies from HANA Calculation Views and 
--- Stored Procedures into a single executable BigQuery query.
--- All intermediate views have been recursively expanded and inlined.
+-- This SQL consolidates all upstream dependencies into a single executable query
+-- All intermediate Calculation Views and stored procedure logic have been inlined
+-- Only physical source tables remain as dependencies
 -- =====================================================================================
+
+-- PARAMETERS (must be provided at runtime):
+-- @IP_VERSION: STRING (default: 'LEDGER_BUD')
+-- @IP_WEEK_ENDING_FROM: STRING
+-- @IP_WEEK_ENDING_TO: STRING
+-- @IP_FC_COUNT: STRING (derived from IP_VERSION via external function, must be provided)
+-- @V_WEEK: STRING (derived from SFN_PRIOR_FISCAL_WEEK function, must be provided)
 
 WITH
+
 -- =====================================================================================
--- BASE DATA SOURCES (Physical Tables)
+-- SECTION 1: CV_BASE_FIN_WEEKLY_BUDGET_S4 EXPANSION
+-- =====================================================================================
+-- Source: CV_BASE_FIN_WEEKLY_BUDGET_S4
+-- Logic: Union of Frozen Cube (DS052) and Live Cube (DS041) with aggregation
 -- =====================================================================================
 
--- Source: AZSRP_DS052_VT_S4 (Frozen Cube data for budget)
-Frozen_Cube_Base AS (
+Frozen_Cube AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -41,11 +50,10 @@ Frozen_Cube_Base AS (
     `PROJECT.DATASET.AZSRP_DS052_VT_S4`
   WHERE
     MANDT IN ('110', '200')
-    AND @IP_FC_COUNT != 0
+    AND @IP_FC_COUNT != '0'
 ),
 
--- Source: AZSRP_DS041_VT_S4 (Live Cube data for budget)
-Live_Cube_Base AS (
+Live_Cube AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -73,21 +81,16 @@ Live_Cube_Base AS (
     `PROJECT.DATASET.AZSRP_DS041_VT_S4`
   WHERE
     MANDT IN ('110', '200')
-    AND @IP_FC_COUNT = 0
+    AND @IP_FC_COUNT = '0'
 ),
 
--- =====================================================================================
--- CV_BASE_FIN_WEEKLY_BUDGET_S4 (Inlined)
--- Union of Frozen and Live Cube with calculated measure logic
--- =====================================================================================
-
-Union_Budget AS (
-  SELECT * FROM Frozen_Cube_Base
+Combined_Frozen_Live_Cube AS (
+  SELECT * FROM Frozen_Cube
   UNION ALL
-  SELECT * FROM Live_Cube_Base
+  SELECT * FROM Live_Cube
 ),
 
-Aggregated_Budget AS (
+Aggregated_Weekly_Budget AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -112,7 +115,7 @@ Aggregated_Budget AS (
     SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT_DUMMY,
     SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT
   FROM
-    Union_Budget
+    Combined_Frozen_Live_Cube
   GROUP BY
     FISCPER,
     FISCVARNT,
@@ -136,7 +139,7 @@ Aggregated_Budget AS (
     FLAG
 ),
 
-RES_AMOUNTS_Budget AS (
+Summed_Measures AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -157,11 +160,11 @@ RES_AMOUNTS_Budget AS (
     _BIC_ZWWSC_PA1,
     RECORDMODE,
     CURRENCY,
+    SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT,
     SUM(CASE WHEN FLAG = 'LC' THEN _B631_S_AMOUNT_DUMMY ELSE 0 END) AS RES_AMOUNT_LC,
-    SUM(CASE WHEN FLAG = 'FC' THEN _B631_S_AMOUNT_DUMMY ELSE 0 END) AS RES_AMOUNT_FC,
-    SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT
+    SUM(CASE WHEN FLAG = 'FC' THEN _B631_S_AMOUNT_DUMMY ELSE 0 END) AS RES_AMOUNT_FC
   FROM
-    Aggregated_Budget
+    Aggregated_Weekly_Budget
   GROUP BY
     FISCPER,
     FISCVARNT,
@@ -184,7 +187,7 @@ RES_AMOUNTS_Budget AS (
     CURRENCY
 ),
 
-CV_BASE_FIN_WEEKLY_BUDGET_S4 AS (
+CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT AS (
   SELECT
     FISCPER,
     FISCVARNT,
@@ -205,18 +208,23 @@ CV_BASE_FIN_WEEKLY_BUDGET_S4 AS (
     _BIC_ZWWSC_PA1,
     RECORDMODE,
     CURRENCY,
-    IF(RES_AMOUNT_FC IS NULL OR RES_AMOUNT_FC = 0, RES_AMOUNT_LC, RES_AMOUNT_FC) AS _B631_S_AMOUNT,
-    _BIC_ZIO_AMT
+    _BIC_ZIO_AMT,
+    CASE
+      WHEN RES_AMOUNT_FC IS NULL OR RES_AMOUNT_FC = 0 THEN RES_AMOUNT_LC
+      ELSE RES_AMOUNT_FC
+    END AS _B631_S_AMOUNT
   FROM
-    RES_AMOUNTS_Budget
+    Summed_Measures
 ),
 
 -- =====================================================================================
--- CV_BASE_MD_HRRP_NODE_S4 (Inlined)
--- Hierarchy node data
+-- SECTION 2: CV_BASE_MD_HRRP_NODE_S4 EXPANSION
+-- =====================================================================================
+-- Source: CV_BASE_MD_HRRP_NODE_S4
+-- Logic: Projection from HRRP_NODE table with MANDT filter
 -- =====================================================================================
 
-CV_BASE_MD_HRRP_NODE_S4 AS (
+CV_BASE_MD_HRRP_NODE_S4_OUTPUT AS (
   SELECT
     MANDT,
     HRYID,
@@ -230,17 +238,75 @@ CV_BASE_MD_HRRP_NODE_S4 AS (
     NODETYPE,
     NODEVALUE
   FROM
-    `PROJECT.DATASET.HRRP_NODE`
+    PROJECT.DATASET.HRRP_NODE
   WHERE
     MANDT IN (120, 200)
 ),
 
 -- =====================================================================================
--- CV_BASE_MD_SRPACT_S4 (Inlined)
--- Store attributes from base table (used by stored procedure)
+-- SECTION 3: CV_BASE_MD_RCALWEEK_S4 EXPANSION
+-- =====================================================================================
+-- Source: CV_BASE_MD_RCALWEEK_S4
+-- Logic: Projection from ZTFIGL_RCALWEEK table with RCLNT filter
 -- =====================================================================================
 
-CV_BASE_MD_SRPACT_S4 AS (
+CV_BASE_MD_RCALWEEK_S4_OUTPUT AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZCALYRP,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    ZRYRQTR,
+    ZRWSTRTDATE,
+    ZRWENDDATE
+  FROM
+    PROJECT.DATASET.ZTFIGL_RCALWEEK
+  WHERE
+    RCLNT IN (120, 200)
+),
+
+-- =====================================================================================
+-- SECTION 4: CV_BASE_MD_CEPCT_S4 EXPANSION
+-- =====================================================================================
+-- Source: CV_BASE_MD_CEPCT_S4
+-- Logic: Projection from CEPCT table with MANDT filter
+-- =====================================================================================
+
+CV_BASE_MD_CEPCT_S4_OUTPUT AS (
+  SELECT
+    MANDT,
+    SPRAS,
+    PRCTR,
+    DATBI,
+    KOKRS,
+    KTEXT,
+    LTEXT,
+    MCTXT
+  FROM
+    PROJECT.DATASET.CEPCT
+  WHERE
+    MANDT IN (120, 200)
+),
+
+-- =====================================================================================
+-- SECTION 5: CV_BASE_MD_SRPACT_S4 EXPANSION
+-- =====================================================================================
+-- Source: CV_BASE_MD_SRPACT_S4
+-- Logic: Projection and aggregation from ZTSRP_ATTR_ACT table with MANDT filter
+-- =====================================================================================
+
+CV_BASE_MD_SRPACT_S4_FILTERED AS (
+  SELECT
+    *
+  FROM
+    `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE
+    MANDT IN (120, 200)
+),
+
+CV_BASE_MD_SRPACT_S4_OUTPUT AS (
   SELECT
     MANDT,
     STRNUM,
@@ -318,9 +384,7 @@ CV_BASE_MD_SRPACT_S4 AS (
     SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
     SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
   FROM
-    `PROJECT.DATASET.ZTSRP_ATTR_ACT`
-  WHERE
-    MANDT IN (120, 200)
+    CV_BASE_MD_SRPACT_S4_FILTERED
   GROUP BY
     MANDT,
     STRNUM,
@@ -396,12 +460,13 @@ CV_BASE_MD_SRPACT_S4 AS (
 ),
 
 -- =====================================================================================
--- CV_BASE_MD_COMPFL_S4 (Inlined - NOT USED in final lineage)
--- This view is used by STP_WSS_SRP_ATTRIBUTES but not directly by CV_COMP_FIN_BUDGET_STATIC
--- Included for completeness but marked as NOT USED in final consolidation
+-- SECTION 6: CV_BASE_MD_COMPFL_S4 EXPANSION
+-- =====================================================================================
+-- Source: CV_BASE_MD_COMPFL_S4
+-- Logic: Projection from ZTSRP_COMPFL table with MANDT filter
 -- =====================================================================================
 
-CV_BASE_MD_COMPFL_S4 AS (
+CV_BASE_MD_COMPFL_S4_OUTPUT AS (
   SELECT
     MANDT,
     PRCTR,
@@ -417,16 +482,21 @@ CV_BASE_MD_COMPFL_S4 AS (
     FS_COMP_WK,
     RX_COMP_WK
   FROM
-    `PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG_SOURCE`
+    PROJECT.DATASET.ZTSRP_COMPFL
+  WHERE
+    MANDT IN (110, 200)
 ),
 
 -- =====================================================================================
--- CV_COMP_MD_SRPACT_STATIC (Inlined)
--- Store attributes aggregated from ETL table (populated by stored procedure from CV_BASE_MD_SRPACT_S4)
--- For consolidation, we trace back to the original source: CV_BASE_MD_SRPACT_S4
+-- SECTION 7: CV_COMP_MD_SRPACT_STATIC EXPANSION
+-- =====================================================================================
+-- Source: CV_COMP_MD_SRPACT_STATIC (populated by STP_WSS_SRP_ATTRIBUTES)
+-- Logic: Uses CV_BASE_MD_SRPACT_S4 output (already expanded above)
+-- Note: The stored procedure populates TBL_WSS_SRP_ATTR_ACT from CV_BASE_MD_SRPACT_S4
+--       We inline the source logic directly
 -- =====================================================================================
 
-CV_COMP_MD_SRPACT_STATIC AS (
+CV_COMP_MD_SRPACT_STATIC_OUTPUT AS (
   SELECT
     MANDT,
     STRNUM,
@@ -498,22 +568,96 @@ CV_COMP_MD_SRPACT_STATIC AS (
     RX_AREA_CODE,
     RX_REGION_CODE,
     RX_DISTRICT_CODE,
-    RX_HRS_OPER,
-    FS_HRS_OPER,
-    RX_STORE,
-    RETAIL_SQFT_AMT,
-    TOTAL_SQFT_AMT
+    SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+    SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+    SUM(RX_STORE) AS RX_STORE,
+    SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+    SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
   FROM
-    CV_BASE_MD_SRPACT_S4
+    CV_BASE_MD_SRPACT_S4_OUTPUT
+  GROUP BY
+    MANDT,
+    STRNUM,
+    PRCTR,
+    KOKRS,
+    KOSTL,
+    RX_OPEN_DAT,
+    RX_CLOSE_DAT,
+    FS_OPEN_DAT,
+    FS_CLOSE_DAT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    ADDRESS,
+    CITY,
+    STATE,
+    ZIPCODE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    DIVISION_MGR,
+    AREA_CODE,
+    AREA_DESC,
+    AREA_MGR,
+    REGION_CODE,
+    REGION_DESC,
+    REGION_MGR,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZONE_CODE,
+    DISTRICT_MGR,
+    ZONE_DESC,
+    MAJOR_REGION_CODE,
+    MAJOR_REGION,
+    STORE_TYPE,
+    STORE_TYPE_DESC,
+    RX_STORE_DESC,
+    DISTRIBUTION_CNTR,
+    DISTRIBUTION_CNTR_DESC,
+    STORE_24_HR,
+    BUDGET_OPEN_DAT,
+    BUDGET_CLOSED_DAT,
+    BUDGET_RELOC_DAT,
+    CONST_OPEN_DAT,
+    CONST_CLOSE_DAT,
+    CONST_RELO_DAT,
+    RELOCATION_DAT,
+    EMERG_MKT_IND,
+    BUDGET_EMERG_MKT_IND,
+    COMPANY_CODE,
+    COMPANY_CODE_DESC,
+    ORIGINAL_FS_OPEN_DAT,
+    ORIGINAL_RX_OPEN_DAT,
+    GROUP_ONE,
+    GROUP_TWO,
+    ARD_SORT_KEY,
+    AREA_COST_CENTER,
+    REGIION_COST_CENTER,
+    COUNTY_CODE,
+    COUNTY_DESC,
+    SQFT_BRACKET_DESC,
+    SQFT_SORT_KEY,
+    ACQUISITION_CODE,
+    ACQUISITION_DESC,
+    PHOTO_LAB_ADD_DAT,
+    PHOTO_LAB_CLOSE_DAT,
+    MIN_HRS_IND,
+    CREATEDBY,
+    CREATED_ON,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
 ),
 
 -- =====================================================================================
--- CV_COMP_MD_COMPFL_STATIC (Inlined)
--- Comp flags from ETL table (populated by stored procedure)
--- For consolidation, we use the ETL table directly as the stored procedure is procedural
+-- SECTION 8: CV_COMP_MD_COMPFL_STATIC EXPANSION
+-- =====================================================================================
+-- Source: CV_COMP_MD_COMPFL_STATIC (populated by STP_WSS_SRP_ATTRIBUTES)
+-- Logic: Uses CV_BASE_MD_COMPFL_S4 output with ZWEEK filter
+-- Note: The stored procedure populates TBL_WSS_SRP_COMPFLAG from CV_BASE_MD_COMPFL_S4
+--       filtered by ZWEEK = @V_WEEK
 -- =====================================================================================
 
-CV_COMP_MD_COMPFL_STATIC AS (
+CV_COMP_MD_COMPFL_STATIC_OUTPUT AS (
   SELECT
     MANDT,
     PRCTR,
@@ -529,54 +673,16 @@ CV_COMP_MD_COMPFL_STATIC AS (
     FS_COMP_WK,
     RX_COMP_WK
   FROM
-    `PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG`
-),
-
--- =====================================================================================
--- CV_BASE_MD_RCALWEEK_S4 (Inlined)
--- Calendar week master data
--- =====================================================================================
-
-CV_BASE_MD_RCALWEEK_S4 AS (
-  SELECT
-    RCLNT,
-    ZZWEEK,
-    ZCALYRP,
-    ZRYEAR,
-    ZRPERIOD,
-    ZRYRP,
-    ZRYRQTR,
-    ZRWSTRTDATE,
-    ZRWENDDATE
-  FROM
-    `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+    CV_BASE_MD_COMPFL_S4_OUTPUT
   WHERE
-    RCLNT IN (120, 200)
+    ZWEEK = @V_WEEK
 ),
 
 -- =====================================================================================
--- CV_BASE_MD_CEPCT_S4 (Inlined)
--- Profit center text
+-- SECTION 9: CV_COMP_FIN_BUDGET_STATIC MAIN LOGIC
 -- =====================================================================================
-
-CV_BASE_MD_CEPCT_S4 AS (
-  SELECT
-    MANDT,
-    SPRAS,
-    PRCTR,
-    DATBI,
-    KOKRS,
-    KTEXT,
-    LTEXT,
-    MCTXT
-  FROM
-    `PROJECT.DATASET.CEPCT`
-  WHERE
-    MANDT IN (120, 200)
-),
-
--- =====================================================================================
--- CV_COMP_FIN_BUDGET_STATIC - MAIN CONSOLIDATION LOGIC
+-- Source: CV_COMP_FIN_BUDGET_STATIC
+-- Logic: Joins all upstream dependencies with filters and calculated columns
 -- =====================================================================================
 
 WEEKLY_SNAPSHOT_DS05 AS (
@@ -600,9 +706,9 @@ WEEKLY_SNAPSHOT_DS05 AS (
     _BIC_ZWWSC_PA1,
     _B631_S_AMOUNT,
     CURRENCY,
-    _BIC_ZIO_AMT,
-    'BUDGET' AS FLAG
-  FROM CV_BASE_FIN_WEEKLY_BUDGET_S4
+    _BIC_ZIO_AMT
+  FROM
+    CV_BASE_FIN_WEEKLY_BUDGET_S4_OUTPUT
   WHERE
     FISCVARNT = 'K4'
     AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
@@ -616,9 +722,10 @@ HIER_NODE AS (
     PARNODE,
     HRYVALTO,
     NODEVALUE
-  FROM CV_BASE_MD_HRRP_NODE_S4
+  FROM
+    CV_BASE_MD_HRRP_NODE_S4_OUTPUT
   WHERE
-    (PARNODE LIKE '%CORE_RET')
+    REGEXP_CONTAINS(PARNODE, r'.*CORE_RET$')
     AND HRYVALTO = '99991231'
 ),
 
@@ -626,15 +733,17 @@ Join_1 AS (
   SELECT
     w.*,
     h.PARNODE
-  FROM WEEKLY_SNAPSHOT_DS05 w
-  INNER JOIN HIER_NODE h
-    ON w._B631_S_PROFTCTR = h.NODEVALUE
+  FROM
+    WEEKLY_SNAPSHOT_DS05 w
+    INNER JOIN HIER_NODE h
+      ON w._B631_S_PROFTCTR = h.NODEVALUE
 ),
 
 ONLY_CORE_RET_DATA AS (
   SELECT
     *
-  FROM Join_1
+  FROM
+    Join_1
 ),
 
 STORE_ATTR_ACTUAL AS (
@@ -661,12 +770,13 @@ STORE_ATTR_ACTUAL AS (
     RX_AREA_CODE,
     RX_REGION_CODE,
     RX_DISTRICT_CODE
-  FROM CV_COMP_MD_SRPACT_STATIC
+  FROM
+    CV_COMP_MD_SRPACT_STATIC_OUTPUT
 ),
 
 Join_2 AS (
   SELECT
-    o.*,
+    f.*,
     s.REP_MKT_CODE,
     s.REP_MKT_DESC,
     s.EMERG_MKT_IND,
@@ -687,16 +797,18 @@ Join_2 AS (
     s.RX_AREA_CODE,
     s.RX_REGION_CODE,
     s.RX_DISTRICT_CODE
-  FROM ONLY_CORE_RET_DATA o
-  LEFT JOIN STORE_ATTR_ACTUAL s
-    ON o._B631_S_PROFTCTR = s.PRCTR
+  FROM
+    ONLY_CORE_RET_DATA f
+    LEFT JOIN STORE_ATTR_ACTUAL s
+      ON f._B631_S_PROFTCTR = s.PRCTR
 ),
 
 WEEK_NUMBER AS (
   SELECT
     *,
     RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_STORE_WEEK_NUMBER
-  FROM Join_2
+  FROM
+    Join_2
 ),
 
 COMP_FLAG_BUDGET AS (
@@ -710,8 +822,10 @@ COMP_FLAG_BUDGET AS (
     ZMONTH,
     ZYEAR,
     COMP_VER
-  FROM CV_COMP_MD_COMPFL_STATIC
-  WHERE COMP_VER = @IP_VERSION
+  FROM
+    CV_COMP_MD_COMPFL_STATIC_OUTPUT
+  WHERE
+    COMP_VER = @IP_VERSION
 ),
 
 Join_3 AS (
@@ -719,9 +833,11 @@ Join_3 AS (
     w.*,
     c.FS_COMP_WK,
     c.RX_COMP_WK
-  FROM WEEK_NUMBER w
-  LEFT JOIN COMP_FLAG_BUDGET c
-    ON w._B631_S_PROFTCTR = c.PRCTR AND w._BIC_ZIO_SWEEK = c.ZWEEK
+  FROM
+    WEEK_NUMBER w
+    LEFT JOIN COMP_FLAG_BUDGET c
+      ON w._B631_S_PROFTCTR = c.PRCTR
+      AND w._BIC_ZIO_SWEEK = c.ZWEEK
 ),
 
 CAL_WEEK AS (
@@ -730,7 +846,8 @@ CAL_WEEK AS (
     ZRWSTRTDATE,
     ZRWENDDATE,
     RCLNT
-  FROM CV_BASE_MD_RCALWEEK_S4
+  FROM
+    CV_BASE_MD_RCALWEEK_S4_OUTPUT
 ),
 
 Join_4 AS (
@@ -738,9 +855,10 @@ Join_4 AS (
     j.*,
     c.ZRWSTRTDATE,
     c.ZRWENDDATE
-  FROM Join_3 j
-  LEFT JOIN CAL_WEEK c
-    ON j._BIC_ZIO_SWEEK = c.ZZWEEK
+  FROM
+    Join_3 j
+    LEFT JOIN CAL_WEEK c
+      ON j._BIC_ZIO_SWEEK = c.ZZWEEK
 ),
 
 PROFIT_CENTER_TEXT AS (
@@ -748,19 +866,21 @@ PROFIT_CENTER_TEXT AS (
     MANDT,
     PRCTR,
     LTEXT AS PROFIT_CENTER_TEXT
-  FROM CV_BASE_MD_CEPCT_S4
+  FROM
+    CV_BASE_MD_CEPCT_S4_OUTPUT
 ),
 
 Join_5 AS (
   SELECT
     j.*,
     p.PROFIT_CENTER_TEXT
-  FROM Join_4 j
-  LEFT JOIN PROFIT_CENTER_TEXT p
-    ON j._B631_S_PROFTCTR = p.PRCTR
+  FROM
+    Join_4 j
+    LEFT JOIN PROFIT_CENTER_TEXT p
+      ON j._B631_S_PROFTCTR = p.PRCTR
 ),
 
-FLAGS_PRE_AGG AS (
+FLAGS AS (
   SELECT
     RX_COMP_WK,
     FS_COMP_WK,
@@ -803,32 +923,32 @@ FLAGS_PRE_AGG AS (
     PROFIT_CENTER_TEXT,
     FS_OPEN_DAT,
     RX_OPEN_DAT,
-    FLAG,
+    PARNODE AS FLAG,
     RX_DIVISION_CODE,
     RX_AREA_CODE,
     RX_REGION_CODE,
     RX_DISTRICT_CODE,
     CASE
-      WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
-      WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
+      WHEN LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
+      WHEN LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
       ELSE ''
     END AS CAL_FS_RX_FLAG,
     CASE
-      WHEN (CASE
-              WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
-              WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
-              ELSE FS_COMP_WK
-            END) IS NULL
-        THEN '0'
-      ELSE (CASE
-              WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
-              WHEN LEFT(CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
-              ELSE FS_COMP_WK
-            END)
+      WHEN CASE
+             WHEN LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
+             WHEN LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
+             ELSE FS_COMP_WK
+           END IS NULL THEN '0'
+      ELSE CASE
+             WHEN LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN FS_COMP_WK
+             WHEN LEFT(SAFE_CAST(_BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN RX_COMP_WK
+             ELSE FS_COMP_WK
+           END
     END AS CAL_COMP_FLAG,
     RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
     (_B631_S_AMOUNT * -1) AS _B631_S_AMOUNT
-  FROM Join_5
+  FROM
+    Join_5
 )
 
 SELECT
@@ -850,7 +970,9 @@ SELECT
   _B631_S_GL_ACCT,
   _BIC_ZWWPC_PA1,
   _BIC_ZWWSC_PA1,
+  SUM(_B631_S_AMOUNT_NEGATIVE) AS _B631_S_AMOUNT_NEGATIVE,
   CURRENCY,
+  SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT,
   REP_MKT_CODE,
   REP_MKT_DESC,
   EMERG_MKT_IND,
@@ -879,10 +1001,9 @@ SELECT
   RX_AREA_CODE,
   RX_REGION_CODE,
   RX_DISTRICT_CODE,
-  SUM(_B631_S_AMOUNT_NEGATIVE) AS _B631_S_AMOUNT_NEGATIVE,
-  SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT,
   SUM(_B631_S_AMOUNT) AS _B631_S_AMOUNT
-FROM FLAGS_PRE_AGG
+FROM
+  FLAGS
 GROUP BY
   MANDT,
   FISCPER,
@@ -894,7 +1015,7 @@ GROUP BY
   _B631_S_CO_AREA,
   _BIC_ZIO_CMPCD,
   _B631_S_PROFTCTR,
-  CAL_FS_RX_FLAG,
+  FS_RX_FLAG,
   _B631_S_COSTCNTR,
   _B631_S_FUNCAREA,
   _BIC_ZIO_VER,
@@ -908,7 +1029,7 @@ GROUP BY
   EMERG_MKT_IND,
   FS_COMP_WK,
   RX_COMP_WK,
-  CAL_COMP_FLAG,
+  COMP_FLAG,
   DIVISION_CODE,
   DIVISION_DESC,
   AREA_CODE,
@@ -926,7 +1047,7 @@ GROUP BY
   PROFIT_CENTER_TEXT,
   FS_OPEN_DAT,
   RX_OPEN_DAT,
-  FLAG,
+  FIN_BUD_CUBE,
   RX_DIVISION_CODE,
   RX_AREA_CODE,
   RX_REGION_CODE,
