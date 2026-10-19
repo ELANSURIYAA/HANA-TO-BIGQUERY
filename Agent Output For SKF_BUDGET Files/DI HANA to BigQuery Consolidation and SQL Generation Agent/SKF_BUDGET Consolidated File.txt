@@ -596,6 +596,7 @@ COMP_FLAG_BUDGET AS (
     COMP_VER
   FROM CV_BASE_MD_COMPFL_S4
   WHERE COMP_VER = @IP_VERSION
+     AND ZWEEK = @V_WEEK
 ),
 -- ============================================================================
 -- Join with Comp Flags
