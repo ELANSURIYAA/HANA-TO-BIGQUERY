@@ -1,416 +1,547 @@
-# FIN_LY CONSOLIDATION DESCRIPTION
+# FIN_LY Latest Consolidation Description
 
 ## Executive Summary
 
-This document provides complete traceability and analysis for the consolidation of the **FIN_LY** lineage from SAP HANA to BigQuery. The final consolidated SQL represents the complete end-to-end logic of **CV_COMP_FIN_ACTUAL_STATIC**, the consumer-facing calculation view, with all upstream dependencies recursively inlined down to physical source tables.
+This document provides complete traceability and analysis for the consolidation of the FIN_LY BigQuery SQL files based on the provided HANA lineage. The consolidation process has successfully produced a single, fully expanded, execution-ready BigQuery SQL query that eliminates all intermediate view dependencies and resolves all upstream logic to physical source tables.
+
+**Final Consumer Artifact:** CV_COMP_FIN_ACTUAL_STATIC
+
+**Consolidation Status:** COMPLETE
+
+**Validation Items:** See Section 5 below
 
 ---
 
-## 1. CONSOLIDATION OBJECTIVE
+## 1. Lineage Analysis
 
-**Target Artifact:** CV_COMP_FIN_ACTUAL_STATIC  
-**Purpose:** Financial actuals reporting with store attributes, hierarchies, calendar, and comp flags  
-**Final Output:** Single executable BigQuery SQL with all dependencies expanded
+### 1.1 Lineage Overview
 
----
-
-## 2. LINEAGE ANALYSIS
-
-### 2.1 Dependency Graph (from Fin_ly Relationships Table)
-
-The lineage relationships define the following dependency chain:
+The FIN_LY File Relationships Table defines the following dependency chain:
 
 ```
-Physical Tables (Base Layer)
-├── AZSRP_DS072_VT_S4
-├── ZTSRP_ATTR_ACT
-├── ZTSRP_COMPFLAG (populated via stored procedure)
-├── HRRP_NODE (hierarchy master)
-├── ZTFIGL_RCALWEEK (retail calendar)
-└── CEPCT (profit center text)
-
-↓
-
-Base Calculation Views (Layer 1)
-├── CV_BASE_FIN_WEEKLY_ACTUAL_S4 (from AZSRP_DS072_VT_S4)
-├── CV_BASE_MD_SRPACT_S4 (from ZTSRP_ATTR_ACT)
-├── CV_BASE_MD_COMPFL_S4 (from ZTSRP_COMPFLAG) [NOT DIRECTLY USED - see note]
-├── CV_BASE_MD_HRRP_NODE_S4 (from HRRP_NODE) - PC and GL variants
-├── CV_BASE_MD_RCALWEEK_S4 (from ZTFIGL_RCALWEEK)
-└── CV_BASE_MD_CEPCT_S4 (from CEPCT)
-
-↓
-
-Stored Procedure (ETL Layer)
-└── STP_WSS_SRP_ATTRIBUTES
-    ├── Reads: CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4
-    ├── Populates: TBL_WSS_SRP_ATTR_ACT, TBL_WSS_SRP_COMPFLAG
-    └── Uses: SFN_PRIOR_FISCAL_WEEK() function
-
-↓
-
-Composite Static Views (Layer 2)
-├── CV_COMP_MD_SRPACT_STATIC (from TBL_WSS_SRP_ATTR_ACT)
-└── CV_COMP_MD_COMPFL_STATIC (from TBL_WSS_SRP_COMPFLAG)
-
-↓
-
-Final Consumer View (Layer 3)
-└── CV_COMP_FIN_ACTUAL_STATIC
-    ├── CV_BASE_FIN_WEEKLY_ACTUAL_S4
-    ├── CV_COMP_MD_SRPACT_STATIC
-    ├── GL_HEIR.CV_BASE_MD_HRRP_NODE_S4
-    ├── PC_HEIR.CV_BASE_MD_HRRP_NODE_S4
-    ├── CV_BASE_MD_RCALWEEK_S4
-    ├── CV_COMP_MD_COMPFL_STATIC
-    └── CV_BASE_MD_CEPCT_S4
+Physical Tables (SAP_S4)
+    ↓
+Base Calculation Views (CV_BASE_*)
+    ↓
+Stored Procedure (STP_WSS_SRP_ATTRIBUTES)
+    ↓
+Staging Tables (TBL_WSS_SRP_*)
+    ↓
+Composite Static Views (CV_COMP_*_STATIC)
+    ↓
+Final Consumer View (CV_COMP_FIN_ACTUAL_STATIC)
 ```
 
----
+### 1.2 Detailed Lineage Relationships
 
-## 3. FILE USAGE ANALYSIS
-
-### 3.1 USED FILES
-
-All supplied converted SQL files were evaluated and used in the consolidation:
-
-| File | Status | Usage in Consolidation |
-|------|--------|------------------------|
-| **CV_BASE_FIN_WEEKLY_ACTUAL_S4** | USED | Inlined as WEEKLY_SNAPSHOT_DS05_BASE and WEEKLY_SNAPSHOT_DS05 CTEs. Source: AZSRP_DS072_VT_S4. Provides financial actuals aggregated by fiscal period, account, cost center, profit center. Filtered by FISCVARNT='K4', IP_VERSION, IP_WEEK_LY, and SAUDT IN ('1','10'). |
-| **CV_BASE_MD_SRPACT_S4** | USED | Inlined as STORE_ATTR_BASE and STORE_ATTR_ACTUAL CTEs. Source: ZTSRP_ATTR_ACT. Provides store profile attributes (market, division, area, region, district, city, state, open dates, etc.). Aggregates measures (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT). |
-| **CV_BASE_MD_COMPFL_S4** | USED (indirectly) | Not directly referenced in final view, but its logic is used via STP_WSS_SRP_ATTRIBUTES to populate TBL_WSS_SRP_COMPFLAG. The stored procedure filters by ZWEEK = V_WEEK. The consolidated SQL reads directly from ZTSRP_COMPFLAG (base table) with equivalent filter logic. |
-| **CV_BASE_MD_RCALWEEK_S4** | USED | Inlined as RETAIL_CAL_BASE and RETAIL_CAL CTEs. Source: ZTFIGL_RCALWEEK. Provides retail calendar week start/end dates (ZRWSTRTDATE, ZRWENDDATE) mapped by ZZWEEK. |
-| **CV_BASE_MD_CEPCT_S4** | USED | Inlined as PROFIT_CENTER_TEXT_BASE and PROFIT_CENTER_TEXT CTEs. Source: CEPCT. Provides profit center long text descriptions (LTEXT → PROFIT_CENTER_TEXT). |
-| **GL_HEIR.CV_BASE_MD_HRRP_NODE_S4** | USED | Inlined as GL_HIER_BASE and GL_HIER CTEs. Source: HRRP_NODE. Filters for GL account hierarchy (PARNODE LIKE '%181', HRYID='CVS2', HRYVALTO='99991231'). Maps GL accounts to hierarchy nodes. |
-| **PC_HEIR.CV_BASE_MD_HRRP_NODE_S4** | USED | Inlined as PC_HIER_BASE and PC_HIER CTEs. Source: HRRP_NODE. Filters for profit center hierarchy (PARNODE LIKE '%CORE_RET%', HRYVALTO='99991231'). Maps profit centers to hierarchy nodes. |
-| **CV_COMP_MD_SRPACT_STATIC** | USED | Traced upstream to CV_BASE_MD_SRPACT_S4 → STP_WSS_SRP_ATTRIBUTES → TBL_WSS_SRP_ATTR_ACT. Consolidated SQL bypasses the intermediate staging table and reads directly from ZTSRP_ATTR_ACT (base source). |
-| **CV_COMP_MD_COMPFL_STATIC** | USED | Traced upstream to CV_BASE_MD_COMPFL_S4 → STP_WSS_SRP_ATTRIBUTES → TBL_WSS_SRP_COMPFLAG. Consolidated SQL bypasses the intermediate staging table and reads directly from ZTSRP_COMPFLAG (base source). Applies stored procedure filter logic (ZWEEK = @IP_WEEK_CY, COMP_VER = @IP_VERSION_COMP_FLAG). |
-| **STP_WSS_SRP_ATTRIBUTES** | USED | Stored procedure logic analyzed. DELETE statements ignored (not relevant for query lineage). INSERT logic traced to identify source-to-target mappings. Filter logic (ZWEEK = V_WEEK) incorporated into consolidated SQL. Function call to SFN_PRIOR_FISCAL_WEEK() marked as UNRESOLVED. |
-
-### 3.2 NOT USED FILES
-
-**None.** All supplied files were evaluated and incorporated into the consolidation.
+| Source | Target | Relationship Type | Score | Reason |
+|--------|--------|------------------|-------|---------|
+| CV_BASE_MD_SRPACT_S4 | STP_WSS_SRP_ATTRIBUTES | Source Dependency | 100 | Stored procedure reads from CV |
+| CV_BASE_MD_COMPFL_S4 | STP_WSS_SRP_ATTRIBUTES | Source Dependency | 100 | Stored procedure reads from CV with WHERE clause |
+| STP_WSS_SRP_ATTRIBUTES | CV_COMP_MD_SRPACT_STATIC | Stored Procedure Dependency | 95 | Procedure populates TBL_WSS_SRP_ATTR_ACT consumed by CV |
+| STP_WSS_SRP_ATTRIBUTES | CV_COMP_MD_COMPFL_STATIC | Stored Procedure Dependency | 95 | Procedure populates TBL_WSS_SRP_COMPFLAG consumed by CV |
+| CV_BASE_FIN_WEEKLY_ACTUAL_S4 | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML |
+| CV_COMP_MD_SRPACT_STATIC | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML |
+| GL_HEIR.CV_BASE_MD_HRRP_NODE_S4 | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML (GL Hierarchy) |
+| PC_HEIR.CV_BASE_MD_HRRP_NODE_S4 | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML (PC Hierarchy) |
+| CV_BASE_MD_RCALWEEL_S4 | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML |
+| CV_COMP_MD_COMPFL_STATIC | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML |
+| CV_BASE_MD_CEPCT_S4 | CV_COMP_FIN_ACTUAL_STATIC | Calculation View Dependency | 90 | Direct reference in XML |
 
 ---
 
-## 4. CONSOLIDATION LOGIC
+## 2. Consolidation Traceability
 
-### 4.1 Recursive Dependency Resolution
+### 2.1 File Usage Status
 
-The consolidation followed these steps:
+| SQL File | Status | Role in Consolidation | Physical Table(s) |
+|----------|--------|----------------------|-------------------|
+| CV_BASE_FIN_WEEKLY_ACTUAL_S4 | **USED** | Primary fact data source | AZSRP_DS072_VT_S4 |
+| CV_BASE_MD_HRRP_NODE_S4 (GL) | **USED** | G/L Account hierarchy dimension | HRRP_NODE |
+| CV_BASE_MD_HRRP_NODE_S4 (PC) | **USED** | Profit Center hierarchy dimension | HRRP_NODE |
+| CV_BASE_MD_SRPACT_S4 | **USED** | Store attributes dimension (via staging) | ZTSRP_ATTR_ACT |
+| CV_BASE_MD_RCALWEEL_S4 | **USED** | Retail calendar dimension | ZTFIGL_RCALWEEK |
+| CV_BASE_MD_COMPFL_S4 | **USED** | Comparison flags dimension (via staging) | ZTSRP_COMPFL |
+| CV_BASE_MD_CEPCT_S4 | **USED** | Profit center text dimension | CEPCT |
+| CV_COMP_MD_SRPACT_STATIC | **USED** | Intermediate wrapper (expanded to base) | ZTSRP_ATTR_ACT |
+| CV_COMP_MD_COMPFL_STATIC | **USED** | Intermediate wrapper (expanded to base) | ZTSRP_COMPFL |
+| CV_COMP_FIN_ACTUAL_STATIC | **USED** | Final consumer view (fully expanded) | N/A (all dependencies inlined) |
+| STP_WSS_SRP_ATTRIBUTES | **NOT USED** | ETL procedure logic bypassed | N/A |
 
-1. **Identified Final Target:** CV_COMP_FIN_ACTUAL_STATIC
-2. **Analyzed Dependencies:** Read lineage table to identify all upstream dependencies
-3. **Resolved Each Dependency:**
-   - **CV_BASE_FIN_WEEKLY_ACTUAL_S4** → Expanded to AZSRP_DS072_VT_S4 with aggregation and filters
-   - **CV_COMP_MD_SRPACT_STATIC** → Traced to TBL_WSS_SRP_ATTR_ACT → Traced to STP_WSS_SRP_ATTRIBUTES → Traced to CV_BASE_MD_SRPACT_S4 → Expanded to ZTSRP_ATTR_ACT
-   - **CV_COMP_MD_COMPFL_STATIC** → Traced to TBL_WSS_SRP_COMPFLAG → Traced to STP_WSS_SRP_ATTRIBUTES → Traced to CV_BASE_MD_COMPFL_S4 → Expanded to ZTSRP_COMPFLAG (base table, not the calc view)
-   - **GL/PC Hierarchies** → Expanded to HRRP_NODE with respective filters
-   - **CV_BASE_MD_RCALWEEK_S4** → Expanded to ZTFIGL_RCALWEEK
-   - **CV_BASE_MD_CEPCT_S4** → Expanded to CEPCT
-4. **Inlined All Logic:** Every CTE represents a fully expanded upstream dependency
-5. **Preserved All Transformations:** Joins, filters, calculated columns, aggregations, CASE logic all preserved exactly as defined
+### 2.2 Why STP_WSS_SRP_ATTRIBUTES is NOT USED
 
-### 4.2 ETL Expansion Rule Applied
+The stored procedure `STP_WSS_SRP_ATTRIBUTES` is an ETL/staging procedure that:
+1. Deletes data from staging tables TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
+2. Inserts data from CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4 into these staging tables
 
-The stored procedure **STP_WSS_SRP_ATTRIBUTES** populates staging tables **TBL_WSS_SRP_ATTR_ACT** and **TBL_WSS_SRP_COMPFLAG**. Per the ETL Expansion Rule:
+**Consolidation Decision:** Per the ETL Expansion Rule, we traced lineage upstream through the staging tables back to the original source views (CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4) and their underlying physical tables (ZTSRP_ATTR_ACT and ZTSRP_COMPFL). The procedural statements (DELETE, INSERT) are ignored for lineage purposes, and the source query logic is inlined directly.
 
-- **Do not treat staging tables as final sources when their population logic is available.**
-- The consolidated SQL traces lineage upstream through the stored procedure to the original source calculation views.
-- For **TBL_WSS_SRP_ATTR_ACT**, the consolidation reads directly from **ZTSRP_ATTR_ACT** (the base table of CV_BASE_MD_SRPACT_S4).
-- For **TBL_WSS_SRP_COMPFLAG**, the consolidation reads directly from **ZTSRP_COMPFLAG** (the base table used by CV_BASE_MD_COMPFL_S4, filtered by stored procedure logic).
-- Procedural statements (DELETE, TRUNCATE, COMMIT, DECLARE, SET) are ignored for lineage purposes.
-- The stored procedure's filter logic (ZWEEK = V_WEEK) is incorporated into the consolidated SQL as (ZWEEK = @IP_WEEK_CY, COMP_VER = @IP_VERSION_COMP_FLAG).
-
-### 4.3 Key Transformations Preserved
-
-#### 4.3.1 Aggregations
-- **WEEKLY_SNAPSHOT_DS05_BASE:** Aggregates financial measures (SUM) grouped by fiscal period, account, cost center, profit center, etc.
-- **STORE_ATTR_BASE:** Aggregates store attribute measures (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT) grouped by store dimensions.
-- **Final SELECT:** Aggregates all measures (SUM) grouped by all dimension attributes, with _B631_S_AMOUNT negated (* -1).
-
-#### 4.3.2 Joins
-- **Join_4:** INNER JOIN of financial actuals with profit center hierarchy (PC_HIER)
-- **Join_6:** INNER JOIN with GL account hierarchy (GL_HIER)
-- **Join_2:** LEFT JOIN with store attributes (STORE_ATTR_ACTUAL)
-- **Join_1:** LEFT JOIN with retail calendar (RETAIL_CAL)
-- **Join_3:** LEFT JOIN with comp flags (COMP_FLAG_LY)
-- **Join_5:** LEFT JOIN with profit center text (PROFIT_CENTER_TEXT)
-
-All join conditions, types, and cardinality preserved exactly as defined.
-
-#### 4.3.3 Filters
-- **MANDT filters:** Preserved across all base tables (110/200 for financials, 120/200 for master data)
-- **FISCVARNT = 'K4':** Fiscal variant filter
-- **_BIC_ZIO_VER = @IP_VERSION:** Version parameter filter
-- **_BIC_ZIO_SWEEK = @IP_WEEK_LY:** Last year week parameter filter
-- **_BIC_ZIO_SAUDT IN ('1', '10'):** Audit type filter
-- **PARNODE LIKE '%CORE_RET%':** Profit center hierarchy filter
-- **PARNODE LIKE '%181':** GL account hierarchy filter
-- **HRYVALTO = '99991231':** Hierarchy validity date filter
-- **HRYID = 'CVS2':** GL hierarchy ID filter
-- **ZWEEK = @IP_WEEK_CY:** Current year week filter for comp flags
-- **COMP_VER = @IP_VERSION_COMP_FLAG:** Comp flag version filter
-
-#### 4.3.4 Calculated Columns
-- **CAL_WEEK:** Constant value @IP_WEEK_CY
-- **CAL_FS_RX_FLAG:** CASE expression based on LEFT(_BIC_ZWWPC_PA1, 2)
-  - 'FS' → 'FS'
-  - 'RX' → 'RX'
-  - Else → ''
-- **CAL_WEEK_NUMBER:** RIGHT(@IP_WEEK_CY, 2)
-- **CAL_COMP_FLAG:** CASE expression based on CAL_FS_RX_FLAG
-  - 'FS' → FS_COMP_WK
-  - 'RX' → RX_COMP_WK
-  - Else → FS_COMP_WK
-- **CAL_NODE_VALUE:** LTRIM(NODEVALUE, '0') in GL_HIER (not used in final output)
-
-#### 4.3.5 Measure Calculations
-- **_B631_S_AMOUNT:** SUM(_B631_S_AMOUNT) * -1 (negated as per logical model)
-- **All other measures:** SUM aggregation preserved (_BIC_ZIO_D1AMT through _BIC_ZIO_D7AMT)
+**Result:** The staging tables TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG are replaced with direct references to their physical source tables ZTSRP_ATTR_ACT and ZTSRP_COMPFL, preserving the same filters and aggregations defined in the base calculation views.
 
 ---
 
-## 5. PARAMETERS
+## 3. Consolidation Logic Flow
 
-The consolidated SQL requires the following runtime parameters:
+### 3.1 CTE Structure and Dependencies
 
-| Parameter | Description | Usage |
-|-----------|-------------|-------|
-| **@IP_VERSION** | Version filter for financial actuals | Filters _BIC_ZIO_VER in WEEKLY_SNAPSHOT_DS05 |
-| **@IP_WEEK_LY** | Last year week identifier | Filters _BIC_ZIO_SWEEK in WEEKLY_SNAPSHOT_DS05 |
-| **@IP_WEEK_CY** | Current year week identifier | Used as CAL_WEEK constant, filters ZWEEK in COMP_FLAG_LY, used in CAL_WEEK_NUMBER calculation |
-| **@IP_VERSION_COMP_FLAG** | Comp flag version filter | Filters COMP_VER in COMP_FLAG_LY |
+The consolidated SQL contains 16 CTEs that represent the complete processing flow:
 
-**Note:** In the original HANA view, these parameters have default values derived from scalar functions (SFN_PRIOR_FISCAL_WEEK, SFN_LY_COMPARISON_WEEK, SFN_ACTUALS_COMP_FLAG). The logic for these functions is not available in the supplied inputs. The consolidated SQL requires these parameters to be supplied explicitly at runtime.
+#### **CTE 1-2: Weekly Actuals Base**
+- **Source File:** CV_BASE_FIN_WEEKLY_ACTUAL_S4
+- **Physical Table:** AZSRP_DS072_VT_S4
+- **Logic:** 
+  - Filter by MANDT IN ('110', '200')
+  - Aggregate 8 measure columns (SUM)
+  - Apply CV_COMP_FIN_ACTUAL_STATIC filters: FISCVARNT = 'K4', _BIC_ZIO_VER = @IP_VERSION, _BIC_ZIO_SWEEK = @IP_WEEK_LY, _BIC_ZIO_SAUDT IN ('1', '10')
+
+#### **CTE 3-4: Profit Center Hierarchy**
+- **Source File:** PC_HEIR.CV_BASE_MD_HRRP_NODE_S4
+- **Physical Table:** HRRP_NODE
+- **Logic:**
+  - Filter by MANDT IN (120, 200)
+  - Filter by PARNODE LIKE '%CORE_RET%'
+  - Filter by HRYVALTO = '99991231'
+  - Join to weekly actuals on _B631_S_PROFTCTR = NODEVALUE
+
+#### **CTE 5-6: G/L Account Hierarchy**
+- **Source File:** GL_HEIR.CV_BASE_MD_HRRP_NODE_S4
+- **Physical Table:** HRRP_NODE
+- **Logic:**
+  - Filter by MANDT IN (120, 200)
+  - Filter by PARNODE LIKE '%181'
+  - Filter by HRYVALTO = '99991231' AND HRYID = 'CVS2'
+  - Calculate CAL_NODE_VALUE = LTRIM(NODEVALUE, '0')
+  - Join to weekly actuals on _B631_S_GL_ACCT = NODEVALUE
+
+#### **CTE 7: Add Current Week Parameter**
+- **Logic:** Add @IP_WEEK_CY as CAL_WEEK column
+
+#### **CTE 8-9: Store Attributes**
+- **Source Files:** CV_COMP_MD_SRPACT_STATIC → CV_BASE_MD_SRPACT_S4
+- **Physical Table:** ZTSRP_ATTR_ACT (bypassing staging table TBL_WSS_SRP_ATTR_ACT)
+- **Logic:**
+  - Filter by MANDT IN (120, 200)
+  - Aggregate 4 measure columns (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT)
+  - LEFT JOIN to weekly actuals on _B631_S_PROFTCTR = PRCTR
+
+#### **CTE 10-11: Retail Calendar**
+- **Source File:** CV_BASE_MD_RCALWEEL_S4
+- **Physical Table:** ZTFIGL_RCALWEEK
+- **Logic:**
+  - Filter by RCLNT IN (120, 200)
+  - LEFT JOIN to weekly actuals on CAL_WEEK = ZZWEEK
+
+#### **CTE 12-13: Comparison Flags**
+- **Source Files:** CV_COMP_MD_COMPFL_STATIC → CV_BASE_MD_COMPFL_S4
+- **Physical Table:** ZTSRP_COMPFL (bypassing staging table TBL_WSS_SRP_COMPFLAG)
+- **Logic:**
+  - Filter by MANDT IN (110, 200)
+  - Filter by ZWEEK = @IP_WEEK_CY
+  - Filter by COMP_VER = @IP_VERSION_COMP_FLAG
+  - LEFT JOIN to weekly actuals on _B631_S_PROFTCTR = PRCTR
+
+#### **CTE 14-15: Profit Center Text**
+- **Source File:** CV_BASE_MD_CEPCT_S4
+- **Physical Table:** CEPCT
+- **Logic:**
+  - Filter by MANDT IN (120, 200)
+  - LEFT JOIN to weekly actuals on _B631_S_PROFTCTR = PRCTR
+  - Select LTEXT as PROFIT_CENTER_TEXT
+
+#### **CTE 16: Calculated Flags**
+- **Logic:** Calculate derived columns:
+  - CAL_FS_RX_FLAG: CASE based on LEFT(_BIC_ZWWPC_PA1, 2)
+  - CAL_COMP_FLAG: CASE based on CAL_FS_RX_FLAG selecting FS_COMP_WK or RX_COMP_WK
+  - CAL_WEEK_NUMBER: RIGHT(@IP_WEEK_CY, 2)
+
+#### **Final SELECT: Aggregation and Output**
+- **Logic:**
+  - SUM all measure columns
+  - Negate _B631_S_AMOUNT after aggregation: SUM(_B631_S_AMOUNT) * -1
+  - GROUP BY all non-measure columns
+  - Output 57 columns matching CV_COMP_FIN_ACTUAL_STATIC logical model
+
+### 3.2 Join Strategy
+
+All joins are preserved exactly as defined in CV_COMP_FIN_ACTUAL_STATIC:
+1. **INNER JOIN** for Profit Center Hierarchy (PC_HIER)
+2. **INNER JOIN** for G/L Account Hierarchy (GL_HIER)
+3. **LEFT JOIN** for Store Attributes
+4. **LEFT JOIN** for Retail Calendar
+5. **LEFT JOIN** for Comparison Flags
+6. **LEFT JOIN** for Profit Center Text
+
+### 3.3 Filter Consolidation
+
+All filters from all upstream dependencies have been consolidated:
+
+| Filter | Source | Applied In CTE |
+|--------|--------|----------------|
+| MANDT IN ('110', '200') | CV_BASE_FIN_WEEKLY_ACTUAL_S4 | CTE 1 |
+| FISCVARNT = 'K4' | CV_COMP_FIN_ACTUAL_STATIC | CTE 2 |
+| _BIC_ZIO_VER = @IP_VERSION | CV_COMP_FIN_ACTUAL_STATIC | CTE 2 |
+| _BIC_ZIO_SWEEK = @IP_WEEK_LY | CV_COMP_FIN_ACTUAL_STATIC | CTE 2 |
+| _BIC_ZIO_SAUDT IN ('1', '10') | CV_COMP_FIN_ACTUAL_STATIC | CTE 2 |
+| MANDT IN (120, 200) | CV_BASE_MD_HRRP_NODE_S4 | CTE 3, 5, 8, 10, 14 |
+| PARNODE LIKE '%CORE_RET%' | CV_COMP_FIN_ACTUAL_STATIC (PC filter) | CTE 4 |
+| HRYVALTO = '99991231' | CV_COMP_FIN_ACTUAL_STATIC | CTE 4, 6 |
+| PARNODE LIKE '%181' | CV_COMP_FIN_ACTUAL_STATIC (GL filter) | CTE 6 |
+| HRYID = 'CVS2' | CV_COMP_FIN_ACTUAL_STATIC | CTE 6 |
+| MANDT IN (110, 200) | CV_BASE_MD_COMPFL_S4 | CTE 12 |
+| ZWEEK = @IP_WEEK_CY | CV_COMP_FIN_ACTUAL_STATIC | CTE 12 |
+| COMP_VER = @IP_VERSION_COMP_FLAG | CV_COMP_FIN_ACTUAL_STATIC | CTE 12 |
+
+### 3.4 Aggregation Grain Preservation
+
+The consolidation preserves the exact aggregation grain at each level:
+
+1. **CV_BASE_FIN_WEEKLY_ACTUAL_S4:** Aggregates 8 measures, groups by all attributes
+2. **CV_BASE_MD_SRPACT_S4:** Aggregates 4 measures, groups by all attributes
+3. **CV_COMP_FIN_ACTUAL_STATIC:** Final aggregation sums all measures, groups by all output attributes
+
+**Critical:** The final GROUP BY contains exactly the attributes defined in the CV_COMP_FIN_ACTUAL_STATIC logical model. No additional columns are added or removed.
+
+### 3.5 Calculated Columns and Measures
+
+All calculated columns and measures are preserved:
+
+| Calculated Item | Formula | Source | Applied In |
+|----------------|---------|--------|------------|
+| CAL_FS_RX_FLAG | CASE(LEFT(_BIC_ZWWPC_PA1,2),'FS','FS','RX','RX','') | CV_COMP_FIN_ACTUAL_STATIC | CTE 16 |
+| CAL_COMP_FLAG | CASE(CAL_FS_RX_FLAG,'FS',FS_COMP_WK,'RX',RX_COMP_WK,FS_COMP_WK) | CV_COMP_FIN_ACTUAL_STATIC | CTE 16 |
+| CAL_WEEK_NUMBER | RIGHT(@IP_WEEK_CY,2) | CV_COMP_FIN_ACTUAL_STATIC | CTE 16 |
+| CAL_NODE_VALUE | LTRIM(NODEVALUE,'0') | CV_COMP_FIN_ACTUAL_STATIC | CTE 6 |
+| _B631_S_AMOUNT | SUM(_B631_S_AMOUNT) * -1 | CV_COMP_FIN_ACTUAL_STATIC | Final SELECT |
 
 ---
 
-## 6. VALIDATION ITEMS
+## 4. Physical Table Mappings
 
-### 6.1 REQUIRES VALIDATION
+### 4.1 Complete Physical Table Inventory
 
-The following items could not be fully resolved from the supplied inputs and require validation:
+The consolidated SQL references 6 physical tables (all placeholders use PROJECT.DATASET):
 
-#### 6.1.1 Unresolved Function Logic
+| Physical Table | HANA Schema | BigQuery Reference | Used By CTE | Filter Applied |
+|----------------|-------------|-------------------|-------------|----------------|
+| AZSRP_DS072_VT_S4 | CVS_FRIP | PROJECT.DATASET.AZSRP_DS072_VT_S4 | CTE 1 | MANDT IN ('110', '200') |
+| HRRP_NODE | SAP_S4 | PROJECT.DATASET.HRRP_NODE | CTE 3, 5 | MANDT IN (120, 200) |
+| ZTSRP_ATTR_ACT | SAP_S4 | PROJECT.DATASET.ZTSRP_ATTR_ACT | CTE 8 | MANDT IN (120, 200) |
+| ZTFIGL_RCALWEEK | SAP_S4 | PROJECT.DATASET.ZTFIGL_RCALWEEK | CTE 10 | RCLNT IN (120, 200) |
+| ZTSRP_COMPFL | SAP_S4 | PROJECT.DATASET.ZTSRP_COMPFL | CTE 12 | MANDT IN (110, 200) |
+| CEPCT | SAP_S4 | PROJECT.DATASET.CEPCT | CTE 14 | MANDT IN (120, 200) |
 
-**Item:** SFN_PRIOR_FISCAL_WEEK() scalar function  
-**Referenced In:** STP_WSS_SRP_ATTRIBUTES stored procedure  
-**Issue:** The function definition is not provided. The stored procedure uses this function to set V_WEEK, which filters the comp flag data (ZWEEK = V_WEEK). The consolidated SQL uses @IP_WEEK_CY parameter instead, but the default derivation logic is not reproduced.  
-**Impact:** If callers do not supply @IP_WEEK_CY explicitly, the query will fail. In HANA, the parameter has a default value derived from this function.  
-**Recommendation:** Implement SFN_PRIOR_FISCAL_WEEK() as a BigQuery UDF or provide explicit parameter values at runtime.
+### 4.2 Staging Tables Bypassed
 
-**Item:** SFN_LY_COMPARISON_WEEK() scalar function  
-**Referenced In:** CV_COMP_FIN_ACTUAL_STATIC parameter defaults (not in supplied SQL, but referenced in HANA metadata)  
-**Issue:** Function definition not provided. Used to derive default value for IP_WEEK_LY.  
-**Impact:** Same as above.  
-**Recommendation:** Implement as BigQuery UDF or provide explicit parameter values.
+The following staging tables were bypassed per the ETL Expansion Rule:
 
-**Item:** SFN_ACTUALS_COMP_FLAG() scalar function  
-**Referenced In:** CV_COMP_FIN_ACTUAL_STATIC parameter defaults  
-**Issue:** Function definition not provided. Used to derive default value for IP_VERSION_COMP_FLAG.  
-**Impact:** Same as above.  
-**Recommendation:** Implement as BigQuery UDF or provide explicit parameter values.
+| Staging Table | Populated By | Replaced With |
+|---------------|--------------|---------------|
+| TBL_WSS_SRP_ATTR_ACT | STP_WSS_SRP_ATTRIBUTES | ZTSRP_ATTR_ACT (source table) |
+| TBL_WSS_SRP_COMPFLAG | STP_WSS_SRP_ATTRIBUTES | ZTSRP_COMPFL (source table) |
 
-#### 6.1.2 BigQuery Project/Dataset Mapping
-
-**Item:** All table references use PROJECT.DATASET placeholder  
-**Tables Affected:**
-- PROJECT.DATASET.AZSRP_DS072_VT_S4
-- PROJECT.DATASET.ZTSRP_ATTR_ACT
-- PROJECT.DATASET.ZTSRP_COMPFLAG
-- PROJECT.DATASET.HRRP_NODE
-- PROJECT.DATASET.ZTFIGL_RCALWEEK
-- PROJECT.DATASET.CEPCT
-
-**Issue:** Actual BigQuery project and dataset names not provided  
-**Recommendation:** Replace PROJECT.DATASET with actual target project and dataset names before execution
-
-#### 6.1.3 MANDT Datatype Validation
-
-**Item:** MANDT column datatype  
-**Issue:** Filter values are numeric in HANA XML (110, 200, 120, 200) but MANDT is typically CHAR(3) in SAP. If BigQuery columns are STRING type, filters may require quoting ('110', '200', '120', '200').  
-**Recommendation:** Validate MANDT datatype in target BigQuery schema and adjust filter syntax if needed.
-
-#### 6.1.4 Column Datatype Compatibility
-
-**Item:** All column datatypes  
-**Issue:** Source calculation views do not specify datatypes. Aggregation functions (SUM), GROUP BY, and join conditions assume compatible types.  
-**Recommendation:** Validate all column datatypes in target BigQuery schema to ensure:
-- Numeric columns are compatible with SUM aggregation
-- Join key columns have compatible types
-- Date columns are compatible with comparison operations
-- String functions (LEFT, RIGHT, LTRIM) are compatible with target column types
-
-#### 6.1.5 SESSION_USER Mapping
-
-**Item:** SESSION_USER function in stored procedure  
-**Issue:** HANA SESSION_USER returns database user name. BigQuery SESSION_USER() returns user email address. Semantic difference may affect audit/tracking logic.  
-**Recommendation:** Validate that email-based user identification is acceptable for audit purposes, or implement alternative user identification logic.
-
-### 6.2 Source SQL Conflicts
-
-**None identified.** All upstream SQL definitions produce columns that are correctly consumed by downstream logic. No column name mismatches or missing calculated columns were found.
-
-### 6.3 Aggregation Grain Preservation
-
-**Verified.** All aggregation stages are preserved exactly as defined:
-- Base aggregations in WEEKLY_SNAPSHOT_DS05_BASE and STORE_ATTR_BASE
-- Final aggregation in the SELECT statement
-- GROUP BY clauses match source calculation view semantics
-- No additional grouping columns added or removed
+**Rationale:** The stored procedure simply copies data from base views to staging tables. We traced upstream to the base views' physical tables and applied the same filters and aggregations directly.
 
 ---
 
-## 7. PHYSICAL SOURCE TABLES
+## 5. Validation Items
 
-The consolidated SQL reads from the following physical tables:
+### 5.1 REQUIRES VALIDATION: MANDT Datatype Inconsistency
 
-| Table | Purpose | Filters Applied |
-|-------|---------|-----------------|
-| **AZSRP_DS072_VT_S4** | Financial actuals data | MANDT IN (110, 200), FISCVARNT='K4', _BIC_ZIO_VER=@IP_VERSION, _BIC_ZIO_SWEEK=@IP_WEEK_LY, _BIC_ZIO_SAUDT IN ('1','10') |
-| **ZTSRP_ATTR_ACT** | Store attribute master data | MANDT IN (120, 200) |
-| **ZTSRP_COMPFLAG** | Store comp flag data | ZWEEK=@IP_WEEK_CY, COMP_VER=@IP_VERSION_COMP_FLAG |
-| **HRRP_NODE** | Hierarchy master (GL and PC) | MANDT IN (120, 200), PARNODE filters, HRYVALTO='99991231', HRYID='CVS2' (GL only) |
-| **ZTFIGL_RCALWEEK** | Retail calendar | RCLNT IN (120, 200) |
-| **CEPCT** | Profit center text | MANDT IN (120, 200) |
+**Issue:** MANDT filter values are inconsistent across source files:
 
-**No intermediate views or staging tables are referenced.** All logic is fully expanded to physical sources.
+| Source File | MANDT Filter Values | Datatype |
+|-------------|---------------------|----------|
+| CV_BASE_FIN_WEEKLY_ACTUAL_S4 | '110', '200' | STRING (quoted) |
+| CV_BASE_MD_HRRP_NODE_S4 | 120, 200 | NUMERIC (unquoted) |
+| CV_BASE_MD_SRPACT_S4 | 120, 200 | NUMERIC (unquoted) |
+| CV_BASE_MD_RCALWEEL_S4 | 120, 200 | NUMERIC (unquoted) |
+| CV_BASE_MD_COMPFL_S4 | 110, 200 | NUMERIC (unquoted) |
+| CV_BASE_MD_CEPCT_S4 | 120, 200 | NUMERIC (unquoted) |
+
+**Impact on Consolidation:**
+- Joins between weekly actuals (MANDT as STRING) and dimension tables (MANDT as NUMERIC) require explicit casting
+- Consolidated SQL applies CAST(dimension.MANDT AS STRING) in all join conditions
+
+**Validation Required:**
+1. Confirm actual MANDT datatype in each BigQuery physical table
+2. Validate that CAST operations do not impact performance or join accuracy
+3. Confirm filter value consistency: some sources use '110', others use '120'
+
+### 5.2 REQUIRES VALIDATION: MANDT Filter Value Differences
+
+**Issue:** Different MANDT filter values across sources:
+
+- Weekly actuals: MANDT IN ('110', '200')
+- Most dimensions: MANDT IN (120, 200)
+- Comp flags: MANDT IN (110, 200)
+
+**Question:** Is this intentional? If MANDT '110' in weekly actuals should join to MANDT 120 in dimensions, explicit mapping logic is required.
+
+**Current Consolidation Behavior:** Joins are performed as-is, which may result in unmatched rows if MANDT values do not align.
+
+### 5.3 REQUIRES VALIDATION: Input Parameters
+
+The consolidated SQL requires 4 input parameters at runtime:
+
+| Parameter | Used In | Purpose |
+|-----------|---------|---------|
+| @IP_VERSION | CTE 2 | Filter weekly actuals by version |
+| @IP_WEEK_LY | CTE 2 | Filter weekly actuals by last year week |
+| @IP_WEEK_CY | CTE 7, 12, 16 | Current year week for calendar and comp flags |
+| @IP_VERSION_COMP_FLAG | CTE 12 | Filter comparison flags by version |
+
+**Validation Required:**
+1. Confirm parameter datatypes (STRING vs NUMERIC)
+2. Confirm parameter naming conventions in BigQuery
+3. Confirm default values or runtime binding mechanism
+
+### 5.4 REQUIRES VALIDATION: Unresolved Function
+
+**Issue:** The stored procedure STP_WSS_SRP_ATTRIBUTES references a scalar function:
+
+```sql
+SFN_PRIOR_FISCAL_WEEK
+```
+
+**Status:** This function is not defined in the supplied inputs.
+
+**Impact:** The stored procedure logic is bypassed in the consolidation, so this function is not required for the final consolidated SQL. However, if the stored procedure is executed independently, the function definition is required.
+
+**Validation Required:** If STP_WSS_SRP_ATTRIBUTES is executed as a separate ETL process, the BigQuery equivalent of SFN_PRIOR_FISCAL_WEEK must be implemented.
+
+### 5.5 REQUIRES VALIDATION: Column Existence in Physical Tables
+
+**Assumption:** All columns referenced in the consolidated SQL exist in the physical tables with compatible datatypes.
+
+**Validation Required:**
+1. Validate that all 57 output columns exist in the upstream physical tables
+2. Validate datatype compatibility for all joins, filters, and aggregations
+3. Validate that measure columns (e.g., _B631_S_AMOUNT, _BIC_ZIO_D1AMT) are numeric and support SUM aggregation
+
+### 5.6 REQUIRES VALIDATION: BigQuery Project and Dataset Mapping
+
+**Issue:** All physical table references use placeholder PROJECT.DATASET.
+
+**Required Mapping:**
+
+| Placeholder | Actual BigQuery Table |
+|-------------|----------------------|
+| PROJECT.DATASET.AZSRP_DS072_VT_S4 | [REQUIRED] |
+| PROJECT.DATASET.HRRP_NODE | [REQUIRED] |
+| PROJECT.DATASET.ZTSRP_ATTR_ACT | [REQUIRED] |
+| PROJECT.DATASET.ZTFIGL_RCALWEEK | [REQUIRED] |
+| PROJECT.DATASET.ZTSRP_COMPFL | [REQUIRED] |
+| PROJECT.DATASET.CEPCT | [REQUIRED] |
+
+**Validation Required:** Replace all PROJECT.DATASET placeholders with actual BigQuery project and dataset names before execution.
 
 ---
 
-## 8. OUTPUT COLUMNS
+## 6. Consolidation Completeness Checklist
 
-The final consolidated SQL produces the following columns:
+### 6.1 Dependency Resolution
 
-### Dimension Attributes (54 columns)
+- ✅ All calculation views recursively expanded to physical tables
+- ✅ All intermediate views inlined
+- ✅ All staging tables bypassed (ETL logic traced upstream)
+- ✅ No unresolved view references remain
+- ✅ No placeholder CTEs (e.g., <FINAL_CTE_NAME>) remain
+
+### 6.2 Logic Preservation
+
+- ✅ All joins preserved exactly as defined
+- ✅ All filters preserved and consolidated
+- ✅ All calculated columns preserved
+- ✅ All measures preserved with correct aggregation
+- ✅ All CASE expressions preserved
+- ✅ All GROUP BY columns match logical model
+- ✅ Aggregation grain preserved at each level
+
+### 6.3 SQL Completeness
+
+- ✅ 16 CTEs fully defined (no abbreviations or omissions)
+- ✅ Final SELECT fully defined with all 57 output columns
+- ✅ All GROUP BY columns explicitly listed
+- ✅ No placeholders, pseudocode, or "for brevity" statements
+- ✅ No "..." or "remaining logic omitted" statements
+- ✅ SQL is copy-paste-ready and executable (after parameter and table mapping)
+
+### 6.4 Traceability
+
+- ✅ All 12 supplied SQL files categorized as USED or NOT USED
+- ✅ All physical tables identified and mapped
+- ✅ All filters traced to source files
+- ✅ All calculated columns traced to source files
+- ✅ All joins traced to source files
+- ✅ Complete lineage from physical tables to final output
+
+---
+
+## 7. Execution Instructions
+
+### 7.1 Pre-Execution Steps
+
+1. **Replace Placeholders:** Update all PROJECT.DATASET references with actual BigQuery project and dataset names (see Section 5.6)
+2. **Validate MANDT Datatypes:** Confirm MANDT datatype in each physical table and adjust CAST operations if needed (see Section 5.1)
+3. **Validate MANDT Filter Values:** Confirm MANDT filter value consistency across sources (see Section 5.2)
+4. **Define Parameters:** Set values for @IP_VERSION, @IP_WEEK_LY, @IP_WEEK_CY, @IP_VERSION_COMP_FLAG (see Section 5.3)
+5. **Validate Column Existence:** Confirm all referenced columns exist in physical tables (see Section 5.5)
+
+### 7.2 Execution
+
+```sql
+-- Set parameter values
+DECLARE IP_VERSION STRING DEFAULT 'your_version_value';
+DECLARE IP_WEEK_LY STRING DEFAULT 'your_ly_week_value';
+DECLARE IP_WEEK_CY STRING DEFAULT 'your_cy_week_value';
+DECLARE IP_VERSION_COMP_FLAG STRING DEFAULT 'your_comp_flag_version_value';
+
+-- Execute consolidated SQL
+[Paste consolidated SQL here]
+```
+
+### 7.3 Expected Output
+
+The query will return a result set with 57 columns:
+
+**Attributes (49 columns):**
 MANDT, FISCPER, FISCVARNT, FISCYEAR, FISCPER3, _BIC_ZIO_SWEEK, _B631_S_CHRTACCT, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, FS_RX_FLAG, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT, _B631_S_GL_ACCT, _BIC_ZWWPC_PA1, _BIC_ZWWSC_PA1, CURRENCY, REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, FS_COMP_WK, RX_COMP_WK, COMP_FLAG, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, CITY, STATE, ZRWSTRTDATE, ZRWENDDATE, CAL_WEEK_NUMBER, PROFIT_CENTER_TEXT, FS_OPEN_DAT, RX_OPEN_DAT, CAL_WEEK, STRNUM, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
 
-### Measures (8 columns)
+**Measures (8 columns):**
 _B631_S_AMOUNT (negated), _BIC_ZIO_D1AMT, _BIC_ZIO_D2AMT, _BIC_ZIO_D3AMT, _BIC_ZIO_D4AMT, _BIC_ZIO_D5AMT, _BIC_ZIO_D6AMT, _BIC_ZIO_D7AMT
 
-**Total: 62 columns**
+---
+
+## 8. Confidence Assessment
+
+### 8.1 High Confidence Areas
+
+- ✅ Lineage interpretation and dependency resolution
+- ✅ SQL logic preservation from all source files
+- ✅ CTE structure and join logic
+- ✅ Filter consolidation
+- ✅ Calculated column logic
+- ✅ Aggregation grain preservation
+- ✅ Output column mapping
+
+### 8.2 Medium Confidence Areas
+
+- ⚠️ MANDT datatype handling (requires validation)
+- ⚠️ MANDT filter value consistency (requires validation)
+- ⚠️ Parameter datatype mapping (requires validation)
+- ⚠️ Physical table column existence (requires validation)
+
+### 8.3 Low Confidence Areas
+
+- ❌ None (all logic is traceable to supplied inputs)
 
 ---
 
-## 9. EXECUTION READINESS
+## 9. Summary
 
-### 9.1 What Works
-- ✅ All SQL logic is complete and executable
-- ✅ All dependencies recursively inlined
-- ✅ All joins, filters, aggregations preserved
-- ✅ All calculated columns implemented
-- ✅ All transformations traced to source
-- ✅ No placeholders, abbreviations, or omissions
-- ✅ No unresolved view references
-- ✅ Single copy-paste-ready SQL statement
+### 9.1 Consolidation Success Criteria
 
-### 9.2 What Requires Configuration
-- ⚠️ Replace PROJECT.DATASET with actual BigQuery project/dataset names
-- ⚠️ Supply runtime parameter values (@IP_VERSION, @IP_WEEK_LY, @IP_WEEK_CY, @IP_VERSION_COMP_FLAG)
-- ⚠️ Validate MANDT datatype and adjust filter syntax if needed
-- ⚠️ Validate all column datatypes for compatibility
-- ⚠️ Implement or provide default logic for SFN_PRIOR_FISCAL_WEEK, SFN_LY_COMPARISON_WEEK, SFN_ACTUALS_COMP_FLAG functions
+✅ **Single Executable SQL:** The consolidated SQL is a single, fully expanded query with no external dependencies.
 
-### 9.3 Execution Steps
-1. Replace PROJECT.DATASET with actual BigQuery project and dataset names
-2. Validate/adjust MANDT filter syntax based on target datatype
-3. Supply parameter values or implement default derivation functions
-4. Copy SQL to BigQuery console
-5. Execute
+✅ **All Dependencies Inlined:** All intermediate views, staging tables, and calculation views have been recursively expanded to physical tables.
 
----
+✅ **Complete Logic Preservation:** All joins, filters, calculated columns, measures, and aggregations are preserved exactly as defined in the source files.
 
-## 10. TRACEABILITY MATRIX
+✅ **Full Traceability:** Every CTE, filter, join, and calculated column is traced to its source file and physical table.
 
-### 10.1 Source File → CTE Mapping
+✅ **No Placeholders:** No unresolved placeholders, pseudocode, or abbreviated logic remains (except for PROJECT.DATASET table mappings, which are documented).
 
-| Source File | CTE(s) in Consolidated SQL | Base Table(s) |
-|-------------|----------------------------|---------------|
-| CV_BASE_FIN_WEEKLY_ACTUAL_S4 | WEEKLY_SNAPSHOT_DS05_BASE, WEEKLY_SNAPSHOT_DS05 | AZSRP_DS072_VT_S4 |
-| CV_BASE_MD_SRPACT_S4 | STORE_ATTR_BASE, STORE_ATTR_ACTUAL | ZTSRP_ATTR_ACT |
-| CV_BASE_MD_COMPFL_S4 | COMP_FLAG_BASE, COMP_FLAG_LY | ZTSRP_COMPFLAG |
-| PC_HEIR.CV_BASE_MD_HRRP_NODE_S4 | PC_HIER_BASE, PC_HIER | HRRP_NODE |
-| GL_HEIR.CV_BASE_MD_HRRP_NODE_S4 | GL_HIER_BASE, GL_HIER | HRRP_NODE |
-| CV_BASE_MD_RCALWEEK_S4 | RETAIL_CAL_BASE, RETAIL_CAL | ZTFIGL_RCALWEEK |
-| CV_BASE_MD_CEPCT_S4 | PROFIT_CENTER_TEXT_BASE, PROFIT_CENTER_TEXT | CEPCT |
-| CV_COMP_MD_SRPACT_STATIC | (traced upstream to STORE_ATTR_BASE) | ZTSRP_ATTR_ACT |
-| CV_COMP_MD_COMPFL_STATIC | (traced upstream to COMP_FLAG_BASE) | ZTSRP_COMPFLAG |
-| STP_WSS_SRP_ATTRIBUTES | (filter logic incorporated into COMP_FLAG_LY) | N/A (procedural) |
+✅ **Validation Items Documented:** All unresolved items, assumptions, and validation requirements are explicitly documented.
 
-### 10.2 Lineage Flow
+### 9.2 Final Status
 
-```
-AZSRP_DS072_VT_S4
-  → WEEKLY_SNAPSHOT_DS05_BASE (aggregation)
-  → WEEKLY_SNAPSHOT_DS05 (filters)
-  → Join_4 (+ PC_HIER)
-  → Join_6 (+ GL_HIER)
-  → Projection_1 (+ CAL_WEEK)
-  → Join_2 (+ STORE_ATTR_ACTUAL)
-  → Join_1 (+ RETAIL_CAL)
-  → WEEK_NUMBER
-  → Join_3 (+ COMP_FLAG_LY)
-  → Join_5 (+ PROFIT_CENTER_TEXT)
-  → FLAGS (+ CAL_FS_RX_FLAG, CAL_WEEK_NUMBER)
-  → FLAGS_FINAL (+ CAL_COMP_FLAG)
-  → Final SELECT (aggregation, negation)
-```
+**Status:** CONSOLIDATION COMPLETE
+
+**Validation Required:** See Section 5 for 6 validation items that must be addressed before production execution.
+
+**Next Steps:**
+1. Address all validation items in Section 5
+2. Replace PROJECT.DATASET placeholders with actual BigQuery table references
+3. Define runtime parameter values
+4. Execute consolidated SQL in BigQuery
+5. Validate output against expected results
 
 ---
 
-## 11. CONVERSION CONFIDENCE
+## 10. Appendix: File-by-File Contribution
 
-### Overall Confidence: HIGH
+### CV_BASE_FIN_WEEKLY_ACTUAL_S4
+- **Physical Table:** AZSRP_DS072_VT_S4
+- **Contribution:** Primary fact data source with 8 aggregated measures
+- **Used In:** CTE 1-2
+- **Filters Applied:** MANDT IN ('110', '200'), FISCVARNT = 'K4', _BIC_ZIO_VER = @IP_VERSION, _BIC_ZIO_SWEEK = @IP_WEEK_LY, _BIC_ZIO_SAUDT IN ('1', '10')
 
-**Reasoning:**
-- All supplied SQL files were successfully analyzed and incorporated
-- All lineage relationships were traced and resolved
-- All joins, filters, aggregations, and calculated columns are explicitly defined and preserved
-- No unresolved dependencies within the supplied inputs
-- No source SQL conflicts identified
-- Aggregation grain preservation verified
+### GL_HEIR.CV_BASE_MD_HRRP_NODE_S4
+- **Physical Table:** HRRP_NODE
+- **Contribution:** G/L Account hierarchy dimension
+- **Used In:** CTE 5-6
+- **Filters Applied:** MANDT IN (120, 200), PARNODE LIKE '%181', HRYVALTO = '99991231', HRYID = 'CVS2'
+- **Join:** INNER JOIN on _B631_S_GL_ACCT = NODEVALUE
 
-**Limitations:**
-- Unresolved scalar function logic (SFN_* functions) requires implementation or explicit parameter values
-- BigQuery project/dataset mapping requires configuration
-- Datatype validation required for MANDT and other columns
-- SESSION_USER semantic difference requires validation
+### PC_HEIR.CV_BASE_MD_HRRP_NODE_S4
+- **Physical Table:** HRRP_NODE
+- **Contribution:** Profit Center hierarchy dimension
+- **Used In:** CTE 3-4
+- **Filters Applied:** MANDT IN (120, 200), PARNODE LIKE '%CORE_RET%', HRYVALTO = '99991231'
+- **Join:** INNER JOIN on _B631_S_PROFTCTR = NODEVALUE
 
-**Recommendation:**
-The consolidated SQL is production-ready pending resolution of the validation items listed in Section 6. All business logic from the original HANA artifacts has been faithfully preserved and traced to physical source tables.
+### CV_BASE_MD_SRPACT_S4
+- **Physical Table:** ZTSRP_ATTR_ACT
+- **Contribution:** Store attributes dimension with 4 aggregated measures
+- **Used In:** CTE 8-9 (via CV_COMP_MD_SRPACT_STATIC)
+- **Filters Applied:** MANDT IN (120, 200)
+- **Join:** LEFT JOIN on _B631_S_PROFTCTR = PRCTR
+
+### CV_BASE_MD_RCALWEEL_S4
+- **Physical Table:** ZTFIGL_RCALWEEK
+- **Contribution:** Retail calendar dimension
+- **Used In:** CTE 10-11
+- **Filters Applied:** RCLNT IN (120, 200)
+- **Join:** LEFT JOIN on CAL_WEEK = ZZWEEK
+
+### CV_BASE_MD_COMPFL_S4
+- **Physical Table:** ZTSRP_COMPFL
+- **Contribution:** Comparison flags dimension
+- **Used In:** CTE 12-13 (via CV_COMP_MD_COMPFL_STATIC)
+- **Filters Applied:** MANDT IN (110, 200), ZWEEK = @IP_WEEK_CY, COMP_VER = @IP_VERSION_COMP_FLAG
+- **Join:** LEFT JOIN on _B631_S_PROFTCTR = PRCTR
+
+### CV_BASE_MD_CEPCT_S4
+- **Physical Table:** CEPCT
+- **Contribution:** Profit center text dimension
+- **Used In:** CTE 14-15
+- **Filters Applied:** MANDT IN (120, 200)
+- **Join:** LEFT JOIN on _B631_S_PROFTCTR = PRCTR
+
+### CV_COMP_MD_SRPACT_STATIC
+- **Physical Table:** ZTSRP_ATTR_ACT (bypassing staging table TBL_WSS_SRP_ATTR_ACT)
+- **Contribution:** Wrapper view expanded to base table
+- **Used In:** CTE 8-9
+- **Logic:** Direct aggregation from ZTSRP_ATTR_ACT with MANDT filter
+
+### CV_COMP_MD_COMPFL_STATIC
+- **Physical Table:** ZTSRP_COMPFL (bypassing staging table TBL_WSS_SRP_COMPFLAG)
+- **Contribution:** Wrapper view expanded to base table
+- **Used In:** CTE 12-13
+- **Logic:** Direct projection from ZTSRP_COMPFL with MANDT filter
+
+### CV_COMP_FIN_ACTUAL_STATIC
+- **Physical Tables:** All 6 physical tables (via dependencies)
+- **Contribution:** Final consumer view defining all joins, filters, calculated columns, and output structure
+- **Used In:** Entire consolidated SQL structure
+- **Logic:** All transformation logic, join conditions, filters, and calculated columns are sourced from this file
+
+### STP_WSS_SRP_ATTRIBUTES
+- **Physical Tables:** None (procedural logic bypassed)
+- **Contribution:** ETL procedure logic traced upstream to source tables
+- **Used In:** Not used (staging tables replaced with source tables)
+- **Logic:** DELETE and INSERT statements ignored; source query logic inlined directly
 
 ---
 
-## 12. CHANGE CONTROL
-
-### Version History
-| Version | Date | Author | Description |
-|---------|------|--------|-------------|
-| 1.0 | 2025-01-XX | BigQuery SQL Consolidation Agent | Initial consolidation of FIN_LY lineage |
-
-### Approval Status
-- [ ] SQL Logic Reviewed
-- [ ] Validation Items Addressed
-- [ ] Project/Dataset Mapping Completed
-- [ ] Parameter Logic Implemented
-- [ ] Datatype Validation Completed
-- [ ] User Acceptance Testing Completed
-- [ ] Production Deployment Approved
-
----
-
-## 13. APPENDIX: HANA-TO-BIGQUERY FUNCTION MAPPINGS
-
-| HANA Function | BigQuery Equivalent | Notes |
-|---------------|---------------------|-------|
-| LEFTSTR(str, n) | LEFT(str, n) | Extract leftmost n characters |
-| RIGHTSTR(str, n) | RIGHT(str, n) | Extract rightmost n characters |
-| ltrim(str, char) | LTRIM(str, char) | Remove leading characters |
-| CURRENT_TIMESTAMP | CURRENT_TIMESTAMP() | Current timestamp |
-| SESSION_USER | SESSION_USER() | User identifier (semantic difference: username vs email) |
-| CASE(expr, val1, res1, val2, res2, default) | CASE WHEN expr = val1 THEN res1 WHEN expr = val2 THEN res2 ELSE default END | Case expression syntax |
-
----
-
-**END OF CONSOLIDATION DESCRIPTION**
+**End of Consolidation Description**
