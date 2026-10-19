@@ -1,0 +1,373 @@
+Weekly_Snapshot_DS05
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Privilege="http://www.sap.com/ndb/BiModelPrivilege.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" schemaVersion="2.3" id="CV_BASE_FIN_WEEKLY_BUDGET_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="false" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base view for Store Reporting Financials Budget frozen DSO - DS05 (Weekly Snapshot)"/>
+  <localVariables>
+    <variable id="IP_VERSION" parameter="true">
+      <descriptions defaultDescription="Store Version"/>
+      <variableProperties datatype="NVARCHAR" length="20" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <defaultRange/>
+      </variableProperties>
+    </variable>
+    <variable id="IP_FC_COUNT" parameter="true">
+      <descriptions defaultDescription="Frozen Cube Count"/>
+      <variableProperties datatype="NVARCHAR" length="1" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="false">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_FC_FLAG</scalarFunctionName>
+          <variableMapping xsi:type="Variable:VariableMapping">
+            <targetVariable name="IP_VERSION"/>
+            <localVariable>#IP_VERSION</localVariable>
+          </variableMapping>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="29"/>
+  <dataSources>
+    <DataSource id="AZSRP_DS052_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="AZSRP_DS052_VT_S4"/>
+    </DataSource>
+    <DataSource id="AZSRP_DS041_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="AZSRP_DS041_VT_S4"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Frozen_Cube" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="RECORDMODE"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZIO_AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#AZSRP_DS052_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_AMT" source="_BIC_ZIO_AMT"/>
+      </input>
+      <filter>(in (&quot;MANDT&quot;,'110','200')) AND ('$$IP_FC_COUNT$$' != 0 )</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Live_Cube" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="RECORDMODE"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZIO_AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#AZSRP_DS041_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_BIC_ZIO_PCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_BIC_ZIO_CCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_AMT" source="_BIC_ZIO_AMT"/>
+      </input>
+      <filter>(in (&quot;MANDT&quot;,'110','200')) AND ('$$IP_FC_COUNT$$' = 0 )</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:UnionView" id="Union_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="RECORDMODE"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZIO_AMT"/>
+        <viewAttribute datatype="NVARCHAR" id="FLAG" length="1"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input emptyUnionBehavior="NO_ROW" node="#Frozen_Cube">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_AMT" source="_BIC_ZIO_AMT"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FLAG" null="false" value="FC"/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Live_Cube">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_AMT" source="_BIC_ZIO_AMT"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FLAG" null="false" value="LC"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Union_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="FISCPER" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FISCPER"/>
+        <keyMapping columnObjectName="Union_1" columnName="FISCPER"/>
+      </attribute>
+      <attribute id="FISCVARNT" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FISCVARNT"/>
+        <keyMapping columnObjectName="Union_1" columnName="FISCVARNT"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_BIC_ZIO_SWEEK"/>
+        <keyMapping columnObjectName="Union_1" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="FISCYEAR" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FISCYEAR"/>
+        <keyMapping columnObjectName="Union_1" columnName="FISCYEAR"/>
+      </attribute>
+      <attribute id="FISCPER3" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FISCPER3"/>
+        <keyMapping columnObjectName="Union_1" columnName="FISCPER3"/>
+      </attribute>
+      <attribute id="_B631_S_CHRTACCT" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_B631_S_CHRTACCT"/>
+        <keyMapping columnObjectName="Union_1" columnName="_B631_S_CHRTACCT"/>
+      </attribute>
+      <attribute id="_B631_S_GL_ACCT" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_B631_S_GL_ACCT"/>
+        <keyMapping columnObjectName="Union_1" columnName="_B631_S_GL_ACCT"/>
+      </attribute>
+      <attribute id="_B631_S_CO_AREA" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_B631_S_CO_AREA"/>
+        <keyMapping columnObjectName="Union_1" columnName="_B631_S_CO_AREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_CMPCD" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_BIC_ZIO_CMPCD"/>
+        <keyMapping columnObjectName="Union_1" columnName="_BIC_ZIO_CMPCD"/>
+      </attribute>
+      <attribute id="_B631_S_PROFTCTR" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_B631_S_PROFTCTR"/>
+        <keyMapping columnObjectName="Union_1" columnName="_B631_S_PROFTCTR"/>
+      </attribute>
+      <attribute id="_B631_S_COSTCNTR" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_B631_S_COSTCNTR"/>
+        <keyMapping columnObjectName="Union_1" columnName="_B631_S_COSTCNTR"/>
+      </attribute>
+      <attribute id="_B631_S_FUNCAREA" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_B631_S_FUNCAREA"/>
+        <keyMapping columnObjectName="Union_1" columnName="_B631_S_FUNCAREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_VER" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_BIC_ZIO_VER"/>
+        <keyMapping columnObjectName="Union_1" columnName="_BIC_ZIO_VER"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SAUDT" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_BIC_ZIO_SAUDT"/>
+        <keyMapping columnObjectName="Union_1" columnName="_BIC_ZIO_SAUDT"/>
+      </attribute>
+      <attribute id="MANDT" order="15" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="MANDT"/>
+        <keyMapping columnObjectName="Union_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="_BIC_ZWWPC_PA1" order="16" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_BIC_ZWWPC_PA1"/>
+        <keyMapping columnObjectName="Union_1" columnName="_BIC_ZWWPC_PA1"/>
+      </attribute>
+      <attribute id="_BIC_ZWWSC_PA1" order="17" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="_BIC_ZWWSC_PA1"/>
+        <keyMapping columnObjectName="Union_1" columnName="_BIC_ZWWSC_PA1"/>
+      </attribute>
+      <attribute id="RECORDMODE" order="18" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RECORDMODE"/>
+        <keyMapping columnObjectName="Union_1" columnName="RECORDMODE"/>
+      </attribute>
+      <attribute id="CURRENCY" order="19" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="CURRENCY"/>
+        <keyMapping columnObjectName="Union_1" columnName="CURRENCY"/>
+      </attribute>
+      <attribute id="FLAG" order="25" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FLAG"/>
+        <keyMapping columnObjectName="Union_1" columnName="FLAG"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="_B631_S_AMOUNT_DUMMY" order="20" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="_B631_S_AMOUNT"/>
+        <measureMapping columnObjectName="Union_1" columnName="_B631_S_AMOUNT"/>
+      </measure>
+      <measure id="_BIC_ZIO_AMT" order="21" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="_BIC_ZIO_AMT"/>
+        <measureMapping columnObjectName="Union_1" columnName="_BIC_ZIO_AMT"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures>
+      <measure id="_B631_S_AMOUNT" hidden="false" order="24" aggregationType="sum" engineAggregation="sum" measureType="simple" datatype="DECIMAL" expressionLanguage="COLUMN_ENGINE" length="23" scale="2">
+        <descriptions defaultDescription="CAL_AMOUNT"/>
+        <formula>IF(isnull(&quot;RES_AMOUNT_FC&quot;), &quot;RES_AMOUNT_LC&quot;, &quot;RES_AMOUNT_FC&quot;)</formula>
+      </measure>
+    </calculatedMeasures>
+    <restrictedMeasures>
+      <measure id="RES_AMOUNT_LC" hidden="true" order="22" engineAggregation="sum" baseMeasure="#_B631_S_AMOUNT_DUMMY">
+        <descriptions defaultDescription="RES_AMOUNT_LC"/>
+        <restriction logicalOperator="AND">
+          <filter xsi:type="Privilege:AttributeFilter" attributeName="FLAG">
+            <valueFilter xsi:type="AccessControl:SingleValueFilter" including="true" value="LC"/>
+          </filter>
+          <attributeName>FLAG</attributeName>
+        </restriction>
+      </measure>
+      <measure id="RES_AMOUNT_FC" hidden="true" order="23" engineAggregation="sum" baseMeasure="#_B631_S_AMOUNT_DUMMY">
+        <descriptions defaultDescription="RES_AMOUNT_FC"/>
+        <restriction logicalOperator="AND">
+          <filter xsi:type="Privilege:AttributeFilter" attributeName="FLAG">
+            <valueFilter xsi:type="AccessControl:SingleValueFilter" including="true" value="FC"/>
+          </filter>
+          <attributeName>FLAG</attributeName>
+        </restriction>
+      </measure>
+    </restrictedMeasures>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="99" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Frozen_Cube" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="281"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Live_Cube" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="281"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Union_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="99" y="165"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

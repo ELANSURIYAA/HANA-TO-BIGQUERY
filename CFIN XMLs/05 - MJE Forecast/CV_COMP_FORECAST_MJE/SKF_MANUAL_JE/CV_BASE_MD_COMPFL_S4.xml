@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_MD_COMPFL_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" calculationScenarioType="TREE_BASED" dataCategory="DIMENSION" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Projection">
+  <origin/>
+  <descriptions defaultDescription="Base View for Store Profile - Comp Flag for Frozens"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="21"/>
+  <dataSources>
+    <DataSource id="ZTSRP_COMPFL" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAP_S4" columnObjectName="ZTSRP_COMPFL"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="110"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="COMP_VER"/>
+        <viewAttribute id="ZWEEK"/>
+        <viewAttribute id="ZMONTH"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="FS_COMP_PRE"/>
+        <viewAttribute id="RX_COMP_PRE"/>
+        <viewAttribute id="FS_COMP_MON"/>
+        <viewAttribute id="RX_COMP_MON"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#ZTSRP_COMPFL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMP_VER" source="COMP_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZWEEK" source="ZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZMONTH" source="ZMONTH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_PRE" source="FS_COMP_PRE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_PRE" source="RX_COMP_PRE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_MON" source="FS_COMP_MON"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_MON" source="RX_COMP_MON"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="PRCTR" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center (Retail Store)"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="STRNUM" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STRNUM"/>
+      </attribute>
+      <attribute id="COMP_VER" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp flag version"/>
+        <keyMapping columnObjectName="Projection_1" columnName="COMP_VER"/>
+      </attribute>
+      <attribute id="ZWEEK" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZWEEK"/>
+      </attribute>
+      <attribute id="ZMONTH" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Month"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZMONTH"/>
+      </attribute>
+      <attribute id="ZYEAR" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Year"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZYEAR"/>
+      </attribute>
+      <attribute id="FS_COMP_PRE" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Comp Flag Prelim"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_COMP_PRE"/>
+      </attribute>
+      <attribute id="RX_COMP_PRE" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX Comp Flag Prelim"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_COMP_PRE"/>
+      </attribute>
+      <attribute id="FS_COMP_MON" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Comp Flag Final Monthly"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_COMP_MON"/>
+      </attribute>
+      <attribute id="RX_COMP_MON" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX Comp Flag Final Monthly"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_COMP_MON"/>
+      </attribute>
+      <attribute id="FS_COMP_WK" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_COMP_WK"/>
+      </attribute>
+      <attribute id="RX_COMP_WK" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_COMP_WK"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures/>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

@@ -1,0 +1,136 @@
+CREATE /**************************************************************************
+Procedure Name    :  "STP_WSS_FORECAST_MJE"
+Version           :  1.0
+Team Responsible  :  CVS FRIP
+Created By        :  Rohit Gawada
+Created On        :  01/30/2020
+Updated By        :  Upamanyu Mukherjee           
+Updated On        :  5/21/2020 - Add Area to Static Flash
+Objective         :  To insert data in hdbdd table from calculation view.
+Source            :  CV_COMP_FORECAST_MJE
+Target            :  TBL_WSS_FORECAST_MJE
+***************************************************************************/
+
+
+PROCEDURE "CVS_FRIP"."CVS_FRIP.Procedure.FI::STP_WSS_FORECAST_MJE" ( ) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY DEFINER 
+	DEFAULT SCHEMA "CVS_FRIP"
+	--READS SQL DATA 
+	AS
+BEGIN
+
+-- Delete Data of HDBDD Table.
+DELETE FROM "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FORECAST_MJE";
+
+
+-- Insert Data From HANA Calculation View into HDBDD Table.   
+INSERT INTO "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FORECAST_MJE"
+(
+     "CAL_COMP_FLAG_DESC",
+	 "CAL_EMERG_MKT_IND",     
+     "MANDT",
+	 "CAL_SOURCE",
+	 "DIVISION_CODE",
+	 "DIVISION_DESC",
+	 "REGION_CODE",
+	 "REGION_DESC",
+	 "DISTRICT_CODE",
+	 "DISTRICT_DESC",
+	 --Added for Rx ARD realignment
+	 "RX_DIVISION_CODE",
+	 "RX_AREA_CODE",
+	 "RX_REGION_CODE",
+	 "RX_DISTRICT_CODE",
+	 --Added for Rx ARD realignment
+	 "STRNUM",
+	 "PRCTR",
+	 "EMERG_MKT_IND",
+	 "REP_MKT_CODE",
+	 "REP_MKT_DESC",
+	 "COMP_FLAG",
+	 "FS_RX_FLAG",
+	 "_BIC_ZIO_SWEEK",
+	 "FS_RX_FLAG_EXT",
+	 "ZRWSTRTDATE",
+	 "ZRWENDDATE",
+	 "CAL_WEEK_NUMBER",
+	 "CITY",
+	 "STATE",
+	 "FIN_FORECAST_CURRENCY",
+	 "PROFIT_CENTER_TEXT",
+	 "FIN_FCST_AMOUNT",
+	 "SKF_FCST_QTY",	 
+	 "CAL_DATA_CATEGORY1",
+	 "CAL_DATA_CATEGORY2",
+	 "FS_OPEN_DAT",
+	 "RX_OPEN_DAT",
+	 --"CAL_COMP_FLAG_DESC",
+	 --"CAL_EMERG_MKT_IND",
+	 --"FIN_FCST_AMOUNT",
+	 --"SKF_FCST_QTY",
+	 "SBT",
+	 "SKF_MJE_QTY",
+	 "CAL_FS_SALES_MJE",
+	 "CAL_RX_SALES_MJE",
+	 SNAPSHOT_TIMESTAMP,
+	 CREATED_BY,
+	 AREA_CODE,
+	 AREA_DESC
+) 
+
+SELECT  
+	 "CAL_COMP_FLAG_DESC",
+	 "CAL_EMERG_MKT_IND",
+     "MANDT",
+	 "CAL_SOURCE",
+	 "DIVISION_CODE",
+	 "DIVISION_DESC",
+	 "REGION_CODE",
+	 "REGION_DESC",
+	 "DISTRICT_CODE",
+	 "DISTRICT_DESC",
+	 --Added for Rx ARD realignment
+	 "RX_DIVISION_CODE",
+	 "RX_AREA_CODE",
+	 "RX_REGION_CODE",
+	 "RX_DISTRICT_CODE",
+	 --Added for Rx ARD realignment
+	 "STRNUM",
+	 "PRCTR",
+	 "EMERG_MKT_IND",
+	 "REP_MKT_CODE",
+	 "REP_MKT_DESC",
+	 "COMP_FLAG",
+	 "FS_RX_FLAG",
+	 "_BIC_ZIO_SWEEK",
+	 "FS_RX_FLAG_EXT",
+	 "ZRWSTRTDATE",
+	 "ZRWENDDATE",
+	 "CAL_WEEK_NUMBER",
+	 "CITY",
+	 "STATE",
+	 "FIN_FORECAST_CURRENCY",
+	 "PROFIT_CENTER_TEXT",
+	 "FIN_FCST_AMOUNT",
+	 "SKF_FCST_QTY",
+	 "CAL_DATA_CATEGORY1",
+	 "CAL_DATA_CATEGORY2",
+	 "FS_OPEN_DAT",
+	 "RX_OPEN_DAT",
+	 --"CAL_COMP_FLAG_DESC",
+	 --"CAL_EMERG_MKT_IND",
+	 --"FIN_FCST_AMOUNT",
+	 --"SKF_FCST_QTY",
+	 "SBT",
+	 "SKF_MJE_QTY",
+	 "CAL_FS_SALES_MJE",
+	 "CAL_RX_SALES_MJE",
+	 CURRENT_TIMESTAMP,
+	 SESSION_USER,
+	 AREA_CODE,
+	 AREA_DESC 
+
+FROM "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FORECAST_MJE";
+
+END;

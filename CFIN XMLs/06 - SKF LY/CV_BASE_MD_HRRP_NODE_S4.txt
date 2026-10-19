@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_MD_HRRP_NODE_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" calculationScenarioType="TREE_BASED" dataCategory="DIMENSION" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Projection">
+  <origin/>
+  <descriptions defaultDescription="Base view for HRRP_NODE - Hierarchy Master Data"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="27"/>
+  <dataSources>
+    <DataSource id="HRRP_NODE" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAP_S4" columnObjectName="HRRP_NODE"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="120"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="HRYID"/>
+        <viewAttribute id="HRYVER"/>
+        <viewAttribute id="NODECLS"/>
+        <viewAttribute id="HRYNODE"/>
+        <viewAttribute id="PARNODE"/>
+        <viewAttribute id="HRYVALTO"/>
+        <viewAttribute id="HRYVALFROM"/>
+        <viewAttribute id="BALIND"/>
+        <viewAttribute id="NODETYPE"/>
+        <viewAttribute id="NODEVALUE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#HRRP_NODE">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYID" source="HRYID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYVER" source="HRYVER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NODECLS" source="NODECLS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYNODE" source="HRYNODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARNODE" source="PARNODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYVALTO" source="HRYVALTO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYVALFROM" source="HRYVALFROM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BALIND" source="BALIND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NODETYPE" source="NODETYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NODEVALUE" source="NODEVALUE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="HRYID" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Hierarchy ID"/>
+        <keyMapping columnObjectName="Projection_1" columnName="HRYID"/>
+      </attribute>
+      <attribute id="HRYVER" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Hierarchy version"/>
+        <keyMapping columnObjectName="Projection_1" columnName="HRYVER"/>
+      </attribute>
+      <attribute id="NODECLS" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Node class"/>
+        <keyMapping columnObjectName="Projection_1" columnName="NODECLS"/>
+      </attribute>
+      <attribute id="HRYNODE" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Hierarchy node"/>
+        <keyMapping columnObjectName="Projection_1" columnName="HRYNODE"/>
+      </attribute>
+      <attribute id="PARNODE" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Hierarchy parent node"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PARNODE"/>
+      </attribute>
+      <attribute id="HRYVALTO" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valid To Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="HRYVALTO"/>
+      </attribute>
+      <attribute id="HRYVALFROM" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valid-From Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="HRYVALFROM"/>
+      </attribute>
+      <attribute id="BALIND" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Balance indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BALIND"/>
+      </attribute>
+      <attribute id="NODETYPE" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Hierarchy node type"/>
+        <keyMapping columnObjectName="Projection_1" columnName="NODETYPE"/>
+      </attribute>
+      <attribute id="NODEVALUE" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Node value"/>
+        <keyMapping columnObjectName="Projection_1" columnName="NODEVALUE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures/>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

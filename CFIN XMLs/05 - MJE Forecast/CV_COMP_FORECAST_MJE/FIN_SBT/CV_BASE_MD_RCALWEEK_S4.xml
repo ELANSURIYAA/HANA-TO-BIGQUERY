@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_MD_RCALWEEK_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" calculationScenarioType="TREE_BASED" dataCategory="DIMENSION" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Projection">
+  <origin/>
+  <descriptions defaultDescription="Base View for  ZTFIGL_RCALWEEK - Retail Calendar Week Master Data"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="87"/>
+  <dataSources>
+    <DataSource id="ZTFIGL_RCALWEEK" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAP_S4" columnObjectName="ZTFIGL_RCALWEEK"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="RCLNT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="120"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZCALYRP"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="ZRYRQTR"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#ZTFIGL_RCALWEEK">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCLNT" source="RCLNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZCALYRP" source="ZCALYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRQTR" source="ZRYRQTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="RCLNT" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RCLNT"/>
+      </attribute>
+      <attribute id="ZZWEEK" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZWEEK"/>
+      </attribute>
+      <attribute id="ZCALYRP" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Calendar Year Period"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZCALYRP"/>
+      </attribute>
+      <attribute id="ZRYEAR" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Year"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRYEAR"/>
+      </attribute>
+      <attribute id="ZRPERIOD" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Period"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRPERIOD"/>
+      </attribute>
+      <attribute id="ZRYRP" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Period/Year"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRYRP"/>
+      </attribute>
+      <attribute id="ZRYRQTR" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Year Quarter"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRYRQTR"/>
+      </attribute>
+      <attribute id="ZRWSTRTDATE" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail  Week Start Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRWSTRTDATE"/>
+      </attribute>
+      <attribute id="ZRWENDDATE" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Week End Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRWENDDATE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures/>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

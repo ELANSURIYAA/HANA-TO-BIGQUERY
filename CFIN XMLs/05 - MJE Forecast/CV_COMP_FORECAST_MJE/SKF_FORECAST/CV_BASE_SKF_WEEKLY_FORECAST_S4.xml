@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_SKF_WEEKLY_FORECAST_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for Store Reporting SKF Forecast Live DSO - DS03"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="23"/>
+  <dataSources>
+    <DataSource id="AZSRP_DS031_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="AZSRP_DS031_VT_S4"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions>
+        <comment text="Remove MANDT filter"/>
+      </descriptions>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="_BIC_ZIO_PSTY"/>
+        <viewAttribute id="_BIC_ZIO_PSKF"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="MANDT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="120"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="RECORDMODE"/>
+        <viewAttribute id="UNIT"/>
+        <viewAttribute id="_BIC_ZIO_SKFQ"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#AZSRP_DS031_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_PSTY" source="_BIC_ZIO_PSTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_PSKF" source="_BIC_ZIO_PSKF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_BIC_ZIO_PCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_BIC_ZIO_CCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="UNIT" source="UNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SKFQ" source="_BIC_ZIO_SKFQ"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="FISCPER" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year/period"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCPER"/>
+      </attribute>
+      <attribute id="FISCVARNT" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year Variant"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCVARNT"/>
+      </attribute>
+      <attribute id="FISCYEAR" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCYEAR"/>
+      </attribute>
+      <attribute id="FISCPER3" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting period"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCPER3"/>
+      </attribute>
+      <attribute id="MANDT" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RECORDMODE" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="BW Delta Process: Record Mode"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RECORDMODE"/>
+      </attribute>
+      <attribute id="UNIT" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Unit of Measure"/>
+        <keyMapping columnObjectName="Projection_1" columnName="UNIT"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Week"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_PSTY" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Plan SKF Type"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_PSTY"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_PSKF" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Plan SKF Account"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_PSKF"/>
+      </attribute>
+      <attribute id="_B631_S_CO_AREA" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_CO_AREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_CMPCD" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Company Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_CMPCD"/>
+      </attribute>
+      <attribute id="_B631_S_PROFTCTR" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_PROFTCTR"/>
+      </attribute>
+      <attribute id="_B631_S_COSTCNTR" order="14" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_COSTCNTR"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_VER" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Version"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_VER"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SAUDT" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Audit trail"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_SAUDT"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="_BIC_ZIO_SKFQ" order="17" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Plan SKF Quantity"/>
+        <measureMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_SKFQ"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

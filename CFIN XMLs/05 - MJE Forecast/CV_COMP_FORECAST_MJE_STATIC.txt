@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_COMP_FORECAST_MJE_STATIC" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Wrapper View on Snapshot Table for Forcast &amp; MJE"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="27"/>
+  <dataSources>
+    <DataSource id="TBL_WSS_FORECAST_MJE" type="CDS_ARTIFACT">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>CVS_FRIP.Table::TBL_WSS_FORECAST_MJE</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CAL_COMP_FLAG_DESC"/>
+        <viewAttribute id="CAL_EMERG_MKT_IND"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="CAL_SOURCE"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="COMP_FLAG"/>
+        <viewAttribute id="FS_RX_FLAG"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FS_RX_FLAG_EXT"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="CAL_WEEK_NUMBER"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FIN_FORECAST_CURRENCY"/>
+        <viewAttribute id="FIN_FCST_AMOUNT"/>
+        <viewAttribute id="SKF_FCST_QTY"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+        <viewAttribute id="CAL_DATA_CATEGORY1"/>
+        <viewAttribute id="CAL_DATA_CATEGORY2"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="SBT"/>
+        <viewAttribute id="SKF_MJE_QTY"/>
+        <viewAttribute id="CAL_FS_SALES_MJE"/>
+        <viewAttribute id="CAL_RX_SALES_MJE"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#TBL_WSS_FORECAST_MJE">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG_DESC" source="CAL_COMP_FLAG_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_EMERG_MKT_IND" source="CAL_EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SOURCE" source="CAL_SOURCE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMP_FLAG" source="COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_RX_FLAG" source="FS_RX_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_RX_FLAG_EXT" source="FS_RX_FLAG_EXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_FORECAST_CURRENCY" source="FIN_FORECAST_CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_FCST_AMOUNT" source="FIN_FCST_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_FCST_QTY" source="SKF_FCST_QTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="PROFIT_CENTER_TEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_DATA_CATEGORY1" source="CAL_DATA_CATEGORY1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_DATA_CATEGORY2" source="CAL_DATA_CATEGORY2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SBT" source="SBT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_MJE_QTY" source="SKF_MJE_QTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_SALES_MJE" source="CAL_FS_SALES_MJE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_SALES_MJE" source="CAL_RX_SALES_MJE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="CAL_COMP_FLAG_DESC" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp Flag"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_COMP_FLAG_DESC"/>
+      </attribute>
+      <attribute id="CAL_EMERG_MKT_IND" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="MANDT" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="CAL_SOURCE" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_SOURCE"/>
+      </attribute>
+      <attribute id="DIVISION_CODE" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_CODE"/>
+      </attribute>
+      <attribute id="DIVISION_DESC" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_DESC"/>
+      </attribute>
+      <attribute id="REGION_CODE" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_CODE"/>
+      </attribute>
+      <attribute id="REGION_DESC" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_DESC"/>
+      </attribute>
+      <attribute id="DISTRICT_CODE" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_DESC" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_DESC"/>
+      </attribute>
+      <attribute id="STRNUM" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STRNUM"/>
+      </attribute>
+      <attribute id="PRCTR" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="EMERG_MKT_IND" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="REP_MKT_CODE" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REP_MKT_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_DESC" order="15" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REP_MKT_DESC"/>
+      </attribute>
+      <attribute id="COMP_FLAG" order="16" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp Flag Indictaor"/>
+        <keyMapping columnObjectName="Projection_1" columnName="COMP_FLAG"/>
+      </attribute>
+      <attribute id="FS_RX_FLAG" order="17" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS/Rx Flag"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_RX_FLAG"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="18" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="FS_RX_FLAG_EXT" order="19" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS/Rx Flag Ext"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_RX_FLAG_EXT"/>
+      </attribute>
+      <attribute id="ZRWSTRTDATE" order="20" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail  Week Start Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRWSTRTDATE"/>
+      </attribute>
+      <attribute id="ZRWENDDATE" order="21" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Week End Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRWENDDATE"/>
+      </attribute>
+      <attribute id="CAL_WEEK_NUMBER" order="22" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_WEEK_NUMBER"/>
+      </attribute>
+      <attribute id="CITY" order="23" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="City"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CITY"/>
+      </attribute>
+      <attribute id="STATE" order="24" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="State"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STATE"/>
+      </attribute>
+      <attribute id="FIN_FORECAST_CURRENCY" order="25" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Finance Forecast Currency"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FIN_FORECAST_CURRENCY"/>
+      </attribute>
+      <attribute id="PROFIT_CENTER_TEXT" order="28" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Long Text"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PROFIT_CENTER_TEXT"/>
+      </attribute>
+      <attribute id="CAL_DATA_CATEGORY1" order="29" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Data Category for union pruning"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_DATA_CATEGORY1"/>
+      </attribute>
+      <attribute id="CAL_DATA_CATEGORY2" order="30" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Data Category for union pruning 2"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_DATA_CATEGORY2"/>
+      </attribute>
+      <attribute id="FS_OPEN_DAT" order="31" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store (FS) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="RX_OPEN_DAT" order="32" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy (RX) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="AREA_CODE" order="37" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_CODE"/>
+      </attribute>
+      <attribute id="AREA_DESC" order="38" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_DESC"/>
+      </attribute>
+      <attribute id="RX_DIVISION_CODE" order="39" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_DIVISION_CODE"/>
+      </attribute>
+      <attribute id="RX_AREA_CODE" order="40" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_AREA_CODE"/>
+      </attribute>
+      <attribute id="RX_REGION_CODE" order="41" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_REGION_CODE"/>
+      </attribute>
+      <attribute id="RX_DISTRICT_CODE" order="42" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_DISTRICT_CODE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="FIN_FCST_AMOUNT" order="26" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FIN_FCST_AMOUNT"/>
+      </measure>
+      <measure id="SKF_FCST_QTY" order="27" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Quantity"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SKF_FCST_QTY"/>
+      </measure>
+      <measure id="SBT" order="33" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="SBT Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SBT"/>
+      </measure>
+      <measure id="SKF_MJE_QTY" order="34" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="SKF MJE"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SKF_MJE_QTY"/>
+      </measure>
+      <measure id="CAL_FS_SALES_MJE" order="35" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="FS Sales MJE"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_FS_SALES_MJE"/>
+      </measure>
+      <measure id="CAL_RX_SALES_MJE" order="36" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="RX Sales MJE"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_RX_SALES_MJE"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

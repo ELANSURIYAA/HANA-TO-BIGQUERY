@@ -1,0 +1,2171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_FIN_ACDOCA_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="true" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for ACDOCA - Universal Ledger"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="73"/>
+  <dataSources>
+    <DataSource id="ACDOCA_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="ACDOCA_VT_S4"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="RCLNT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="120"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="RLDNR"/>
+        <viewAttribute id="RBUKRS"/>
+        <viewAttribute id="GJAHR"/>
+        <viewAttribute id="BELNR"/>
+        <viewAttribute id="DOCLN"/>
+        <viewAttribute id="RYEAR"/>
+        <viewAttribute id="RRCTY"/>
+        <viewAttribute id="RMVCT"/>
+        <viewAttribute id="VORGN"/>
+        <viewAttribute id="VRGNG"/>
+        <viewAttribute id="BTTYPE"/>
+        <viewAttribute id="AWTYP"/>
+        <viewAttribute id="AWSYS"/>
+        <viewAttribute id="AWORG"/>
+        <viewAttribute id="AWREF"/>
+        <viewAttribute id="AWITEM"/>
+        <viewAttribute id="AWITGRP"/>
+        <viewAttribute id="SUBTA"/>
+        <viewAttribute id="XREVERSING"/>
+        <viewAttribute id="XREVERSED"/>
+        <viewAttribute id="XTRUEREV"/>
+        <viewAttribute id="AWTYP_REV"/>
+        <viewAttribute id="AWORG_REV"/>
+        <viewAttribute id="AWREF_REV"/>
+        <viewAttribute id="SUBTA_REV"/>
+        <viewAttribute id="XSETTLING"/>
+        <viewAttribute id="XSETTLED"/>
+        <viewAttribute id="PREC_AWTYP"/>
+        <viewAttribute id="PREC_AWORG"/>
+        <viewAttribute id="PREC_AWREF"/>
+        <viewAttribute id="PREC_AWITEM"/>
+        <viewAttribute id="PREC_SUBTA"/>
+        <viewAttribute id="PREC_AWMULT"/>
+        <viewAttribute id="XSECONDARY"/>
+        <viewAttribute id="RTCUR"/>
+        <viewAttribute id="RWCUR"/>
+        <viewAttribute id="RHCUR"/>
+        <viewAttribute id="RKCUR"/>
+        <viewAttribute id="ROCUR"/>
+        <viewAttribute id="RVCUR"/>
+        <viewAttribute id="RBCUR"/>
+        <viewAttribute id="RCCUR"/>
+        <viewAttribute id="RDCUR"/>
+        <viewAttribute id="RECUR"/>
+        <viewAttribute id="RFCUR"/>
+        <viewAttribute id="RGCUR"/>
+        <viewAttribute id="RCO_OCUR"/>
+        <viewAttribute id="RUNIT"/>
+        <viewAttribute id="RVUNIT"/>
+        <viewAttribute id="RRUNIT"/>
+        <viewAttribute id="QUNIT1"/>
+        <viewAttribute id="QUNIT2"/>
+        <viewAttribute id="QUNIT3"/>
+        <viewAttribute id="RACCT"/>
+        <viewAttribute id="RCNTR"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="RFAREA"/>
+        <viewAttribute id="RBUSA"/>
+        <viewAttribute id="KOKRS"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="SCNTR"/>
+        <viewAttribute id="PPRCTR"/>
+        <viewAttribute id="SFAREA"/>
+        <viewAttribute id="SBUSA"/>
+        <viewAttribute id="RASSC"/>
+        <viewAttribute id="PSEGMENT"/>
+        <viewAttribute id="TSL"/>
+        <viewAttribute id="WSL"/>
+        <viewAttribute id="WSL2"/>
+        <viewAttribute id="WSL3"/>
+        <viewAttribute id="HSL"/>
+        <viewAttribute id="KSL"/>
+        <viewAttribute id="OSL"/>
+        <viewAttribute id="VSL"/>
+        <viewAttribute id="BSL"/>
+        <viewAttribute id="CSL"/>
+        <viewAttribute id="DSL"/>
+        <viewAttribute id="ESL"/>
+        <viewAttribute id="FSL"/>
+        <viewAttribute id="GSL"/>
+        <viewAttribute id="KFSL"/>
+        <viewAttribute id="KFSL2"/>
+        <viewAttribute id="KFSL3"/>
+        <viewAttribute id="PSL"/>
+        <viewAttribute id="PSL2"/>
+        <viewAttribute id="PSL3"/>
+        <viewAttribute id="PFSL"/>
+        <viewAttribute id="PFSL2"/>
+        <viewAttribute id="PFSL3"/>
+        <viewAttribute id="CO_OSL"/>
+        <viewAttribute id="HSALK3"/>
+        <viewAttribute id="KSALK3"/>
+        <viewAttribute id="OSALK3"/>
+        <viewAttribute id="VSALK3"/>
+        <viewAttribute id="HSALKV"/>
+        <viewAttribute id="KSALKV"/>
+        <viewAttribute id="OSALKV"/>
+        <viewAttribute id="VSALKV"/>
+        <viewAttribute id="HPVPRS"/>
+        <viewAttribute id="KPVPRS"/>
+        <viewAttribute id="OPVPRS"/>
+        <viewAttribute id="VPVPRS"/>
+        <viewAttribute id="HSTPRS"/>
+        <viewAttribute id="KSTPRS"/>
+        <viewAttribute id="OSTPRS"/>
+        <viewAttribute id="VSTPRS"/>
+        <viewAttribute id="HSLALT"/>
+        <viewAttribute id="KSLALT"/>
+        <viewAttribute id="OSLALT"/>
+        <viewAttribute id="VSLALT"/>
+        <viewAttribute id="HSLEXT"/>
+        <viewAttribute id="KSLEXT"/>
+        <viewAttribute id="OSLEXT"/>
+        <viewAttribute id="VSLEXT"/>
+        <viewAttribute id="HVKWRT"/>
+        <viewAttribute id="HVKSAL"/>
+        <viewAttribute id="MSL"/>
+        <viewAttribute id="MFSL"/>
+        <viewAttribute id="VMSL"/>
+        <viewAttribute id="VMFSL"/>
+        <viewAttribute id="RMSL"/>
+        <viewAttribute id="QUANT1"/>
+        <viewAttribute id="QUANT2"/>
+        <viewAttribute id="QUANT3"/>
+        <viewAttribute id="LBKUM"/>
+        <viewAttribute id="DRCRK"/>
+        <viewAttribute id="POPER"/>
+        <viewAttribute id="PERIV"/>
+        <viewAttribute id="FISCYEARPER"/>
+        <viewAttribute id="BUDAT"/>
+        <viewAttribute id="BLDAT"/>
+        <viewAttribute id="BLART"/>
+        <viewAttribute id="BUZEI"/>
+        <viewAttribute id="ZUONR"/>
+        <viewAttribute id="BSCHL"/>
+        <viewAttribute id="BSTAT"/>
+        <viewAttribute id="LINETYPE"/>
+        <viewAttribute id="KTOSL"/>
+        <viewAttribute id="SLALITTYPE"/>
+        <viewAttribute id="XSPLITMOD"/>
+        <viewAttribute id="USNAM"/>
+        <viewAttribute id="TIMESTAMP"/>
+        <viewAttribute id="EPRCTR"/>
+        <viewAttribute id="RHOART"/>
+        <viewAttribute id="GLACCOUNT_TYPE"/>
+        <viewAttribute id="KTOPL"/>
+        <viewAttribute id="LOKKT"/>
+        <viewAttribute id="KTOP2"/>
+        <viewAttribute id="REBZG"/>
+        <viewAttribute id="REBZJ"/>
+        <viewAttribute id="REBZZ"/>
+        <viewAttribute id="REBZT"/>
+        <viewAttribute id="RBEST"/>
+        <viewAttribute id="EBELN"/>
+        <viewAttribute id="EBELP"/>
+        <viewAttribute id="ZEKKN"/>
+        <viewAttribute id="SGTXT"/>
+        <viewAttribute id="KDAUF"/>
+        <viewAttribute id="KDPOS"/>
+        <viewAttribute id="MATNR"/>
+        <viewAttribute id="WERKS"/>
+        <viewAttribute id="LIFNR"/>
+        <viewAttribute id="KUNNR"/>
+        <viewAttribute id="FBUDA"/>
+        <viewAttribute id="KOART"/>
+        <viewAttribute id="UMSKZ"/>
+        <viewAttribute id="MWSKZ"/>
+        <viewAttribute id="HBKID"/>
+        <viewAttribute id="HKTID"/>
+        <viewAttribute id="XOPVW"/>
+        <viewAttribute id="AUGDT"/>
+        <viewAttribute id="AUGBL"/>
+        <viewAttribute id="AUGGJ"/>
+        <viewAttribute id="AFABE"/>
+        <viewAttribute id="ANLN1"/>
+        <viewAttribute id="ANLN2"/>
+        <viewAttribute id="BZDAT"/>
+        <viewAttribute id="ANBWA"/>
+        <viewAttribute id="MOVCAT"/>
+        <viewAttribute id="DEPR_PERIOD"/>
+        <viewAttribute id="ANLGR"/>
+        <viewAttribute id="ANLGR2"/>
+        <viewAttribute id="SETTLEMENT_RULE"/>
+        <viewAttribute id="UBZDT_PN"/>
+        <viewAttribute id="XVABG_PN"/>
+        <viewAttribute id="PROZS_PN"/>
+        <viewAttribute id="XMANPROPVAL_PN"/>
+        <viewAttribute id="KALNR"/>
+        <viewAttribute id="VPRSV"/>
+        <viewAttribute id="MLAST"/>
+        <viewAttribute id="KZBWS"/>
+        <viewAttribute id="XOBEW"/>
+        <viewAttribute id="SOBKZ"/>
+        <viewAttribute id="VTSTAMP"/>
+        <viewAttribute id="MAT_KDAUF"/>
+        <viewAttribute id="MAT_KDPOS"/>
+        <viewAttribute id="MAT_PSPNR"/>
+        <viewAttribute id="MAT_PS_POSID"/>
+        <viewAttribute id="MAT_LIFNR"/>
+        <viewAttribute id="BWTAR"/>
+        <viewAttribute id="BWKEY"/>
+        <viewAttribute id="HPEINH"/>
+        <viewAttribute id="KPEINH"/>
+        <viewAttribute id="OPEINH"/>
+        <viewAttribute id="VPEINH"/>
+        <viewAttribute id="MLPTYP"/>
+        <viewAttribute id="MLCATEG"/>
+        <viewAttribute id="QSBVALT"/>
+        <viewAttribute id="QSPROCESS"/>
+        <viewAttribute id="PERART"/>
+        <viewAttribute id="MLPOSNR"/>
+        <viewAttribute id="BUKRS_SENDER"/>
+        <viewAttribute id="RACCT_SENDER"/>
+        <viewAttribute id="ACCAS_SENDER"/>
+        <viewAttribute id="ACCASTY_SENDER"/>
+        <viewAttribute id="OBJNR"/>
+        <viewAttribute id="HRKFT"/>
+        <viewAttribute id="HKGRP"/>
+        <viewAttribute id="PAROB1"/>
+        <viewAttribute id="PAROBSRC"/>
+        <viewAttribute id="USPOB"/>
+        <viewAttribute id="CO_BELKZ"/>
+        <viewAttribute id="CO_BEKNZ"/>
+        <viewAttribute id="BELTP"/>
+        <viewAttribute id="MUVFLG"/>
+        <viewAttribute id="GKONT"/>
+        <viewAttribute id="GKOAR"/>
+        <viewAttribute id="ERLKZ"/>
+        <viewAttribute id="PERNR"/>
+        <viewAttribute id="PAOBJNR"/>
+        <viewAttribute id="XPAOBJNR_CO_REL"/>
+        <viewAttribute id="SCOPE"/>
+        <viewAttribute id="LOGSYSO"/>
+        <viewAttribute id="PBUKRS"/>
+        <viewAttribute id="PSCOPE"/>
+        <viewAttribute id="LOGSYSP"/>
+        <viewAttribute id="BWSTRAT"/>
+        <viewAttribute id="OBJNR_HK"/>
+        <viewAttribute id="AUFNR_ORG"/>
+        <viewAttribute id="UKOSTL"/>
+        <viewAttribute id="ULSTAR"/>
+        <viewAttribute id="UPRZNR"/>
+        <viewAttribute id="ACCAS"/>
+        <viewAttribute id="ACCASTY"/>
+        <viewAttribute id="LSTAR"/>
+        <viewAttribute id="AUFNR"/>
+        <viewAttribute id="AUTYP"/>
+        <viewAttribute id="PS_PSP_PNR"/>
+        <viewAttribute id="PS_POSID"/>
+        <viewAttribute id="PS_PSPID"/>
+        <viewAttribute id="NPLNR"/>
+        <viewAttribute id="NPLNR_VORGN"/>
+        <viewAttribute id="PRZNR"/>
+        <viewAttribute id="KSTRG"/>
+        <viewAttribute id="BEMOT"/>
+        <viewAttribute id="RSRCE"/>
+        <viewAttribute id="QMNUM"/>
+        <viewAttribute id="ERKRS"/>
+        <viewAttribute id="PACCAS"/>
+        <viewAttribute id="PACCASTY"/>
+        <viewAttribute id="PLSTAR"/>
+        <viewAttribute id="PAUFNR"/>
+        <viewAttribute id="PAUTYP"/>
+        <viewAttribute id="PPS_POSID"/>
+        <viewAttribute id="PPS_PSPID"/>
+        <viewAttribute id="PKDAUF"/>
+        <viewAttribute id="PKDPOS"/>
+        <viewAttribute id="PPAOBJNR"/>
+        <viewAttribute id="PNPLNR"/>
+        <viewAttribute id="PNPLNR_VORGN"/>
+        <viewAttribute id="PPRZNR"/>
+        <viewAttribute id="PKSTRG"/>
+        <viewAttribute id="CO_ACCASTY_N1"/>
+        <viewAttribute id="CO_ACCASTY_N2"/>
+        <viewAttribute id="CO_ACCASTY_N3"/>
+        <viewAttribute id="CO_ZLENR"/>
+        <viewAttribute id="CO_BELNR"/>
+        <viewAttribute id="CO_BUZEI"/>
+        <viewAttribute id="CO_BUZEI1"/>
+        <viewAttribute id="CO_BUZEI2"/>
+        <viewAttribute id="CO_BUZEI5"/>
+        <viewAttribute id="CO_BUZEI6"/>
+        <viewAttribute id="CO_BUZEI7"/>
+        <viewAttribute id="CO_REFBZ"/>
+        <viewAttribute id="CO_REFBZ1"/>
+        <viewAttribute id="CO_REFBZ2"/>
+        <viewAttribute id="CO_REFBZ5"/>
+        <viewAttribute id="CO_REFBZ6"/>
+        <viewAttribute id="CO_REFBZ7"/>
+        <viewAttribute id="WORK_ITEM_ID"/>
+        <viewAttribute id="FKART"/>
+        <viewAttribute id="VKORG"/>
+        <viewAttribute id="VTWEG"/>
+        <viewAttribute id="SPART"/>
+        <viewAttribute id="MATNR_COPA"/>
+        <viewAttribute id="MATKL"/>
+        <viewAttribute id="KDGRP"/>
+        <viewAttribute id="LAND1"/>
+        <viewAttribute id="BRSCH"/>
+        <viewAttribute id="BZIRK"/>
+        <viewAttribute id="KUNRE"/>
+        <viewAttribute id="KUNWE"/>
+        <viewAttribute id="KONZS"/>
+        <viewAttribute id="ACDOC_COPA_EEW_DUMMY_PA"/>
+        <viewAttribute id="WWCP_PA"/>
+        <viewAttribute id="WWDC_PA"/>
+        <viewAttribute id="WWPC_PA"/>
+        <viewAttribute id="WWSC_PA"/>
+        <viewAttribute id="WWTH_PA"/>
+        <viewAttribute id="WWHC_PA"/>
+        <viewAttribute id="RE_BUKRS"/>
+        <viewAttribute id="RE_ACCOUNT"/>
+        <viewAttribute id="FIKRS"/>
+        <viewAttribute id="FISTL"/>
+        <viewAttribute id="MEASURE"/>
+        <viewAttribute id="RFUND"/>
+        <viewAttribute id="RGRANT_NBR"/>
+        <viewAttribute id="RBUDGET_PD"/>
+        <viewAttribute id="SFUND"/>
+        <viewAttribute id="SGRANT_NBR"/>
+        <viewAttribute id="SBUDGET_PD"/>
+        <viewAttribute id="VNAME"/>
+        <viewAttribute id="EGRUP"/>
+        <viewAttribute id="RECID"/>
+        <viewAttribute id="VPTNR"/>
+        <viewAttribute id="BTYPE"/>
+        <viewAttribute id="ETYPE"/>
+        <viewAttribute id="PRODPER"/>
+        <viewAttribute id="SWENR"/>
+        <viewAttribute id="SGENR"/>
+        <viewAttribute id="SGRNR"/>
+        <viewAttribute id="SMENR"/>
+        <viewAttribute id="RECNNR"/>
+        <viewAttribute id="SNKSL"/>
+        <viewAttribute id="SEMPSL"/>
+        <viewAttribute id="DABRZ"/>
+        <viewAttribute id="PSWENR"/>
+        <viewAttribute id="PSGENR"/>
+        <viewAttribute id="PSGRNR"/>
+        <viewAttribute id="PSMENR"/>
+        <viewAttribute id="PRECNNR"/>
+        <viewAttribute id="PSNKSL"/>
+        <viewAttribute id="PSEMPSL"/>
+        <viewAttribute id="PDABRZ"/>
+        <viewAttribute id="ACDOC_EEW_DUMMY"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="DUMMY_INCL_EEW_COBL"/>
+        <viewAttribute id="FUP_ACTION"/>
+        <viewAttribute id="MIG_SOURCE"/>
+        <viewAttribute id="MIG_DOCLN"/>
+        <viewAttribute id="_DATAAGING"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#ACDOCA_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCLNT" source="RCLNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RLDNR" source="RLDNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBUKRS" source="RBUKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GJAHR" source="GJAHR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BELNR" source="BELNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOCLN" source="DOCLN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RYEAR" source="RYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RRCTY" source="RRCTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RMVCT" source="RMVCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VORGN" source="VORGN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VRGNG" source="VRGNG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BTTYPE" source="BTTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWTYP" source="AWTYP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWSYS" source="AWSYS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWORG" source="AWORG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWREF" source="AWREF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWITEM" source="AWITEM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWITGRP" source="AWITGRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SUBTA" source="SUBTA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XREVERSING" source="XREVERSING"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XREVERSED" source="XREVERSED"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XTRUEREV" source="XTRUEREV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWTYP_REV" source="AWTYP_REV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWORG_REV" source="AWORG_REV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AWREF_REV" source="AWREF_REV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SUBTA_REV" source="SUBTA_REV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XSETTLING" source="XSETTLING"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XSETTLED" source="XSETTLED"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PREC_AWTYP" source="PREC_AWTYP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PREC_AWORG" source="PREC_AWORG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PREC_AWREF" source="PREC_AWREF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PREC_AWITEM" source="PREC_AWITEM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PREC_SUBTA" source="PREC_SUBTA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PREC_AWMULT" source="PREC_AWMULT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XSECONDARY" source="XSECONDARY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RTCUR" source="RTCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RWCUR" source="RWCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RHCUR" source="RHCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RKCUR" source="RKCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ROCUR" source="ROCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RVCUR" source="RVCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBCUR" source="RBCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCCUR" source="RCCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RDCUR" source="RDCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECUR" source="RECUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RFCUR" source="RFCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RGCUR" source="RGCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCO_OCUR" source="RCO_OCUR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RUNIT" source="RUNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RVUNIT" source="RVUNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RRUNIT" source="RRUNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QUNIT1" source="QUNIT1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QUNIT2" source="QUNIT2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QUNIT3" source="QUNIT3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RACCT" source="RACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCNTR" source="RCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RFAREA" source="RFAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBUSA" source="RBUSA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KOKRS" source="KOKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCNTR" source="SCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PPRCTR" source="PPRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SFAREA" source="SFAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SBUSA" source="SBUSA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RASSC" source="RASSC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSEGMENT" source="PSEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TSL" source="TSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WSL" source="WSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WSL2" source="WSL2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WSL3" source="WSL3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HSL" source="HSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSL" source="KSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OSL" source="OSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VSL" source="VSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BSL" source="BSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CSL" source="CSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DSL" source="DSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ESL" source="ESL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FSL" source="FSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GSL" source="GSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KFSL" source="KFSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KFSL2" source="KFSL2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KFSL3" source="KFSL3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSL" source="PSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSL2" source="PSL2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSL3" source="PSL3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PFSL" source="PFSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PFSL2" source="PFSL2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PFSL3" source="PFSL3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_OSL" source="CO_OSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HSALK3" source="HSALK3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSALK3" source="KSALK3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OSALK3" source="OSALK3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VSALK3" source="VSALK3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HSALKV" source="HSALKV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSALKV" source="KSALKV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OSALKV" source="OSALKV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VSALKV" source="VSALKV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HPVPRS" source="HPVPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KPVPRS" source="KPVPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OPVPRS" source="OPVPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VPVPRS" source="VPVPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HSTPRS" source="HSTPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSTPRS" source="KSTPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OSTPRS" source="OSTPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VSTPRS" source="VSTPRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HSLALT" source="HSLALT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSLALT" source="KSLALT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OSLALT" source="OSLALT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VSLALT" source="VSLALT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HSLEXT" source="HSLEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSLEXT" source="KSLEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OSLEXT" source="OSLEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VSLEXT" source="VSLEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HVKWRT" source="HVKWRT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HVKSAL" source="HVKSAL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MSL" source="MSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MFSL" source="MFSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VMSL" source="VMSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VMFSL" source="VMFSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RMSL" source="RMSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QUANT1" source="QUANT1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QUANT2" source="QUANT2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QUANT3" source="QUANT3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LBKUM" source="LBKUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DRCRK" source="DRCRK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="POPER" source="POPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PERIV" source="PERIV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEARPER" source="FISCYEARPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUDAT" source="BUDAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BLDAT" source="BLDAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BLART" source="BLART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUZEI" source="BUZEI"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZUONR" source="ZUONR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BSCHL" source="BSCHL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BSTAT" source="BSTAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LINETYPE" source="LINETYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KTOSL" source="KTOSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SLALITTYPE" source="SLALITTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XSPLITMOD" source="XSPLITMOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="USNAM" source="USNAM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TIMESTAMP" source="TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EPRCTR" source="EPRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RHOART" source="RHOART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GLACCOUNT_TYPE" source="GLACCOUNT_TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KTOPL" source="KTOPL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOKKT" source="LOKKT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KTOP2" source="KTOP2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REBZG" source="REBZG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REBZJ" source="REBZJ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REBZZ" source="REBZZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REBZT" source="REBZT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBEST" source="RBEST"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EBELN" source="EBELN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EBELP" source="EBELP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZEKKN" source="ZEKKN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SGTXT" source="SGTXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KDAUF" source="KDAUF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KDPOS" source="KDPOS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MATNR" source="MATNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WERKS" source="WERKS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LIFNR" source="LIFNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KUNNR" source="KUNNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FBUDA" source="FBUDA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KOART" source="KOART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="UMSKZ" source="UMSKZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MWSKZ" source="MWSKZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HBKID" source="HBKID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HKTID" source="HKTID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XOPVW" source="XOPVW"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AUGDT" source="AUGDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AUGBL" source="AUGBL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AUGGJ" source="AUGGJ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AFABE" source="AFABE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ANLN1" source="ANLN1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ANLN2" source="ANLN2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BZDAT" source="BZDAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ANBWA" source="ANBWA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MOVCAT" source="MOVCAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DEPR_PERIOD" source="DEPR_PERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ANLGR" source="ANLGR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ANLGR2" source="ANLGR2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SETTLEMENT_RULE" source="SETTLEMENT_RULE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="UBZDT_PN" source="UBZDT_PN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XVABG_PN" source="XVABG_PN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROZS_PN" source="PROZS_PN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XMANPROPVAL_PN" source="XMANPROPVAL_PN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KALNR" source="KALNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VPRSV" source="VPRSV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MLAST" source="MLAST"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KZBWS" source="KZBWS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XOBEW" source="XOBEW"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SOBKZ" source="SOBKZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VTSTAMP" source="VTSTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAT_KDAUF" source="MAT_KDAUF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAT_KDPOS" source="MAT_KDPOS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAT_PSPNR" source="MAT_PSPNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAT_PS_POSID" source="MAT_PS_POSID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAT_LIFNR" source="MAT_LIFNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BWTAR" source="BWTAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BWKEY" source="BWKEY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HPEINH" source="HPEINH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KPEINH" source="KPEINH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OPEINH" source="OPEINH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VPEINH" source="VPEINH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MLPTYP" source="MLPTYP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MLCATEG" source="MLCATEG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QSBVALT" source="QSBVALT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QSPROCESS" source="QSPROCESS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PERART" source="PERART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MLPOSNR" source="MLPOSNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUKRS_SENDER" source="BUKRS_SENDER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RACCT_SENDER" source="RACCT_SENDER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACCAS_SENDER" source="ACCAS_SENDER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACCASTY_SENDER" source="ACCASTY_SENDER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OBJNR" source="OBJNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRKFT" source="HRKFT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HKGRP" source="HKGRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PAROB1" source="PAROB1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PAROBSRC" source="PAROBSRC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="USPOB" source="USPOB"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BELKZ" source="CO_BELKZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BEKNZ" source="CO_BEKNZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BELTP" source="BELTP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MUVFLG" source="MUVFLG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GKONT" source="GKONT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GKOAR" source="GKOAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ERLKZ" source="ERLKZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PERNR" source="PERNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PAOBJNR" source="PAOBJNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="XPAOBJNR_CO_REL" source="XPAOBJNR_CO_REL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCOPE" source="SCOPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOGSYSO" source="LOGSYSO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PBUKRS" source="PBUKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSCOPE" source="PSCOPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOGSYSP" source="LOGSYSP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BWSTRAT" source="BWSTRAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OBJNR_HK" source="OBJNR_HK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AUFNR_ORG" source="AUFNR_ORG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="UKOSTL" source="UKOSTL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ULSTAR" source="ULSTAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="UPRZNR" source="UPRZNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACCAS" source="ACCAS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACCASTY" source="ACCASTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LSTAR" source="LSTAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AUFNR" source="AUFNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AUTYP" source="AUTYP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PS_PSP_PNR" source="PS_PSP_PNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PS_POSID" source="PS_POSID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PS_PSPID" source="PS_PSPID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NPLNR" source="NPLNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NPLNR_VORGN" source="NPLNR_VORGN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRZNR" source="PRZNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KSTRG" source="KSTRG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BEMOT" source="BEMOT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RSRCE" source="RSRCE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="QMNUM" source="QMNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ERKRS" source="ERKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PACCAS" source="PACCAS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PACCASTY" source="PACCASTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PLSTAR" source="PLSTAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PAUFNR" source="PAUFNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PAUTYP" source="PAUTYP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PPS_POSID" source="PPS_POSID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PPS_PSPID" source="PPS_PSPID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PKDAUF" source="PKDAUF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PKDPOS" source="PKDPOS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PPAOBJNR" source="PPAOBJNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PNPLNR" source="PNPLNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PNPLNR_VORGN" source="PNPLNR_VORGN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PPRZNR" source="PPRZNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PKSTRG" source="PKSTRG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_ACCASTY_N1" source="CO_ACCASTY_N1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_ACCASTY_N2" source="CO_ACCASTY_N2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_ACCASTY_N3" source="CO_ACCASTY_N3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_ZLENR" source="CO_ZLENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BELNR" source="CO_BELNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BUZEI" source="CO_BUZEI"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BUZEI1" source="CO_BUZEI1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BUZEI2" source="CO_BUZEI2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BUZEI5" source="CO_BUZEI5"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BUZEI6" source="CO_BUZEI6"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_BUZEI7" source="CO_BUZEI7"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_REFBZ" source="CO_REFBZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_REFBZ1" source="CO_REFBZ1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_REFBZ2" source="CO_REFBZ2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_REFBZ5" source="CO_REFBZ5"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_REFBZ6" source="CO_REFBZ6"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CO_REFBZ7" source="CO_REFBZ7"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WORK_ITEM_ID" source="WORK_ITEM_ID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FKART" source="FKART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VKORG" source="VKORG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VTWEG" source="VTWEG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SPART" source="SPART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MATNR_COPA" source="MATNR_COPA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MATKL" source="MATKL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KDGRP" source="KDGRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LAND1" source="LAND1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BRSCH" source="BRSCH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BZIRK" source="BZIRK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KUNRE" source="KUNRE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KUNWE" source="KUNWE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KONZS" source="KONZS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACDOC_COPA_EEW_DUMMY_PA" source="ACDOC_COPA_EEW_DUMMY_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WWCP_PA" source="WWCP_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WWDC_PA" source="WWDC_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WWPC_PA" source="WWPC_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WWSC_PA" source="WWSC_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WWTH_PA" source="WWTH_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WWHC_PA" source="WWHC_PA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RE_BUKRS" source="RE_BUKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RE_ACCOUNT" source="RE_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIKRS" source="FIKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISTL" source="FISTL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MEASURE" source="MEASURE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RFUND" source="RFUND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RGRANT_NBR" source="RGRANT_NBR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBUDGET_PD" source="RBUDGET_PD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SFUND" source="SFUND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SGRANT_NBR" source="SGRANT_NBR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SBUDGET_PD" source="SBUDGET_PD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VNAME" source="VNAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EGRUP" source="EGRUP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECID" source="RECID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VPTNR" source="VPTNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BTYPE" source="BTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ETYPE" source="ETYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRODPER" source="PRODPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SWENR" source="SWENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SGENR" source="SGENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SGRNR" source="SGRNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SMENR" source="SMENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECNNR" source="RECNNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SNKSL" source="SNKSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEMPSL" source="SEMPSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DABRZ" source="DABRZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSWENR" source="PSWENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSGENR" source="PSGENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSGRNR" source="PSGRNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSMENR" source="PSMENR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRECNNR" source="PRECNNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSNKSL" source="PSNKSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PSEMPSL" source="PSEMPSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PDABRZ" source="PDABRZ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACDOC_EEW_DUMMY" source="ACDOC_EEW_DUMMY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DUMMY_INCL_EEW_COBL" source="DUMMY_INCL_EEW_COBL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FUP_ACTION" source="FUP_ACTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MIG_SOURCE" source="MIG_SOURCE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MIG_DOCLN" source="MIG_DOCLN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_DATAAGING" source="_DATAAGING"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection">
+    <descriptions/>
+    <attributes>
+      <attribute id="RCLNT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection" columnName="RCLNT"/>
+      </attribute>
+      <attribute id="RLDNR" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Ledger in General Ledger Accounting"/>
+        <keyMapping columnObjectName="Projection" columnName="RLDNR"/>
+      </attribute>
+      <attribute id="RBUKRS" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code"/>
+        <keyMapping columnObjectName="Projection" columnName="RBUKRS"/>
+      </attribute>
+      <attribute id="GJAHR" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year"/>
+        <keyMapping columnObjectName="Projection" columnName="GJAHR"/>
+      </attribute>
+      <attribute id="BELNR" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Accounting Document Number"/>
+        <keyMapping columnObjectName="Projection" columnName="BELNR"/>
+      </attribute>
+      <attribute id="DOCLN" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Six-Character Posting Item for Ledger"/>
+        <keyMapping columnObjectName="Projection" columnName="DOCLN"/>
+      </attribute>
+      <attribute id="RYEAR" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="General Ledger Fiscal Year"/>
+        <keyMapping columnObjectName="Projection" columnName="RYEAR"/>
+      </attribute>
+      <attribute id="RRCTY" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Record Type"/>
+        <keyMapping columnObjectName="Projection" columnName="RRCTY"/>
+      </attribute>
+      <attribute id="RMVCT" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction type"/>
+        <keyMapping columnObjectName="Projection" columnName="RMVCT"/>
+      </attribute>
+      <attribute id="VORGN" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Type for General Ledger"/>
+        <keyMapping columnObjectName="Projection" columnName="VORGN"/>
+      </attribute>
+      <attribute id="VRGNG" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="CO Business Transaction"/>
+        <keyMapping columnObjectName="Projection" columnName="VRGNG"/>
+      </attribute>
+      <attribute id="BTTYPE" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Transaction Type"/>
+        <keyMapping columnObjectName="Projection" columnName="BTTYPE"/>
+      </attribute>
+      <attribute id="AWTYP" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reference procedure"/>
+        <keyMapping columnObjectName="Projection" columnName="AWTYP"/>
+      </attribute>
+      <attribute id="AWSYS" order="14" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Logical system of source document"/>
+        <keyMapping columnObjectName="Projection" columnName="AWSYS"/>
+      </attribute>
+      <attribute id="AWORG" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reference Organizational Units"/>
+        <keyMapping columnObjectName="Projection" columnName="AWORG"/>
+      </attribute>
+      <attribute id="AWREF" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reference document number"/>
+        <keyMapping columnObjectName="Projection" columnName="AWREF"/>
+      </attribute>
+      <attribute id="AWITEM" order="17" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reference Document Line Item"/>
+        <keyMapping columnObjectName="Projection" columnName="AWITEM"/>
+      </attribute>
+      <attribute id="AWITGRP" order="18" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Group of Reference Document Line Items"/>
+        <keyMapping columnObjectName="Projection" columnName="AWITGRP"/>
+      </attribute>
+      <attribute id="SUBTA" order="19" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partial Document to be balanced to zero"/>
+        <keyMapping columnObjectName="Projection" columnName="SUBTA"/>
+      </attribute>
+      <attribute id="XREVERSING" order="20" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Item is reversing another item"/>
+        <keyMapping columnObjectName="Projection" columnName="XREVERSING"/>
+      </attribute>
+      <attribute id="XREVERSED" order="21" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Item is reversed"/>
+        <keyMapping columnObjectName="Projection" columnName="XREVERSED"/>
+      </attribute>
+      <attribute id="XTRUEREV" order="22" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: True reversal (i.e. cancellation)"/>
+        <keyMapping columnObjectName="Projection" columnName="XTRUEREV"/>
+      </attribute>
+      <attribute id="AWTYP_REV" order="23" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reversal: Reference Transaction of Document To Be Reversed"/>
+        <keyMapping columnObjectName="Projection" columnName="AWTYP_REV"/>
+      </attribute>
+      <attribute id="AWORG_REV" order="24" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reversal: Reverse Document Reference Organization"/>
+        <keyMapping columnObjectName="Projection" columnName="AWORG_REV"/>
+      </attribute>
+      <attribute id="AWREF_REV" order="25" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reversal: Reverse Document Reference Document Number"/>
+        <keyMapping columnObjectName="Projection" columnName="AWREF_REV"/>
+      </attribute>
+      <attribute id="SUBTA_REV" order="26" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reversal: Partial Document to be balanced to zero"/>
+        <keyMapping columnObjectName="Projection" columnName="SUBTA_REV"/>
+      </attribute>
+      <attribute id="XSETTLING" order="27" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Item is settling or transferring another item"/>
+        <keyMapping columnObjectName="Projection" columnName="XSETTLING"/>
+      </attribute>
+      <attribute id="XSETTLED" order="28" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Line item is settled or transferred"/>
+        <keyMapping columnObjectName="Projection" columnName="XSETTLED"/>
+      </attribute>
+      <attribute id="PREC_AWTYP" order="29" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Preceding Document Reference Transaction"/>
+        <keyMapping columnObjectName="Projection" columnName="PREC_AWTYP"/>
+      </attribute>
+      <attribute id="PREC_AWORG" order="30" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Preceding Document Reference Organizational Units"/>
+        <keyMapping columnObjectName="Projection" columnName="PREC_AWORG"/>
+      </attribute>
+      <attribute id="PREC_AWREF" order="31" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Preceding Document Reference Document Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PREC_AWREF"/>
+      </attribute>
+      <attribute id="PREC_AWITEM" order="32" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Preceding Reference Document Line Item"/>
+        <keyMapping columnObjectName="Projection" columnName="PREC_AWITEM"/>
+      </attribute>
+      <attribute id="PREC_SUBTA" order="33" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Preceding Partial Document to be balanced to zero"/>
+        <keyMapping columnObjectName="Projection" columnName="PREC_SUBTA"/>
+      </attribute>
+      <attribute id="PREC_AWMULT" order="34" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ID of multiple Preceding Document References"/>
+        <keyMapping columnObjectName="Projection" columnName="PREC_AWMULT"/>
+      </attribute>
+      <attribute id="XSECONDARY" order="35" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Secondary journal entry"/>
+        <keyMapping columnObjectName="Projection" columnName="XSECONDARY"/>
+      </attribute>
+      <attribute id="RTCUR" order="36" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Balance Transaction Currency"/>
+        <keyMapping columnObjectName="Projection" columnName="RTCUR"/>
+      </attribute>
+      <attribute id="RWCUR" order="37" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Currency"/>
+        <keyMapping columnObjectName="Projection" columnName="RWCUR"/>
+      </attribute>
+      <attribute id="RHCUR" order="38" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code Currency"/>
+        <keyMapping columnObjectName="Projection" columnName="RHCUR"/>
+      </attribute>
+      <attribute id="RKCUR" order="39" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Global Currency"/>
+        <keyMapping columnObjectName="Projection" columnName="RKCUR"/>
+      </attribute>
+      <attribute id="ROCUR" order="40" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 1"/>
+        <keyMapping columnObjectName="Projection" columnName="ROCUR"/>
+      </attribute>
+      <attribute id="RVCUR" order="41" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 2"/>
+        <keyMapping columnObjectName="Projection" columnName="RVCUR"/>
+      </attribute>
+      <attribute id="RBCUR" order="42" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 3"/>
+        <keyMapping columnObjectName="Projection" columnName="RBCUR"/>
+      </attribute>
+      <attribute id="RCCUR" order="43" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 4"/>
+        <keyMapping columnObjectName="Projection" columnName="RCCUR"/>
+      </attribute>
+      <attribute id="RDCUR" order="44" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 5"/>
+        <keyMapping columnObjectName="Projection" columnName="RDCUR"/>
+      </attribute>
+      <attribute id="RECUR" order="45" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 6"/>
+        <keyMapping columnObjectName="Projection" columnName="RECUR"/>
+      </attribute>
+      <attribute id="RFCUR" order="46" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 7"/>
+        <keyMapping columnObjectName="Projection" columnName="RFCUR"/>
+      </attribute>
+      <attribute id="RGCUR" order="47" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Freely Defined Currency 8"/>
+        <keyMapping columnObjectName="Projection" columnName="RGCUR"/>
+      </attribute>
+      <attribute id="RCO_OCUR" order="48" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="CO Object Currency"/>
+        <keyMapping columnObjectName="Projection" columnName="RCO_OCUR"/>
+      </attribute>
+      <attribute id="RUNIT" order="49" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Base Unit of Measure"/>
+        <keyMapping columnObjectName="Projection" columnName="RUNIT"/>
+      </attribute>
+      <attribute id="RVUNIT" order="50" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Unit of Measure for Valuation Quantity"/>
+        <keyMapping columnObjectName="Projection" columnName="RVUNIT"/>
+      </attribute>
+      <attribute id="RRUNIT" order="51" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Unit of Measure for Reference Quantity"/>
+        <keyMapping columnObjectName="Projection" columnName="RRUNIT"/>
+      </attribute>
+      <attribute id="QUNIT1" order="52" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Additional Unit of Measure 1"/>
+        <keyMapping columnObjectName="Projection" columnName="QUNIT1"/>
+      </attribute>
+      <attribute id="QUNIT2" order="53" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Additional Unit of Measure 2"/>
+        <keyMapping columnObjectName="Projection" columnName="QUNIT2"/>
+      </attribute>
+      <attribute id="QUNIT3" order="54" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Additional Unit of Measure 3"/>
+        <keyMapping columnObjectName="Projection" columnName="QUNIT3"/>
+      </attribute>
+      <attribute id="RACCT" order="55" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Account Number"/>
+        <keyMapping columnObjectName="Projection" columnName="RACCT"/>
+      </attribute>
+      <attribute id="RCNTR" order="56" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center"/>
+        <keyMapping columnObjectName="Projection" columnName="RCNTR"/>
+      </attribute>
+      <attribute id="PRCTR" order="57" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Projection" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="RFAREA" order="58" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Functional Area"/>
+        <keyMapping columnObjectName="Projection" columnName="RFAREA"/>
+      </attribute>
+      <attribute id="RBUSA" order="59" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Area"/>
+        <keyMapping columnObjectName="Projection" columnName="RBUSA"/>
+      </attribute>
+      <attribute id="KOKRS" order="60" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="Projection" columnName="KOKRS"/>
+      </attribute>
+      <attribute id="SEGMENT" order="61" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Segment for Segmental Reporting"/>
+        <keyMapping columnObjectName="Projection" columnName="SEGMENT"/>
+      </attribute>
+      <attribute id="SCNTR" order="62" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sender cost center"/>
+        <keyMapping columnObjectName="Projection" columnName="SCNTR"/>
+      </attribute>
+      <attribute id="PPRCTR" order="63" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Profit Center"/>
+        <keyMapping columnObjectName="Projection" columnName="PPRCTR"/>
+      </attribute>
+      <attribute id="SFAREA" order="64" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Functional Area"/>
+        <keyMapping columnObjectName="Projection" columnName="SFAREA"/>
+      </attribute>
+      <attribute id="SBUSA" order="65" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Trading partner's business area"/>
+        <keyMapping columnObjectName="Projection" columnName="SBUSA"/>
+      </attribute>
+      <attribute id="RASSC" order="66" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company ID of trading partner"/>
+        <keyMapping columnObjectName="Projection" columnName="RASSC"/>
+      </attribute>
+      <attribute id="PSEGMENT" order="67" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Segment for Segmental Reporting"/>
+        <keyMapping columnObjectName="Projection" columnName="PSEGMENT"/>
+      </attribute>
+      <attribute id="DRCRK" order="127" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Debit/Credit Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="DRCRK"/>
+      </attribute>
+      <attribute id="POPER" order="128" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting period"/>
+        <keyMapping columnObjectName="Projection" columnName="POPER"/>
+      </attribute>
+      <attribute id="PERIV" order="129" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year Variant"/>
+        <keyMapping columnObjectName="Projection" columnName="PERIV"/>
+      </attribute>
+      <attribute id="FISCYEARPER" order="130" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Period/year"/>
+        <keyMapping columnObjectName="Projection" columnName="FISCYEARPER"/>
+      </attribute>
+      <attribute id="BUDAT" order="131" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting Date in the Document"/>
+        <keyMapping columnObjectName="Projection" columnName="BUDAT"/>
+      </attribute>
+      <attribute id="BLDAT" order="132" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document Date in Document"/>
+        <keyMapping columnObjectName="Projection" columnName="BLDAT"/>
+      </attribute>
+      <attribute id="BLART" order="133" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document type"/>
+        <keyMapping columnObjectName="Projection" columnName="BLART"/>
+      </attribute>
+      <attribute id="BUZEI" order="134" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Number of Line Item Within Accounting Document"/>
+        <keyMapping columnObjectName="Projection" columnName="BUZEI"/>
+      </attribute>
+      <attribute id="ZUONR" order="135" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Assignment number"/>
+        <keyMapping columnObjectName="Projection" columnName="ZUONR"/>
+      </attribute>
+      <attribute id="BSCHL" order="136" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting Key"/>
+        <keyMapping columnObjectName="Projection" columnName="BSCHL"/>
+      </attribute>
+      <attribute id="BSTAT" order="137" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document Status"/>
+        <keyMapping columnObjectName="Projection" columnName="BSTAT"/>
+      </attribute>
+      <attribute id="LINETYPE" order="138" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item Category"/>
+        <keyMapping columnObjectName="Projection" columnName="LINETYPE"/>
+      </attribute>
+      <attribute id="KTOSL" order="139" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Key"/>
+        <keyMapping columnObjectName="Projection" columnName="KTOSL"/>
+      </attribute>
+      <attribute id="SLALITTYPE" order="140" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Subledger-Specific Line Item Type"/>
+        <keyMapping columnObjectName="Projection" columnName="SLALITTYPE"/>
+      </attribute>
+      <attribute id="XSPLITMOD" order="141" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item Changed by Document Splitting"/>
+        <keyMapping columnObjectName="Projection" columnName="XSPLITMOD"/>
+      </attribute>
+      <attribute id="USNAM" order="142" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="User Name"/>
+        <keyMapping columnObjectName="Projection" columnName="USNAM"/>
+      </attribute>
+      <attribute id="EPRCTR" order="144" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner profit center for elimination of internal business"/>
+        <keyMapping columnObjectName="Projection" columnName="EPRCTR"/>
+      </attribute>
+      <attribute id="RHOART" order="145" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type of origin object (EC-PCA)"/>
+        <keyMapping columnObjectName="Projection" columnName="RHOART"/>
+      </attribute>
+      <attribute id="GLACCOUNT_TYPE" order="146" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type of a General Ledger Account"/>
+        <keyMapping columnObjectName="Projection" columnName="GLACCOUNT_TYPE"/>
+      </attribute>
+      <attribute id="KTOPL" order="147" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Chart of Accounts"/>
+        <keyMapping columnObjectName="Projection" columnName="KTOPL"/>
+      </attribute>
+      <attribute id="LOKKT" order="148" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Alternative Account Number in Company Code"/>
+        <keyMapping columnObjectName="Projection" columnName="LOKKT"/>
+      </attribute>
+      <attribute id="KTOP2" order="149" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Chart of Accounts According to Country Legislation"/>
+        <keyMapping columnObjectName="Projection" columnName="KTOP2"/>
+      </attribute>
+      <attribute id="REBZG" order="150" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document No. of the Invoice to Which the Transaction Belongs"/>
+        <keyMapping columnObjectName="Projection" columnName="REBZG"/>
+      </attribute>
+      <attribute id="REBZJ" order="151" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year of the Relevant Invoice (for Credit Memo)"/>
+        <keyMapping columnObjectName="Projection" columnName="REBZJ"/>
+      </attribute>
+      <attribute id="REBZZ" order="152" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Line Item in the Relevant Invoice"/>
+        <keyMapping columnObjectName="Projection" columnName="REBZZ"/>
+      </attribute>
+      <attribute id="REBZT" order="153" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Follow-On Document Type"/>
+        <keyMapping columnObjectName="Projection" columnName="REBZT"/>
+      </attribute>
+      <attribute id="RBEST" order="154" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Category of Reference Purchase Order"/>
+        <keyMapping columnObjectName="Projection" columnName="RBEST"/>
+      </attribute>
+      <attribute id="EBELN" order="155" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Purchasing Document Number"/>
+        <keyMapping columnObjectName="Projection" columnName="EBELN"/>
+      </attribute>
+      <attribute id="EBELP" order="156" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item Number of Purchasing Document"/>
+        <keyMapping columnObjectName="Projection" columnName="EBELP"/>
+      </attribute>
+      <attribute id="ZEKKN" order="157" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sequential Number of Account Assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="ZEKKN"/>
+      </attribute>
+      <attribute id="SGTXT" order="158" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item Text"/>
+        <keyMapping columnObjectName="Projection" columnName="SGTXT"/>
+      </attribute>
+      <attribute id="KDAUF" order="159" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Order Number"/>
+        <keyMapping columnObjectName="Projection" columnName="KDAUF"/>
+      </attribute>
+      <attribute id="KDPOS" order="160" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item number in Sales Order"/>
+        <keyMapping columnObjectName="Projection" columnName="KDPOS"/>
+      </attribute>
+      <attribute id="MATNR" order="161" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Material Number"/>
+        <keyMapping columnObjectName="Projection" columnName="MATNR"/>
+      </attribute>
+      <attribute id="WERKS" order="162" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Plant"/>
+        <keyMapping columnObjectName="Projection" columnName="WERKS"/>
+      </attribute>
+      <attribute id="LIFNR" order="163" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Account Number of Vendor or Creditor"/>
+        <keyMapping columnObjectName="Projection" columnName="LIFNR"/>
+      </attribute>
+      <attribute id="KUNNR" order="164" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Customer Number"/>
+        <keyMapping columnObjectName="Projection" columnName="KUNNR"/>
+      </attribute>
+      <attribute id="FBUDA" order="165" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Date on which services rendered"/>
+        <keyMapping columnObjectName="Projection" columnName="FBUDA"/>
+      </attribute>
+      <attribute id="KOART" order="166" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Account type"/>
+        <keyMapping columnObjectName="Projection" columnName="KOART"/>
+      </attribute>
+      <attribute id="UMSKZ" order="167" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Special G/L Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="UMSKZ"/>
+      </attribute>
+      <attribute id="MWSKZ" order="168" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Tax on sales/purchases code"/>
+        <keyMapping columnObjectName="Projection" columnName="MWSKZ"/>
+      </attribute>
+      <attribute id="HBKID" order="169" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Short key for a house bank"/>
+        <keyMapping columnObjectName="Projection" columnName="HBKID"/>
+      </attribute>
+      <attribute id="HKTID" order="170" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ID for account details"/>
+        <keyMapping columnObjectName="Projection" columnName="HKTID"/>
+      </attribute>
+      <attribute id="XOPVW" order="171" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Open Item Management?"/>
+        <keyMapping columnObjectName="Projection" columnName="XOPVW"/>
+      </attribute>
+      <attribute id="AUGDT" order="172" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Clearing Date"/>
+        <keyMapping columnObjectName="Projection" columnName="AUGDT"/>
+      </attribute>
+      <attribute id="AUGBL" order="173" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document Number of the Clearing Document"/>
+        <keyMapping columnObjectName="Projection" columnName="AUGBL"/>
+      </attribute>
+      <attribute id="AUGGJ" order="174" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year of Clearing Document"/>
+        <keyMapping columnObjectName="Projection" columnName="AUGGJ"/>
+      </attribute>
+      <attribute id="AFABE" order="175" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Depreciation Area Real or Derived"/>
+        <keyMapping columnObjectName="Projection" columnName="AFABE"/>
+      </attribute>
+      <attribute id="ANLN1" order="176" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Main Asset Number"/>
+        <keyMapping columnObjectName="Projection" columnName="ANLN1"/>
+      </attribute>
+      <attribute id="ANLN2" order="177" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Asset Subnumber"/>
+        <keyMapping columnObjectName="Projection" columnName="ANLN2"/>
+      </attribute>
+      <attribute id="BZDAT" order="178" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Asset Value Date"/>
+        <keyMapping columnObjectName="Projection" columnName="BZDAT"/>
+      </attribute>
+      <attribute id="ANBWA" order="179" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Asset Transaction Type"/>
+        <keyMapping columnObjectName="Projection" columnName="ANBWA"/>
+      </attribute>
+      <attribute id="MOVCAT" order="180" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Type Category"/>
+        <keyMapping columnObjectName="Projection" columnName="MOVCAT"/>
+      </attribute>
+      <attribute id="DEPR_PERIOD" order="181" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting Period of Depreciation"/>
+        <keyMapping columnObjectName="Projection" columnName="DEPR_PERIOD"/>
+      </attribute>
+      <attribute id="ANLGR" order="182" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Group Asset"/>
+        <keyMapping columnObjectName="Projection" columnName="ANLGR"/>
+      </attribute>
+      <attribute id="ANLGR2" order="183" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Subnumber of Group Asset"/>
+        <keyMapping columnObjectName="Projection" columnName="ANLGR2"/>
+      </attribute>
+      <attribute id="SETTLEMENT_RULE" order="184" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Distribution Rule Group"/>
+        <keyMapping columnObjectName="Projection" columnName="SETTLEMENT_RULE"/>
+      </attribute>
+      <attribute id="UBZDT_PN" order="185" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Original Value Date of Transaction"/>
+        <keyMapping columnObjectName="Projection" columnName="UBZDT_PN"/>
+      </attribute>
+      <attribute id="XVABG_PN" order="186" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Post Complete Retirement"/>
+        <keyMapping columnObjectName="Projection" columnName="XVABG_PN"/>
+      </attribute>
+      <attribute id="XMANPROPVAL_PN" order="188" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator Proportional Values Entered Manually"/>
+        <keyMapping columnObjectName="Projection" columnName="XMANPROPVAL_PN"/>
+      </attribute>
+      <attribute id="KALNR" order="189" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Estimate Number for Cost Est. w/o Qty Structure"/>
+        <keyMapping columnObjectName="Projection" columnName="KALNR"/>
+      </attribute>
+      <attribute id="VPRSV" order="190" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Price control indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="VPRSV"/>
+      </attribute>
+      <attribute id="MLAST" order="191" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Material Price Determination: Control"/>
+        <keyMapping columnObjectName="Projection" columnName="MLAST"/>
+      </attribute>
+      <attribute id="KZBWS" order="192" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valuation of Special Stock"/>
+        <keyMapping columnObjectName="Projection" columnName="KZBWS"/>
+      </attribute>
+      <attribute id="XOBEW" order="193" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Vendor Stock Valuation Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="XOBEW"/>
+      </attribute>
+      <attribute id="SOBKZ" order="194" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Special Stock Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="SOBKZ"/>
+      </attribute>
+      <attribute id="MAT_KDAUF" order="196" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Document Number of Valuated Special Inventory"/>
+        <keyMapping columnObjectName="Projection" columnName="MAT_KDAUF"/>
+      </attribute>
+      <attribute id="MAT_KDPOS" order="197" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Document Item Number of Valuated Special Inventory"/>
+        <keyMapping columnObjectName="Projection" columnName="MAT_KDPOS"/>
+      </attribute>
+      <attribute id="MAT_PSPNR" order="198" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="WBS Element (internal) of Valuated Special Inventory"/>
+        <keyMapping columnObjectName="Projection" columnName="MAT_PSPNR"/>
+      </attribute>
+      <attribute id="MAT_PS_POSID" order="199" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="WBS Element (external) of Valuated Special Inventory"/>
+        <keyMapping columnObjectName="Projection" columnName="MAT_PS_POSID"/>
+      </attribute>
+      <attribute id="MAT_LIFNR" order="200" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Supplier of Valuated Special Inventory"/>
+        <keyMapping columnObjectName="Projection" columnName="MAT_LIFNR"/>
+      </attribute>
+      <attribute id="BWTAR" order="201" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valuation Type"/>
+        <keyMapping columnObjectName="Projection" columnName="BWTAR"/>
+      </attribute>
+      <attribute id="BWKEY" order="202" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valuation area"/>
+        <keyMapping columnObjectName="Projection" columnName="BWKEY"/>
+      </attribute>
+      <attribute id="MLPTYP" order="207" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Original Process Category"/>
+        <keyMapping columnObjectName="Projection" columnName="MLPTYP"/>
+      </attribute>
+      <attribute id="MLCATEG" order="208" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Category in Material Update Structure"/>
+        <keyMapping columnObjectName="Projection" columnName="MLCATEG"/>
+      </attribute>
+      <attribute id="QSBVALT" order="209" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Procurement Alternative/Process"/>
+        <keyMapping columnObjectName="Projection" columnName="QSBVALT"/>
+      </attribute>
+      <attribute id="QSPROCESS" order="210" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Production Process"/>
+        <keyMapping columnObjectName="Projection" columnName="QSPROCESS"/>
+      </attribute>
+      <attribute id="PERART" order="211" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type of Period"/>
+        <keyMapping columnObjectName="Projection" columnName="PERART"/>
+      </attribute>
+      <attribute id="MLPOSNR" order="212" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item in Material Ledger Document"/>
+        <keyMapping columnObjectName="Projection" columnName="MLPOSNR"/>
+      </attribute>
+      <attribute id="BUKRS_SENDER" order="213" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code in Sender System"/>
+        <keyMapping columnObjectName="Projection" columnName="BUKRS_SENDER"/>
+      </attribute>
+      <attribute id="RACCT_SENDER" order="214" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="General Ledger Account in Sender System"/>
+        <keyMapping columnObjectName="Projection" columnName="RACCT_SENDER"/>
+      </attribute>
+      <attribute id="ACCAS_SENDER" order="215" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Account Assignment in Sender System"/>
+        <keyMapping columnObjectName="Projection" columnName="ACCAS_SENDER"/>
+      </attribute>
+      <attribute id="ACCASTY_SENDER" order="216" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Account Assignment Type in Sender System"/>
+        <keyMapping columnObjectName="Projection" columnName="ACCASTY_SENDER"/>
+      </attribute>
+      <attribute id="OBJNR" order="217" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Object number"/>
+        <keyMapping columnObjectName="Projection" columnName="OBJNR"/>
+      </attribute>
+      <attribute id="HRKFT" order="218" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="CO Key Subnumber"/>
+        <keyMapping columnObjectName="Projection" columnName="HRKFT"/>
+      </attribute>
+      <attribute id="HKGRP" order="219" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Origin Group as Subdivision of Cost Element"/>
+        <keyMapping columnObjectName="Projection" columnName="HKGRP"/>
+      </attribute>
+      <attribute id="PAROB1" order="220" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Object (Always Filled)"/>
+        <keyMapping columnObjectName="Projection" columnName="PAROB1"/>
+      </attribute>
+      <attribute id="PAROBSRC" order="221" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source of PAROB: PAROB1 or type of partner object"/>
+        <keyMapping columnObjectName="Projection" columnName="PAROBSRC"/>
+      </attribute>
+      <attribute id="USPOB" order="222" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source Object (Cost Center/Activity Type)"/>
+        <keyMapping columnObjectName="Projection" columnName="USPOB"/>
+      </attribute>
+      <attribute id="CO_BELKZ" order="223" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="CO Debit/Credit Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BELKZ"/>
+      </attribute>
+      <attribute id="CO_BEKNZ" order="224" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Debit/Credit Indicator (Origin)"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BEKNZ"/>
+      </attribute>
+      <attribute id="BELTP" order="225" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Debit Type"/>
+        <keyMapping columnObjectName="Projection" columnName="BELTP"/>
+      </attribute>
+      <attribute id="MUVFLG" order="226" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Quantity Is Incomplete"/>
+        <keyMapping columnObjectName="Projection" columnName="MUVFLG"/>
+      </attribute>
+      <attribute id="GKONT" order="227" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Offsetting Account Number"/>
+        <keyMapping columnObjectName="Projection" columnName="GKONT"/>
+      </attribute>
+      <attribute id="GKOAR" order="228" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Offsetting Account Type"/>
+        <keyMapping columnObjectName="Projection" columnName="GKOAR"/>
+      </attribute>
+      <attribute id="ERLKZ" order="229" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Completion indicator for line item"/>
+        <keyMapping columnObjectName="Projection" columnName="ERLKZ"/>
+      </attribute>
+      <attribute id="PERNR" order="230" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Personnel Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PERNR"/>
+      </attribute>
+      <attribute id="PAOBJNR" order="231" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profitability Segment Number (CO-PA)"/>
+        <keyMapping columnObjectName="Projection" columnName="PAOBJNR"/>
+      </attribute>
+      <attribute id="XPAOBJNR_CO_REL" order="232" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Indicator: Profitability segm. relevant for CO compatibility"/>
+        <keyMapping columnObjectName="Projection" columnName="XPAOBJNR_CO_REL"/>
+      </attribute>
+      <attribute id="SCOPE" order="233" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Object Class"/>
+        <keyMapping columnObjectName="Projection" columnName="SCOPE"/>
+      </attribute>
+      <attribute id="LOGSYSO" order="234" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Logical System of Object"/>
+        <keyMapping columnObjectName="Projection" columnName="LOGSYSO"/>
+      </attribute>
+      <attribute id="PBUKRS" order="235" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code of Partner"/>
+        <keyMapping columnObjectName="Projection" columnName="PBUKRS"/>
+      </attribute>
+      <attribute id="PSCOPE" order="236" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Object Class"/>
+        <keyMapping columnObjectName="Projection" columnName="PSCOPE"/>
+      </attribute>
+      <attribute id="LOGSYSP" order="237" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Logical System of Partner Object"/>
+        <keyMapping columnObjectName="Projection" columnName="LOGSYSP"/>
+      </attribute>
+      <attribute id="BWSTRAT" order="238" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Strategy for Determining an Allocation Price"/>
+        <keyMapping columnObjectName="Projection" columnName="BWSTRAT"/>
+      </attribute>
+      <attribute id="OBJNR_HK" order="239" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Object Number of Origin Object"/>
+        <keyMapping columnObjectName="Projection" columnName="OBJNR_HK"/>
+      </attribute>
+      <attribute id="AUFNR_ORG" order="240" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Origin Order Number"/>
+        <keyMapping columnObjectName="Projection" columnName="AUFNR_ORG"/>
+      </attribute>
+      <attribute id="UKOSTL" order="241" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Origin Cost Center"/>
+        <keyMapping columnObjectName="Projection" columnName="UKOSTL"/>
+      </attribute>
+      <attribute id="ULSTAR" order="242" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Origin Activity"/>
+        <keyMapping columnObjectName="Projection" columnName="ULSTAR"/>
+      </attribute>
+      <attribute id="UPRZNR" order="243" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source: Business Process"/>
+        <keyMapping columnObjectName="Projection" columnName="UPRZNR"/>
+      </attribute>
+      <attribute id="ACCAS" order="244" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Account Assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="ACCAS"/>
+      </attribute>
+      <attribute id="ACCASTY" order="245" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Object Type"/>
+        <keyMapping columnObjectName="Projection" columnName="ACCASTY"/>
+      </attribute>
+      <attribute id="LSTAR" order="246" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Activity Type"/>
+        <keyMapping columnObjectName="Projection" columnName="LSTAR"/>
+      </attribute>
+      <attribute id="AUFNR" order="247" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Order Number"/>
+        <keyMapping columnObjectName="Projection" columnName="AUFNR"/>
+      </attribute>
+      <attribute id="AUTYP" order="248" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Order category"/>
+        <keyMapping columnObjectName="Projection" columnName="AUTYP"/>
+      </attribute>
+      <attribute id="PS_PSP_PNR" order="249" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Work Breakdown Structure Element (WBS Element)"/>
+        <keyMapping columnObjectName="Projection" columnName="PS_PSP_PNR"/>
+      </attribute>
+      <attribute id="PS_POSID" order="250" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Work Breakdown Structure Element (WBS Element)"/>
+        <keyMapping columnObjectName="Projection" columnName="PS_POSID"/>
+      </attribute>
+      <attribute id="PS_PSPID" order="251" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Project definition"/>
+        <keyMapping columnObjectName="Projection" columnName="PS_PSPID"/>
+      </attribute>
+      <attribute id="NPLNR" order="252" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Network Number for Account Assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="NPLNR"/>
+      </attribute>
+      <attribute id="NPLNR_VORGN" order="253" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Operation/Activity Number"/>
+        <keyMapping columnObjectName="Projection" columnName="NPLNR_VORGN"/>
+      </attribute>
+      <attribute id="PRZNR" order="254" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Process"/>
+        <keyMapping columnObjectName="Projection" columnName="PRZNR"/>
+      </attribute>
+      <attribute id="KSTRG" order="255" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Object"/>
+        <keyMapping columnObjectName="Projection" columnName="KSTRG"/>
+      </attribute>
+      <attribute id="BEMOT" order="256" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Accounting Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="BEMOT"/>
+      </attribute>
+      <attribute id="RSRCE" order="257" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Resource"/>
+        <keyMapping columnObjectName="Projection" columnName="RSRCE"/>
+      </attribute>
+      <attribute id="QMNUM" order="258" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Notification No"/>
+        <keyMapping columnObjectName="Projection" columnName="QMNUM"/>
+      </attribute>
+      <attribute id="ERKRS" order="259" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Operating concern"/>
+        <keyMapping columnObjectName="Projection" columnName="ERKRS"/>
+      </attribute>
+      <attribute id="PACCAS" order="260" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Account Assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="PACCAS"/>
+      </attribute>
+      <attribute id="PACCASTY" order="261" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Object Type"/>
+        <keyMapping columnObjectName="Projection" columnName="PACCASTY"/>
+      </attribute>
+      <attribute id="PLSTAR" order="262" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Activity"/>
+        <keyMapping columnObjectName="Projection" columnName="PLSTAR"/>
+      </attribute>
+      <attribute id="PAUFNR" order="263" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Order Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PAUFNR"/>
+      </attribute>
+      <attribute id="PAUTYP" order="264" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Order Category"/>
+        <keyMapping columnObjectName="Projection" columnName="PAUTYP"/>
+      </attribute>
+      <attribute id="PPS_POSID" order="265" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Work Breakdown Structure Element"/>
+        <keyMapping columnObjectName="Projection" columnName="PPS_POSID"/>
+      </attribute>
+      <attribute id="PPS_PSPID" order="266" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Project"/>
+        <keyMapping columnObjectName="Projection" columnName="PPS_PSPID"/>
+      </attribute>
+      <attribute id="PKDAUF" order="267" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Number of Partner Sales Order"/>
+        <keyMapping columnObjectName="Projection" columnName="PKDAUF"/>
+      </attribute>
+      <attribute id="PKDPOS" order="268" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Sales Order Item"/>
+        <keyMapping columnObjectName="Projection" columnName="PKDPOS"/>
+      </attribute>
+      <attribute id="PPAOBJNR" order="269" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner profitability segment number (CO-PA)"/>
+        <keyMapping columnObjectName="Projection" columnName="PPAOBJNR"/>
+      </attribute>
+      <attribute id="PNPLNR" order="270" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Project Network"/>
+        <keyMapping columnObjectName="Projection" columnName="PNPLNR"/>
+      </attribute>
+      <attribute id="PNPLNR_VORGN" order="271" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Project Network Activity"/>
+        <keyMapping columnObjectName="Projection" columnName="PNPLNR_VORGN"/>
+      </attribute>
+      <attribute id="PPRZNR" order="272" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Business Process"/>
+        <keyMapping columnObjectName="Projection" columnName="PPRZNR"/>
+      </attribute>
+      <attribute id="PKSTRG" order="273" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Cost Object"/>
+        <keyMapping columnObjectName="Projection" columnName="PKSTRG"/>
+      </attribute>
+      <attribute id="CO_ACCASTY_N1" order="274" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type of first statistical account assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_ACCASTY_N1"/>
+      </attribute>
+      <attribute id="CO_ACCASTY_N2" order="275" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type of second statistical account assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_ACCASTY_N2"/>
+      </attribute>
+      <attribute id="CO_ACCASTY_N3" order="276" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type of third statistical account assignment"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_ACCASTY_N3"/>
+      </attribute>
+      <attribute id="CO_ZLENR" order="277" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document Item Number"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_ZLENR"/>
+      </attribute>
+      <attribute id="CO_BELNR" order="278" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document Number"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BELNR"/>
+      </attribute>
+      <attribute id="CO_BUZEI" order="279" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting Row"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BUZEI"/>
+      </attribute>
+      <attribute id="CO_BUZEI1" order="280" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of CO item in first additional valuation"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BUZEI1"/>
+      </attribute>
+      <attribute id="CO_BUZEI2" order="281" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of CO item in second additional valuation"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BUZEI2"/>
+      </attribute>
+      <attribute id="CO_BUZEI5" order="282" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of CO item in valuation view 5"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BUZEI5"/>
+      </attribute>
+      <attribute id="CO_BUZEI6" order="283" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of CO item in valuation view 6"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BUZEI6"/>
+      </attribute>
+      <attribute id="CO_BUZEI7" order="284" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of CO item in valuation view 7"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_BUZEI7"/>
+      </attribute>
+      <attribute id="CO_REFBZ" order="285" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting Row of Reference Document"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_REFBZ"/>
+      </attribute>
+      <attribute id="CO_REFBZ1" order="286" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of reference document in first add'l valuation"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_REFBZ1"/>
+      </attribute>
+      <attribute id="CO_REFBZ2" order="287" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of reference document in second add'l valuation"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_REFBZ2"/>
+      </attribute>
+      <attribute id="CO_REFBZ5" order="288" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of reference document in valuation view 5"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_REFBZ5"/>
+      </attribute>
+      <attribute id="CO_REFBZ6" order="289" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of reference document in valuation view 6"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_REFBZ6"/>
+      </attribute>
+      <attribute id="CO_REFBZ7" order="290" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting row of reference document in valuation view 7"/>
+        <keyMapping columnObjectName="Projection" columnName="CO_REFBZ7"/>
+      </attribute>
+      <attribute id="WORK_ITEM_ID" order="291" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Work Item ID"/>
+        <keyMapping columnObjectName="Projection" columnName="WORK_ITEM_ID"/>
+      </attribute>
+      <attribute id="FKART" order="292" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Billing Type"/>
+        <keyMapping columnObjectName="Projection" columnName="FKART"/>
+      </attribute>
+      <attribute id="VKORG" order="293" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Organization"/>
+        <keyMapping columnObjectName="Projection" columnName="VKORG"/>
+      </attribute>
+      <attribute id="VTWEG" order="294" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Distribution Channel"/>
+        <keyMapping columnObjectName="Projection" columnName="VTWEG"/>
+      </attribute>
+      <attribute id="SPART" order="295" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division"/>
+        <keyMapping columnObjectName="Projection" columnName="SPART"/>
+      </attribute>
+      <attribute id="MATNR_COPA" order="296" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Product for profitability analysis"/>
+        <keyMapping columnObjectName="Projection" columnName="MATNR_COPA"/>
+      </attribute>
+      <attribute id="MATKL" order="297" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Material Group"/>
+        <keyMapping columnObjectName="Projection" columnName="MATKL"/>
+      </attribute>
+      <attribute id="KDGRP" order="298" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Customer Group"/>
+        <keyMapping columnObjectName="Projection" columnName="KDGRP"/>
+      </attribute>
+      <attribute id="LAND1" order="299" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Country Key"/>
+        <keyMapping columnObjectName="Projection" columnName="LAND1"/>
+      </attribute>
+      <attribute id="BRSCH" order="300" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Industry key"/>
+        <keyMapping columnObjectName="Projection" columnName="BRSCH"/>
+      </attribute>
+      <attribute id="BZIRK" order="301" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales District"/>
+        <keyMapping columnObjectName="Projection" columnName="BZIRK"/>
+      </attribute>
+      <attribute id="KUNRE" order="302" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Bill-to party"/>
+        <keyMapping columnObjectName="Projection" columnName="KUNRE"/>
+      </attribute>
+      <attribute id="KUNWE" order="303" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Ship-To Party"/>
+        <keyMapping columnObjectName="Projection" columnName="KUNWE"/>
+      </attribute>
+      <attribute id="KONZS" order="304" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Group key"/>
+        <keyMapping columnObjectName="Projection" columnName="KONZS"/>
+      </attribute>
+      <attribute id="ACDOC_COPA_EEW_DUMMY_PA" order="305" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Dummy function in length 1"/>
+        <keyMapping columnObjectName="Projection" columnName="ACDOC_COPA_EEW_DUMMY_PA"/>
+      </attribute>
+      <attribute id="WWCP_PA" order="306" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client/Payor"/>
+        <keyMapping columnObjectName="Projection" columnName="WWCP_PA"/>
+      </attribute>
+      <attribute id="WWDC_PA" order="307" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Delivery Channel"/>
+        <keyMapping columnObjectName="Projection" columnName="WWDC_PA"/>
+      </attribute>
+      <attribute id="WWPC_PA" order="308" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Product Class"/>
+        <keyMapping columnObjectName="Projection" columnName="WWPC_PA"/>
+      </attribute>
+      <attribute id="WWSC_PA" order="309" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Channel"/>
+        <keyMapping columnObjectName="Projection" columnName="WWSC_PA"/>
+      </attribute>
+      <attribute id="WWTH_PA" order="310" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Therapy"/>
+        <keyMapping columnObjectName="Projection" columnName="WWTH_PA"/>
+      </attribute>
+      <attribute id="WWHC_PA" order="311" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Health Class"/>
+        <keyMapping columnObjectName="Projection" columnName="WWHC_PA"/>
+      </attribute>
+      <attribute id="RE_BUKRS" order="312" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cash Ledger: Company Code for Expense/Revenue"/>
+        <keyMapping columnObjectName="Projection" columnName="RE_BUKRS"/>
+      </attribute>
+      <attribute id="RE_ACCOUNT" order="313" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cash Ledger: Expense or Revenue Account"/>
+        <keyMapping columnObjectName="Projection" columnName="RE_ACCOUNT"/>
+      </attribute>
+      <attribute id="FIKRS" order="314" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Financial Management Area"/>
+        <keyMapping columnObjectName="Projection" columnName="FIKRS"/>
+      </attribute>
+      <attribute id="FISTL" order="315" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Funds Center"/>
+        <keyMapping columnObjectName="Projection" columnName="FISTL"/>
+      </attribute>
+      <attribute id="MEASURE" order="316" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Funded Program"/>
+        <keyMapping columnObjectName="Projection" columnName="MEASURE"/>
+      </attribute>
+      <attribute id="RFUND" order="317" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Category1"/>
+        <keyMapping columnObjectName="Projection" columnName="RFUND"/>
+      </attribute>
+      <attribute id="RGRANT_NBR" order="318" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Grant"/>
+        <keyMapping columnObjectName="Projection" columnName="RGRANT_NBR"/>
+      </attribute>
+      <attribute id="RBUDGET_PD" order="319" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FM: Budget Period"/>
+        <keyMapping columnObjectName="Projection" columnName="RBUDGET_PD"/>
+      </attribute>
+      <attribute id="SFUND" order="320" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Fund"/>
+        <keyMapping columnObjectName="Projection" columnName="SFUND"/>
+      </attribute>
+      <attribute id="SGRANT_NBR" order="321" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Grant"/>
+        <keyMapping columnObjectName="Projection" columnName="SGRANT_NBR"/>
+      </attribute>
+      <attribute id="SBUDGET_PD" order="322" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FM: Partner Budget Period"/>
+        <keyMapping columnObjectName="Projection" columnName="SBUDGET_PD"/>
+      </attribute>
+      <attribute id="VNAME" order="323" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Joint venture"/>
+        <keyMapping columnObjectName="Projection" columnName="VNAME"/>
+      </attribute>
+      <attribute id="EGRUP" order="324" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Equity group"/>
+        <keyMapping columnObjectName="Projection" columnName="EGRUP"/>
+      </attribute>
+      <attribute id="RECID" order="325" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Recovery Indicator"/>
+        <keyMapping columnObjectName="Projection" columnName="RECID"/>
+      </attribute>
+      <attribute id="VPTNR" order="326" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner account number"/>
+        <keyMapping columnObjectName="Projection" columnName="VPTNR"/>
+      </attribute>
+      <attribute id="BTYPE" order="327" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Payroll Type"/>
+        <keyMapping columnObjectName="Projection" columnName="BTYPE"/>
+      </attribute>
+      <attribute id="ETYPE" order="328" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Equity type"/>
+        <keyMapping columnObjectName="Projection" columnName="ETYPE"/>
+      </attribute>
+      <attribute id="PRODPER" order="329" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Production Month (Date to find period and year)"/>
+        <keyMapping columnObjectName="Projection" columnName="PRODPER"/>
+      </attribute>
+      <attribute id="SWENR" order="330" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Entity Number"/>
+        <keyMapping columnObjectName="Projection" columnName="SWENR"/>
+      </attribute>
+      <attribute id="SGENR" order="331" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Number of Building"/>
+        <keyMapping columnObjectName="Projection" columnName="SGENR"/>
+      </attribute>
+      <attribute id="SGRNR" order="332" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Number of Land"/>
+        <keyMapping columnObjectName="Projection" columnName="SGRNR"/>
+      </attribute>
+      <attribute id="SMENR" order="333" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Number of Rental Object"/>
+        <keyMapping columnObjectName="Projection" columnName="SMENR"/>
+      </attribute>
+      <attribute id="RECNNR" order="334" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Contract Number"/>
+        <keyMapping columnObjectName="Projection" columnName="RECNNR"/>
+      </attribute>
+      <attribute id="SNKSL" order="335" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Service Charge Key"/>
+        <keyMapping columnObjectName="Projection" columnName="SNKSL"/>
+      </attribute>
+      <attribute id="SEMPSL" order="336" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Settlement Unit"/>
+        <keyMapping columnObjectName="Projection" columnName="SEMPSL"/>
+      </attribute>
+      <attribute id="DABRZ" order="337" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reference date for settlement"/>
+        <keyMapping columnObjectName="Projection" columnName="DABRZ"/>
+      </attribute>
+      <attribute id="PSWENR" order="338" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Business Entity Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PSWENR"/>
+      </attribute>
+      <attribute id="PSGENR" order="339" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Building Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PSGENR"/>
+      </attribute>
+      <attribute id="PSGRNR" order="340" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Land Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PSGRNR"/>
+      </attribute>
+      <attribute id="PSMENR" order="341" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Number of Partner Rental Unit"/>
+        <keyMapping columnObjectName="Projection" columnName="PSMENR"/>
+      </attribute>
+      <attribute id="PRECNNR" order="342" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Contract Number"/>
+        <keyMapping columnObjectName="Projection" columnName="PRECNNR"/>
+      </attribute>
+      <attribute id="PSNKSL" order="343" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Service Charge Key"/>
+        <keyMapping columnObjectName="Projection" columnName="PSNKSL"/>
+      </attribute>
+      <attribute id="PSEMPSL" order="344" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Settlement Unit"/>
+        <keyMapping columnObjectName="Projection" columnName="PSEMPSL"/>
+      </attribute>
+      <attribute id="PDABRZ" order="345" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Partner Reference Date for Settlement"/>
+        <keyMapping columnObjectName="Projection" columnName="PDABRZ"/>
+      </attribute>
+      <attribute id="ACDOC_EEW_DUMMY" order="346" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Dummy function in length 1"/>
+        <keyMapping columnObjectName="Projection" columnName="ACDOC_EEW_DUMMY"/>
+      </attribute>
+      <attribute id="ZZWEEK" order="347" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Projection" columnName="ZZWEEK"/>
+      </attribute>
+      <attribute id="DUMMY_INCL_EEW_COBL" order="348" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Dummy function in length 1"/>
+        <keyMapping columnObjectName="Projection" columnName="DUMMY_INCL_EEW_COBL"/>
+      </attribute>
+      <attribute id="FUP_ACTION" order="349" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Follow-up action for this Universal Journal Entry Line Item"/>
+        <keyMapping columnObjectName="Projection" columnName="FUP_ACTION"/>
+      </attribute>
+      <attribute id="MIG_SOURCE" order="350" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source of a migrated journal entry item"/>
+        <keyMapping columnObjectName="Projection" columnName="MIG_SOURCE"/>
+      </attribute>
+      <attribute id="MIG_DOCLN" order="351" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Item ID of migrated G/L line item"/>
+        <keyMapping columnObjectName="Projection" columnName="MIG_DOCLN"/>
+      </attribute>
+      <attribute id="_DATAAGING" order="352" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Data Filter Value for Data Aging"/>
+        <keyMapping columnObjectName="Projection" columnName="_DATAAGING"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="TSL" order="68" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Balance Transaction Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="TSL"/>
+      </measure>
+      <measure id="WSL" order="69" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Transaction Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="WSL"/>
+      </measure>
+      <measure id="WSL2" order="70" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Group Valuation Amount in Transaction Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="WSL2"/>
+      </measure>
+      <measure id="WSL3" order="71" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Profit-Center Valuation Amount in Transaction Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="WSL3"/>
+      </measure>
+      <measure id="HSL" order="72" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Company Code Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HSL"/>
+      </measure>
+      <measure id="KSL" order="73" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KSL"/>
+      </measure>
+      <measure id="OSL" order="74" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 1"/>
+        <measureMapping columnObjectName="Projection" columnName="OSL"/>
+      </measure>
+      <measure id="VSL" order="75" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 2"/>
+        <measureMapping columnObjectName="Projection" columnName="VSL"/>
+      </measure>
+      <measure id="BSL" order="76" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 3"/>
+        <measureMapping columnObjectName="Projection" columnName="BSL"/>
+      </measure>
+      <measure id="CSL" order="77" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 4"/>
+        <measureMapping columnObjectName="Projection" columnName="CSL"/>
+      </measure>
+      <measure id="DSL" order="78" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 5"/>
+        <measureMapping columnObjectName="Projection" columnName="DSL"/>
+      </measure>
+      <measure id="ESL" order="79" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 6"/>
+        <measureMapping columnObjectName="Projection" columnName="ESL"/>
+      </measure>
+      <measure id="FSL" order="80" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 7"/>
+        <measureMapping columnObjectName="Projection" columnName="FSL"/>
+      </measure>
+      <measure id="GSL" order="81" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in Freely Defined Currency 8"/>
+        <measureMapping columnObjectName="Projection" columnName="GSL"/>
+      </measure>
+      <measure id="KFSL" order="82" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Fixed Amount in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KFSL"/>
+      </measure>
+      <measure id="KFSL2" order="83" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Group Valuation Fixed Amount in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KFSL2"/>
+      </measure>
+      <measure id="KFSL3" order="84" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="PrCtr Valuation Fixed Amount in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KFSL3"/>
+      </measure>
+      <measure id="PSL" order="85" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Total Price Variance in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="PSL"/>
+      </measure>
+      <measure id="PSL2" order="86" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Group Valuation Total Price Variance in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="PSL2"/>
+      </measure>
+      <measure id="PSL3" order="87" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="PrCtr Valuation Total Price Variance in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="PSL3"/>
+      </measure>
+      <measure id="PFSL" order="88" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Fixed Price Variance in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="PFSL"/>
+      </measure>
+      <measure id="PFSL2" order="89" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Group Valuation Fixed Price Variance in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="PFSL2"/>
+      </measure>
+      <measure id="PFSL3" order="90" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="PrCtr Valuation Fixed Price Variance in Global Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="PFSL3"/>
+      </measure>
+      <measure id="CO_OSL" order="91" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount in CO Object Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="CO_OSL"/>
+      </measure>
+      <measure id="HSALK3" order="92" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Inventory Value in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HSALK3"/>
+      </measure>
+      <measure id="KSALK3" order="93" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Inventory Value in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KSALK3"/>
+      </measure>
+      <measure id="OSALK3" order="94" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Inventory Value in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OSALK3"/>
+      </measure>
+      <measure id="VSALK3" order="95" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Inventory Value in Fourth Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VSALK3"/>
+      </measure>
+      <measure id="HSALKV" order="96" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Inventory Value in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HSALKV"/>
+      </measure>
+      <measure id="KSALKV" order="97" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Inventory Value in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KSALKV"/>
+      </measure>
+      <measure id="OSALKV" order="98" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Inventory Value in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OSALKV"/>
+      </measure>
+      <measure id="VSALKV" order="99" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Inventory Value in Fourth Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VSALKV"/>
+      </measure>
+      <measure id="HPVPRS" order="100" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Moving Average Price in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HPVPRS"/>
+      </measure>
+      <measure id="KPVPRS" order="101" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Moving Average Price in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KPVPRS"/>
+      </measure>
+      <measure id="OPVPRS" order="102" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Moving Average Price in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OPVPRS"/>
+      </measure>
+      <measure id="VPVPRS" order="103" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Moving Average Price in Fourth Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VPVPRS"/>
+      </measure>
+      <measure id="HSTPRS" order="104" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Standard Price in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HSTPRS"/>
+      </measure>
+      <measure id="KSTPRS" order="105" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Standard Price in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KSTPRS"/>
+      </measure>
+      <measure id="OSTPRS" order="106" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Standard Price in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OSTPRS"/>
+      </measure>
+      <measure id="VSTPRS" order="107" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Standard Price in Fourth Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VSTPRS"/>
+      </measure>
+      <measure id="HSLALT" order="108" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Value in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HSLALT"/>
+      </measure>
+      <measure id="KSLALT" order="109" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Value in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KSLALT"/>
+      </measure>
+      <measure id="OSLALT" order="110" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Value in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OSLALT"/>
+      </measure>
+      <measure id="VSLALT" order="111" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Alternative Value in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VSLALT"/>
+      </measure>
+      <measure id="HSLEXT" order="112" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="External Value in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HSLEXT"/>
+      </measure>
+      <measure id="KSLEXT" order="113" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="External Value in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KSLEXT"/>
+      </measure>
+      <measure id="OSLEXT" order="114" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="External Value in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OSLEXT"/>
+      </measure>
+      <measure id="VSLEXT" order="115" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="External Value in Fourth Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VSLEXT"/>
+      </measure>
+      <measure id="HVKWRT" order="116" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Value at Sales Price in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HVKWRT"/>
+      </measure>
+      <measure id="HVKSAL" order="117" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Inventory Value at Sales Price in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HVKSAL"/>
+      </measure>
+      <measure id="MSL" order="118" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Quantity"/>
+        <measureMapping columnObjectName="Projection" columnName="MSL"/>
+      </measure>
+      <measure id="MFSL" order="119" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Fixed quantity"/>
+        <measureMapping columnObjectName="Projection" columnName="MFSL"/>
+      </measure>
+      <measure id="VMSL" order="120" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Valuation quantity"/>
+        <measureMapping columnObjectName="Projection" columnName="VMSL"/>
+      </measure>
+      <measure id="VMFSL" order="121" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Fixed valuation quantity"/>
+        <measureMapping columnObjectName="Projection" columnName="VMFSL"/>
+      </measure>
+      <measure id="RMSL" order="122" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Reference quantity"/>
+        <measureMapping columnObjectName="Projection" columnName="RMSL"/>
+      </measure>
+      <measure id="QUANT1" order="123" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Additional Quantity 1"/>
+        <measureMapping columnObjectName="Projection" columnName="QUANT1"/>
+      </measure>
+      <measure id="QUANT2" order="124" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Additional Quantity 2"/>
+        <measureMapping columnObjectName="Projection" columnName="QUANT2"/>
+      </measure>
+      <measure id="QUANT3" order="125" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Additional Quantity 3"/>
+        <measureMapping columnObjectName="Projection" columnName="QUANT3"/>
+      </measure>
+      <measure id="LBKUM" order="126" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Inventory Quantity"/>
+        <measureMapping columnObjectName="Projection" columnName="LBKUM"/>
+      </measure>
+      <measure id="TIMESTAMP" order="143" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="UTC Time Stamp in Short Form (YYYYMMDDhhmmss)"/>
+        <measureMapping columnObjectName="Projection" columnName="TIMESTAMP"/>
+      </measure>
+      <measure id="PROZS_PN" order="187" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Asset Retirement: Percentage Rate"/>
+        <measureMapping columnObjectName="Projection" columnName="PROZS_PN"/>
+      </measure>
+      <measure id="VTSTAMP" order="195" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Valuation Time Stamp"/>
+        <measureMapping columnObjectName="Projection" columnName="VTSTAMP"/>
+      </measure>
+      <measure id="HPEINH" order="203" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Price Unit in Local Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="HPEINH"/>
+      </measure>
+      <measure id="KPEINH" order="204" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Price Unit in Group Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="KPEINH"/>
+      </measure>
+      <measure id="OPEINH" order="205" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Price Unit in Another Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="OPEINH"/>
+      </measure>
+      <measure id="VPEINH" order="206" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Price Unit in Fourth Currency"/>
+        <measureMapping columnObjectName="Projection" columnName="VPEINH"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>
