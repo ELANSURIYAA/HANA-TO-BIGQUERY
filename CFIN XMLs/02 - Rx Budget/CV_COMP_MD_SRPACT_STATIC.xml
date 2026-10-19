@@ -1,0 +1,504 @@
+    <?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_COMP_MD_SRPACT_STATIC" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Wrapper View on Snapshot Table for Store Profile - Attributes Actuals"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="23"/>
+  <dataSources>
+    <DataSource id="TBL_WSS_SRP_ATTR_ACT" type="CDS_ARTIFACT">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="KOKRS"/>
+        <viewAttribute id="KOSTL"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_CLOSE_DAT"/>
+        <viewAttribute id="RX_HRS_OPER"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="FS_CLOSE_DAT"/>
+        <viewAttribute id="FS_HRS_OPER"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="ADDRESS"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="ZIPCODE"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DIVISION_MGR"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="AREA_MGR"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="REGION_MGR"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="ZONE_CODE"/>
+        <viewAttribute id="DISTRICT_MGR"/>
+        <viewAttribute id="ZONE_DESC"/>
+        <viewAttribute id="MAJOR_REGION_CODE"/>
+        <viewAttribute id="MAJOR_REGION"/>
+        <viewAttribute id="STORE_TYPE"/>
+        <viewAttribute id="STORE_TYPE_DESC"/>
+        <viewAttribute id="RX_STORE"/>
+        <viewAttribute id="RX_STORE_DESC"/>
+        <viewAttribute id="DISTRIBUTION_CNTR"/>
+        <viewAttribute id="DISTRIBUTION_CNTR_DESC"/>
+        <viewAttribute id="STORE_24_HR"/>
+        <viewAttribute id="BUDGET_OPEN_DAT"/>
+        <viewAttribute id="BUDGET_CLOSED_DAT"/>
+        <viewAttribute id="BUDGET_RELOC_DAT"/>
+        <viewAttribute id="CONST_OPEN_DAT"/>
+        <viewAttribute id="CONST_CLOSE_DAT"/>
+        <viewAttribute id="CONST_RELO_DAT"/>
+        <viewAttribute id="RELOCATION_DAT"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="BUDGET_EMERG_MKT_IND"/>
+        <viewAttribute id="COMPANY_CODE"/>
+        <viewAttribute id="COMPANY_CODE_DESC"/>
+        <viewAttribute id="ORIGINAL_FS_OPEN_DAT"/>
+        <viewAttribute id="ORIGINAL_RX_OPEN_DAT"/>
+        <viewAttribute id="GROUP_ONE"/>
+        <viewAttribute id="GROUP_TWO"/>
+        <viewAttribute id="ARD_SORT_KEY"/>
+        <viewAttribute id="AREA_COST_CENTER"/>
+        <viewAttribute id="REGIION_COST_CENTER"/>
+        <viewAttribute id="COUNTY_CODE"/>
+        <viewAttribute id="COUNTY_DESC"/>
+        <viewAttribute id="RETAIL_SQFT_AMT"/>
+        <viewAttribute id="TOTAL_SQFT_AMT"/>
+        <viewAttribute id="SQFT_BRACKET_DESC"/>
+        <viewAttribute id="SQFT_SORT_KEY"/>
+        <viewAttribute id="ACQUISITION_CODE"/>
+        <viewAttribute id="ACQUISITION_DESC"/>
+        <viewAttribute id="PHOTO_LAB_ADD_DAT"/>
+        <viewAttribute id="PHOTO_LAB_CLOSE_DAT"/>
+        <viewAttribute id="MIN_HRS_IND"/>
+        <viewAttribute id="CREATEDBY"/>
+        <viewAttribute id="CREATED_ON"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#TBL_WSS_SRP_ATTR_ACT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KOKRS" source="KOKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KOSTL" source="KOSTL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_CLOSE_DAT" source="RX_CLOSE_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_HRS_OPER" source="RX_HRS_OPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_CLOSE_DAT" source="FS_CLOSE_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_HRS_OPER" source="FS_HRS_OPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ADDRESS" source="ADDRESS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZIPCODE" source="ZIPCODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_MGR" source="DIVISION_MGR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_MGR" source="AREA_MGR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_MGR" source="REGION_MGR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZONE_CODE" source="ZONE_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_MGR" source="DISTRICT_MGR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZONE_DESC" source="ZONE_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAJOR_REGION_CODE" source="MAJOR_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MAJOR_REGION" source="MAJOR_REGION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STORE_TYPE" source="STORE_TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STORE_TYPE_DESC" source="STORE_TYPE_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_STORE" source="RX_STORE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_STORE_DESC" source="RX_STORE_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRIBUTION_CNTR" source="DISTRIBUTION_CNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRIBUTION_CNTR_DESC" source="DISTRIBUTION_CNTR_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STORE_24_HR" source="STORE_24_HR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUDGET_OPEN_DAT" source="BUDGET_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUDGET_CLOSED_DAT" source="BUDGET_CLOSED_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUDGET_RELOC_DAT" source="BUDGET_RELOC_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CONST_OPEN_DAT" source="CONST_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CONST_CLOSE_DAT" source="CONST_CLOSE_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CONST_RELO_DAT" source="CONST_RELO_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RELOCATION_DAT" source="RELOCATION_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUDGET_EMERG_MKT_IND" source="BUDGET_EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMPANY_CODE" source="COMPANY_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMPANY_CODE_DESC" source="COMPANY_CODE_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ORIGINAL_FS_OPEN_DAT" source="ORIGINAL_FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ORIGINAL_RX_OPEN_DAT" source="ORIGINAL_RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GROUP_ONE" source="GROUP_ONE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="GROUP_TWO" source="GROUP_TWO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ARD_SORT_KEY" source="ARD_SORT_KEY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_COST_CENTER" source="AREA_COST_CENTER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGIION_COST_CENTER" source="REGIION_COST_CENTER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COUNTY_CODE" source="COUNTY_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COUNTY_DESC" source="COUNTY_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAIL_SQFT_AMT" source="RETAIL_SQFT_AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TOTAL_SQFT_AMT" source="TOTAL_SQFT_AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SQFT_BRACKET_DESC" source="SQFT_BRACKET_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SQFT_SORT_KEY" source="SQFT_SORT_KEY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACQUISITION_CODE" source="ACQUISITION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACQUISITION_DESC" source="ACQUISITION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PHOTO_LAB_ADD_DAT" source="PHOTO_LAB_ADD_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PHOTO_LAB_CLOSE_DAT" source="PHOTO_LAB_CLOSE_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MIN_HRS_IND" source="MIN_HRS_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CREATEDBY" source="CREATEDBY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CREATED_ON" source="CREATED_ON"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="STRNUM" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STRNUM"/>
+      </attribute>
+      <attribute id="PRCTR" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center(Retail Store)"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="KOKRS" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="KOKRS"/>
+      </attribute>
+      <attribute id="KOSTL" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center(Retail Store)"/>
+        <keyMapping columnObjectName="Projection_1" columnName="KOSTL"/>
+      </attribute>
+      <attribute id="RX_OPEN_DAT" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy(RX) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="RX_CLOSE_DAT" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy(RX) Close Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_CLOSE_DAT"/>
+      </attribute>
+      <attribute id="FS_OPEN_DAT" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store(FS) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="FS_CLOSE_DAT" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store(FS) Close Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_CLOSE_DAT"/>
+      </attribute>
+      <attribute id="REP_MKT_CODE" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REP_MKT_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_DESC" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REP_MKT_DESC"/>
+      </attribute>
+      <attribute id="ADDRESS" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Address"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ADDRESS"/>
+      </attribute>
+      <attribute id="CITY" order="15" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="City"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CITY"/>
+      </attribute>
+      <attribute id="STATE" order="16" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="State"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STATE"/>
+      </attribute>
+      <attribute id="ZIPCODE" order="17" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Zipcode"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZIPCODE"/>
+      </attribute>
+      <attribute id="DIVISION_CODE" order="18" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_CODE"/>
+      </attribute>
+      <attribute id="DIVISION_DESC" order="19" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_DESC"/>
+      </attribute>
+      <attribute id="DIVISION_MGR" order="20" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Divsion Manager"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_MGR"/>
+      </attribute>
+      <attribute id="AREA_CODE" order="21" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_CODE"/>
+      </attribute>
+      <attribute id="AREA_DESC" order="22" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_DESC"/>
+      </attribute>
+      <attribute id="AREA_MGR" order="23" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Manager"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_MGR"/>
+      </attribute>
+      <attribute id="REGION_CODE" order="24" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_CODE"/>
+      </attribute>
+      <attribute id="REGION_DESC" order="25" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_DESC"/>
+      </attribute>
+      <attribute id="REGION_MGR" order="26" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Manager"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_MGR"/>
+      </attribute>
+      <attribute id="DISTRICT_CODE" order="27" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_DESC" order="28" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_DESC"/>
+      </attribute>
+      <attribute id="ZONE_CODE" order="29" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Zone Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZONE_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_MGR" order="30" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Manager"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_MGR"/>
+      </attribute>
+      <attribute id="ZONE_DESC" order="31" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Zone Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZONE_DESC"/>
+      </attribute>
+      <attribute id="MAJOR_REGION_CODE" order="32" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Major Region Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MAJOR_REGION_CODE"/>
+      </attribute>
+      <attribute id="MAJOR_REGION" order="33" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Major Region Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MAJOR_REGION"/>
+      </attribute>
+      <attribute id="STORE_TYPE" order="34" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Type"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STORE_TYPE"/>
+      </attribute>
+      <attribute id="STORE_TYPE_DESC" order="35" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Type Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STORE_TYPE_DESC"/>
+      </attribute>
+      <attribute id="RX_STORE_DESC" order="37" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy(RX) Store Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_STORE_DESC"/>
+      </attribute>
+      <attribute id="DISTRIBUTION_CNTR" order="38" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Distribution Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRIBUTION_CNTR"/>
+      </attribute>
+      <attribute id="DISTRIBUTION_CNTR_DESC" order="39" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Distribution Center Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRIBUTION_CNTR_DESC"/>
+      </attribute>
+      <attribute id="STORE_24_HR" order="40" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="24 Hour Store"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STORE_24_HR"/>
+      </attribute>
+      <attribute id="BUDGET_OPEN_DAT" order="41" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Budget Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUDGET_OPEN_DAT"/>
+      </attribute>
+      <attribute id="BUDGET_CLOSED_DAT" order="42" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Budget Closed Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUDGET_CLOSED_DAT"/>
+      </attribute>
+      <attribute id="BUDGET_RELOC_DAT" order="43" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Budget Relo Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUDGET_RELOC_DAT"/>
+      </attribute>
+      <attribute id="CONST_OPEN_DAT" order="44" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Construction Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CONST_OPEN_DAT"/>
+      </attribute>
+      <attribute id="CONST_CLOSE_DAT" order="45" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Construction Close Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CONST_CLOSE_DAT"/>
+      </attribute>
+      <attribute id="CONST_RELO_DAT" order="46" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Construction Relo Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CONST_RELO_DAT"/>
+      </attribute>
+      <attribute id="RELOCATION_DAT" order="47" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Relocation Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RELOCATION_DAT"/>
+      </attribute>
+      <attribute id="EMERG_MKT_IND" order="48" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="BUDGET_EMERG_MKT_IND" order="49" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Budget Emerging Market Indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUDGET_EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="COMPANY_CODE" order="50" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="COMPANY_CODE"/>
+      </attribute>
+      <attribute id="COMPANY_CODE_DESC" order="51" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="COMPANY_CODE_DESC"/>
+      </attribute>
+      <attribute id="ORIGINAL_FS_OPEN_DAT" order="52" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Original Front Store(FS) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ORIGINAL_FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="ORIGINAL_RX_OPEN_DAT" order="53" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Original Pharmacy(RX) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ORIGINAL_RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="GROUP_ONE" order="54" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Group One"/>
+        <keyMapping columnObjectName="Projection_1" columnName="GROUP_ONE"/>
+      </attribute>
+      <attribute id="GROUP_TWO" order="55" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Group Two"/>
+        <keyMapping columnObjectName="Projection_1" columnName="GROUP_TWO"/>
+      </attribute>
+      <attribute id="ARD_SORT_KEY" order="56" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ARD Sort Key"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ARD_SORT_KEY"/>
+      </attribute>
+      <attribute id="AREA_COST_CENTER" order="57" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Cost Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_COST_CENTER"/>
+      </attribute>
+      <attribute id="REGIION_COST_CENTER" order="58" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Cost Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGIION_COST_CENTER"/>
+      </attribute>
+      <attribute id="COUNTY_CODE" order="59" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="County Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="COUNTY_CODE"/>
+      </attribute>
+      <attribute id="COUNTY_DESC" order="60" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="County Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="COUNTY_DESC"/>
+      </attribute>
+      <attribute id="SQFT_BRACKET_DESC" order="63" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sq.Ft Bracket Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="SQFT_BRACKET_DESC"/>
+      </attribute>
+      <attribute id="SQFT_SORT_KEY" order="64" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sq.Ft Sort Key"/>
+        <keyMapping columnObjectName="Projection_1" columnName="SQFT_SORT_KEY"/>
+      </attribute>
+      <attribute id="ACQUISITION_CODE" order="65" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Acquistion Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ACQUISITION_CODE"/>
+      </attribute>
+      <attribute id="ACQUISITION_DESC" order="66" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Acquistion Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ACQUISITION_DESC"/>
+      </attribute>
+      <attribute id="PHOTO_LAB_ADD_DAT" order="67" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Photo Lab Add Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PHOTO_LAB_ADD_DAT"/>
+      </attribute>
+      <attribute id="PHOTO_LAB_CLOSE_DAT" order="68" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Photo Lab Close Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PHOTO_LAB_CLOSE_DAT"/>
+      </attribute>
+      <attribute id="MIN_HRS_IND" order="69" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Minimum Hours Indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MIN_HRS_IND"/>
+      </attribute>
+      <attribute id="CREATEDBY" order="70" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Created By"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CREATEDBY"/>
+      </attribute>
+      <attribute id="CREATED_ON" order="71" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Created On"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CREATED_ON"/>
+      </attribute>
+      <attribute id="RX_DIVISION_CODE" order="72" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DIVISION_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_DIVISION_CODE"/>
+      </attribute>
+      <attribute id="RX_AREA_CODE" order="73" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_AREA_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_AREA_CODE"/>
+      </attribute>
+      <attribute id="RX_REGION_CODE" order="74" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_REGION_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_REGION_CODE"/>
+      </attribute>
+      <attribute id="RX_DISTRICT_CODE" order="75" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DISTRICT_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_DISTRICT_CODE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="RX_HRS_OPER" order="8" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Pharmacy(RX) Hours of Operation"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_HRS_OPER"/>
+      </measure>
+      <measure id="FS_HRS_OPER" order="11" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Front Store(FS) Hours of Operation"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_HRS_OPER"/>
+      </measure>
+      <measure id="RX_STORE" order="36" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Pharmacy(RX) Store"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_STORE"/>
+      </measure>
+      <measure id="RETAIL_SQFT_AMT" order="61" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Retail Sq.Ft Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RETAIL_SQFT_AMT"/>
+      </measure>
+      <measure id="TOTAL_SQFT_AMT" order="62" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Total Sq.Ft Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="TOTAL_SQFT_AMT"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

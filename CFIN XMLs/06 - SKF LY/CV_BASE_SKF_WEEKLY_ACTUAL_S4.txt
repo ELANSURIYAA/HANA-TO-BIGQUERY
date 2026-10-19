@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_SKF_WEEKLY_ACTUAL_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for Store Reporting SKF Actuals frozen DSO - DS11 (Weekly Snapshot)"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="36"/>
+  <dataSources>
+    <DataSource id="AZSRP_DS112_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="AZSRP_DS112_VT_S4"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Frozen_Cube">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="_BIC_ZIO_PSTY"/>
+        <viewAttribute id="_BIC_ZIO_PSKF"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="MANDT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="110"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="RECORDMODE"/>
+        <viewAttribute id="UNIT"/>
+        <viewAttribute id="_BIC_ZIO_SKFQ"/>
+        <viewAttribute id="_BIC_ZIO_D1SKQ"/>
+        <viewAttribute id="_BIC_ZIO_D2SKQ"/>
+        <viewAttribute id="_BIC_ZIO_D3SKQ"/>
+        <viewAttribute id="_BIC_ZIO_D4SKQ"/>
+        <viewAttribute id="_BIC_ZIO_D5SKQ"/>
+        <viewAttribute id="_BIC_ZIO_D6SKQ"/>
+        <viewAttribute id="_BIC_ZIO_D7SKQ"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#AZSRP_DS112_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_PSTY" source="_BIC_ZIO_PSTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_PSKF" source="_BIC_ZIO_PSKF"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="UNIT" source="UNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SKFQ" source="_BIC_ZIO_SKFQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1SKQ" source="_BIC_ZIO_D1SKQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2SKQ" source="_BIC_ZIO_D2SKQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3SKQ" source="_BIC_ZIO_D3SKQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4SKQ" source="_BIC_ZIO_D4SKQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5SKQ" source="_BIC_ZIO_D5SKQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6SKQ" source="_BIC_ZIO_D6SKQ"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7SKQ" source="_BIC_ZIO_D7SKQ"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Frozen_Cube">
+    <descriptions/>
+    <attributes>
+      <attribute id="FISCPER" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year/period"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="FISCPER"/>
+      </attribute>
+      <attribute id="FISCVARNT" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year Variant"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="FISCVARNT"/>
+      </attribute>
+      <attribute id="FISCYEAR" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="FISCYEAR"/>
+      </attribute>
+      <attribute id="FISCPER3" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting period"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="FISCPER3"/>
+      </attribute>
+      <attribute id="MANDT" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RECORDMODE" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="BW Delta Process: Record Mode"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="RECORDMODE"/>
+      </attribute>
+      <attribute id="UNIT" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Unit of Measure"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="UNIT"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Week"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_PSTY" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Plan SKF Type"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_PSTY"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_PSKF" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Plan SKF Account"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_PSKF"/>
+      </attribute>
+      <attribute id="_B631_S_CO_AREA" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_B631_S_CO_AREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_CMPCD" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Company Code"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_CMPCD"/>
+      </attribute>
+      <attribute id="_B631_S_PROFTCTR" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_B631_S_PROFTCTR"/>
+      </attribute>
+      <attribute id="_B631_S_COSTCNTR" order="14" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_B631_S_COSTCNTR"/>
+      </attribute>
+      <attribute id="_B631_S_FUNCAREA" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Functional Area"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_B631_S_FUNCAREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_VER" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Version"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_VER"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SAUDT" order="17" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Audit trail"/>
+        <keyMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_SAUDT"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="_BIC_ZIO_SKFQ" order="18" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="_BIC_ZIO_SKFQ"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_SKFQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D1SKQ" order="19" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for S"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D1SKQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D2SKQ" order="20" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for M"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D2SKQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D3SKQ" order="21" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for T"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D3SKQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D4SKQ" order="22" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for W"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D4SKQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D5SKQ" order="23" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for T"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D5SKQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D6SKQ" order="24" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for F"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D6SKQ"/>
+      </measure>
+      <measure id="_BIC_ZIO_D7SKQ" order="25" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Quantity for S"/>
+        <measureMapping columnObjectName="Frozen_Cube" columnName="_BIC_ZIO_D7SKQ"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Frozen_Cube" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

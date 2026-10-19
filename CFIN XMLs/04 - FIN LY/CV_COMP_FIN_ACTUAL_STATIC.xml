@@ -1,0 +1,1509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_COMP_FIN_ACTUAL_STATIC" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="true" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Composite view for Weekly Static Financial Actuals"/>
+  <localVariables>
+    <variable id="IP_VERSION" parameter="true">
+      <descriptions defaultDescription="Version"/>
+      <variableProperties datatype="NVARCHAR" defaultValue="ACT01" length="20" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_ENDING_FROM" parameter="true">
+      <descriptions defaultDescription="Week Ending From"/>
+      <variableProperties datatype="NVARCHAR" length="7" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="true">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_ENDING_TO" parameter="true">
+      <descriptions defaultDescription="Week Ending To"/>
+      <variableProperties datatype="NVARCHAR" length="7" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="true">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_VERSION_COMP_FLAG" parameter="true">
+      <descriptions defaultDescription="Version"/>
+      <variableProperties datatype="NVARCHAR" length="20" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule>
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_LY" parameter="true">
+      <descriptions defaultDescription="Week Last year"/>
+      <variableProperties datatype="CHAR" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="false">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_LY_COMPARISON_WEEK</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_CY" parameter="true">
+      <descriptions defaultDescription="Current fiscal week to run"/>
+      <variableProperties datatype="CHAR" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="false">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="61"/>
+  <dataSources>
+    <DataSource id="CV_BASE_FIN_WEEKLY_ACTUAL_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.FI/calculationviews/CV_BASE_FIN_WEEKLY_ACTUAL_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_COMP_MD_SRPACT_STATIC" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Composite.Master/calculationviews/CV_COMP_MD_SRPACT_STATIC</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_HRRP_NODE_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_HRRP_NODE_S4</resourceUri>
+    </DataSource>
+    <DataSource id="GL_HIER$$$$CV_BASE_MD_HRRP_NODE_S4$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_HRRP_NODE_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_RCALWEEK_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_RCALWEEK_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_COMP_MD_COMPFL_STATIC" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Composite.Master/calculationviews/CV_COMP_MD_COMPFL_STATIC</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_CEPCT_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Text/calculationviews/CV_BASE_MD_CEPCT_S4</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="WEEKLY_SNAPSHOT_DS05" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_FIN_WEEKLY_ACTUAL_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+      </input>
+      <filter>(&quot;FISCVARNT&quot; ='K4') AND (&quot;_BIC_ZIO_VER&quot; ='$$IP_VERSION$$') AND (&quot;_BIC_ZIO_SWEEK&quot; = '$$IP_WEEK_LY$$') AND IN(&quot;_BIC_ZIO_SAUDT&quot;,'1','10')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="STORE_ATTR_ACTUAL">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_COMP_MD_SRPACT_STATIC">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="PC_HIER">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PARNODE">
+          <filter xsi:type="AccessControl:SingleValueFilter" operator="CP" including="true" value="*CORE_RET*"/>
+        </viewAttribute>
+        <viewAttribute id="HRYVALTO">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="99991231"/>
+        </viewAttribute>
+        <viewAttribute id="NODEVALUE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_HRRP_NODE_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARNODE" source="PARNODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYVALTO" source="HRYVALTO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NODEVALUE" source="NODEVALUE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_4" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#WEEKLY_SNAPSHOT_DS05">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+      </input>
+      <input node="#PC_HIER">
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="NODEVALUE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+      </input>
+      <joinAttribute name="_B631_S_PROFTCTR"/>
+      <joinAttribute name="MANDT"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="GL_HIER">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PARNODE">
+          <filter xsi:type="AccessControl:SingleValueFilter" operator="CP" including="true" value="*181"/>
+        </viewAttribute>
+        <viewAttribute id="HRYVALTO">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="99991231"/>
+        </viewAttribute>
+        <viewAttribute id="NODEVALUE"/>
+        <viewAttribute id="HRYID">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="CVS2"/>
+        </viewAttribute>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_NODE_VALUE" length="10" expressionLanguage="COLUMN_ENGINE">
+          <formula>ltrim(&quot;NODEVALUE&quot;,'0')</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#GL_HIER$$$$CV_BASE_MD_HRRP_NODE_S4$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARNODE" source="PARNODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYVALTO" source="HRYVALTO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NODEVALUE" source="NODEVALUE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYID" source="HRYID"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_6" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+      </input>
+      <input node="#GL_HIER">
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="NODEVALUE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+      </input>
+      <joinAttribute name="_B631_S_GL_ACCT"/>
+      <joinAttribute name="MANDT"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_WEEK" length="6" expressionLanguage="COLUMN_ENGINE">
+          <formula>'$$IP_WEEK_CY$$'</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#Join_6">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_2" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+        <viewAttribute id="CAL_WEEK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Projection_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="CAL_WEEK"/>
+      </input>
+      <input node="#STORE_ATTR_ACTUAL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+      </input>
+      <joinAttribute name="_B631_S_PROFTCTR"/>
+      <joinAttribute name="MANDT"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="RETAIL_CAL">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="RCLNT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_RCALWEEK_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCLNT" source="RCLNT"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_1" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_WEEK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_2">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="CAL_WEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#RETAIL_CAL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="RCLNT"/>
+      </input>
+      <joinAttribute name="CAL_WEEK"/>
+      <joinAttribute name="MANDT"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="WEEK_NUMBER">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_WEEK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="CAL_WEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="COMP_FLAG_LY" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="ZWEEK"/>
+        <viewAttribute id="ZMONTH"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="COMP_VER"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_COMP_MD_COMPFL_STATIC">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZWEEK" source="ZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZMONTH" source="ZMONTH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMP_VER" source="COMP_VER"/>
+      </input>
+      <filter>(&quot;ZWEEK&quot; = '$$IP_WEEK_CY$$') AND (&quot;COMP_VER&quot; ='$$IP_VERSION_COMP_FLAG$$')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_3" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_WEEK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#WEEK_NUMBER">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="CAL_WEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#COMP_FLAG_LY">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+      </input>
+      <joinAttribute name="_B631_S_PROFTCTR"/>
+      <joinAttribute name="MANDT"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="PROFIT_CENTER_TEXT">
+      <descriptions defaultDescription="Profit Center Desc"/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_CEPCT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="LTEXT"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_5" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_WEEK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_3">
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="CAL_WEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#PROFIT_CENTER_TEXT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="PROFIT_CENTER_TEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+      </input>
+      <joinAttribute name="_B631_S_PROFTCTR"/>
+      <joinAttribute name="MANDT"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="FLAGS">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="_BIC_ZIO_D7AMT"/>
+        <viewAttribute id="_BIC_ZIO_D6AMT"/>
+        <viewAttribute id="_BIC_ZIO_D5AMT"/>
+        <viewAttribute id="_BIC_ZIO_D4AMT"/>
+        <viewAttribute id="_BIC_ZIO_D3AMT"/>
+        <viewAttribute id="_BIC_ZIO_D2AMT"/>
+        <viewAttribute id="_BIC_ZIO_D1AMT"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_WEEK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_FS_RX_FLAG" length="2" expressionLanguage="COLUMN_ENGINE">
+          <formula>CASE(LEFTSTR(&quot;_BIC_ZWWPC_PA1&quot;,2),'FS','FS','RX','RX','')</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_COMP_FLAG" length="1" expressionLanguage="COLUMN_ENGINE">
+          <formula>CASE(&quot;CAL_FS_RX_FLAG&quot;,'FS',&quot;FS_COMP_WK&quot;,'RX',&quot;RX_COMP_WK&quot;,&quot;FS_COMP_WK&quot;)</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_WEEK_NUMBER" length="2" expressionLanguage="COLUMN_ENGINE">
+          <formula>RIGHTSTR('$$IP_WEEK_CY$$',2) </formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#Join_5">
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D7AMT" source="_BIC_ZIO_D7AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D6AMT" source="_BIC_ZIO_D6AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D5AMT" source="_BIC_ZIO_D5AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D4AMT" source="_BIC_ZIO_D4AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D3AMT" source="_BIC_ZIO_D3AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D2AMT" source="_BIC_ZIO_D2AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_D1AMT" source="_BIC_ZIO_D1AMT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_B631_S_PROFTCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_B631_S_COSTCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="PROFIT_CENTER_TEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK" source="CAL_WEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="FLAGS">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="FLAGS" columnName="MANDT"/>
+      </attribute>
+      <attribute id="FISCPER" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year/period"/>
+        <keyMapping columnObjectName="FLAGS" columnName="FISCPER"/>
+      </attribute>
+      <attribute id="FISCVARNT" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year Variant"/>
+        <keyMapping columnObjectName="FLAGS" columnName="FISCVARNT"/>
+      </attribute>
+      <attribute id="FISCYEAR" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year"/>
+        <keyMapping columnObjectName="FLAGS" columnName="FISCYEAR"/>
+      </attribute>
+      <attribute id="FISCPER3" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting period"/>
+        <keyMapping columnObjectName="FLAGS" columnName="FISCPER3"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="LY Week"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="_B631_S_CHRTACCT" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Chart of Accounts"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_B631_S_CHRTACCT"/>
+      </attribute>
+      <attribute id="_B631_S_CO_AREA" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_B631_S_CO_AREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_CMPCD" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Company Code"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_CMPCD"/>
+      </attribute>
+      <attribute id="_B631_S_PROFTCTR" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_B631_S_PROFTCTR"/>
+      </attribute>
+      <attribute id="FS_RX_FLAG" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Rx Flag"/>
+        <keyMapping columnObjectName="FLAGS" columnName="CAL_FS_RX_FLAG"/>
+      </attribute>
+      <attribute id="_B631_S_COSTCNTR" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_B631_S_COSTCNTR"/>
+      </attribute>
+      <attribute id="_B631_S_FUNCAREA" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Functional Area"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_B631_S_FUNCAREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_VER" order="14" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Version"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_VER"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SAUDT" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Audit trail"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_SAUDT"/>
+      </attribute>
+      <attribute id="_B631_S_GL_ACCT" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="G/L Account"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_B631_S_GL_ACCT"/>
+      </attribute>
+      <attribute id="_BIC_ZWWPC_PA1" order="17" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Product  Class"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_BIC_ZWWPC_PA1"/>
+      </attribute>
+      <attribute id="_BIC_ZWWSC_PA1" order="18" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Channel"/>
+        <keyMapping columnObjectName="FLAGS" columnName="_BIC_ZWWSC_PA1"/>
+      </attribute>
+      <attribute id="CURRENCY" order="20" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Currency"/>
+        <keyMapping columnObjectName="FLAGS" columnName="CURRENCY"/>
+      </attribute>
+      <attribute id="REP_MKT_CODE" order="21" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Code"/>
+        <keyMapping columnObjectName="FLAGS" columnName="REP_MKT_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_DESC" order="22" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market"/>
+        <keyMapping columnObjectName="FLAGS" columnName="REP_MKT_DESC"/>
+      </attribute>
+      <attribute id="EMERG_MKT_IND" order="23" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="FLAGS" columnName="EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="FS_COMP_WK" order="24" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="FLAGS" columnName="FS_COMP_WK"/>
+      </attribute>
+      <attribute id="RX_COMP_WK" order="25" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="FLAGS" columnName="RX_COMP_WK"/>
+      </attribute>
+      <attribute id="COMP_FLAG" order="26" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp Flag"/>
+        <keyMapping columnObjectName="FLAGS" columnName="CAL_COMP_FLAG"/>
+      </attribute>
+      <attribute id="DIVISION_CODE" order="34" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Code"/>
+        <keyMapping columnObjectName="FLAGS" columnName="DIVISION_CODE"/>
+      </attribute>
+      <attribute id="DIVISION_DESC" order="35" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Description"/>
+        <keyMapping columnObjectName="FLAGS" columnName="DIVISION_DESC"/>
+      </attribute>
+      <attribute id="AREA_CODE" order="36" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Code"/>
+        <keyMapping columnObjectName="FLAGS" columnName="AREA_CODE"/>
+      </attribute>
+      <attribute id="AREA_DESC" order="37" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Description"/>
+        <keyMapping columnObjectName="FLAGS" columnName="AREA_DESC"/>
+      </attribute>
+      <attribute id="REGION_CODE" order="38" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Code"/>
+        <keyMapping columnObjectName="FLAGS" columnName="REGION_CODE"/>
+      </attribute>
+      <attribute id="REGION_DESC" order="39" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Description"/>
+        <keyMapping columnObjectName="FLAGS" columnName="REGION_DESC"/>
+      </attribute>
+      <attribute id="DISTRICT_CODE" order="40" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Code"/>
+        <keyMapping columnObjectName="FLAGS" columnName="DISTRICT_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_DESC" order="41" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Description"/>
+        <keyMapping columnObjectName="FLAGS" columnName="DISTRICT_DESC"/>
+      </attribute>
+      <attribute id="CITY" order="42" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="City"/>
+        <keyMapping columnObjectName="FLAGS" columnName="CITY"/>
+      </attribute>
+      <attribute id="STATE" order="43" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="State"/>
+        <keyMapping columnObjectName="FLAGS" columnName="STATE"/>
+      </attribute>
+      <attribute id="ZRWSTRTDATE" order="45" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail  Week Start Date"/>
+        <keyMapping columnObjectName="FLAGS" columnName="ZRWSTRTDATE"/>
+      </attribute>
+      <attribute id="ZRWENDDATE" order="46" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Week End Date"/>
+        <keyMapping columnObjectName="FLAGS" columnName="ZRWENDDATE"/>
+      </attribute>
+      <attribute id="CAL_WEEK_NUMBER" order="47" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="FLAGS" columnName="CAL_WEEK_NUMBER"/>
+      </attribute>
+      <attribute id="PROFIT_CENTER_TEXT" order="48" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center Desc"/>
+        <keyMapping columnObjectName="FLAGS" columnName="PROFIT_CENTER_TEXT"/>
+      </attribute>
+      <attribute id="FS_OPEN_DAT" order="49" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store(FS) Open Date"/>
+        <keyMapping columnObjectName="FLAGS" columnName="FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="RX_OPEN_DAT" order="50" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy(RX) Open Date"/>
+        <keyMapping columnObjectName="FLAGS" columnName="RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="CAL_WEEK" order="51" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Prior Week"/>
+        <keyMapping columnObjectName="FLAGS" columnName="CAL_WEEK"/>
+      </attribute>
+      <attribute id="STRNUM" order="52" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store"/>
+        <keyMapping columnObjectName="FLAGS" columnName="STRNUM"/>
+      </attribute>
+      <attribute id="RX_DIVISION_CODE" order="53" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DIVISION_CODE"/>
+        <keyMapping columnObjectName="FLAGS" columnName="RX_DIVISION_CODE"/>
+      </attribute>
+      <attribute id="RX_AREA_CODE" order="54" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_AREA_CODE"/>
+        <keyMapping columnObjectName="FLAGS" columnName="RX_AREA_CODE"/>
+      </attribute>
+      <attribute id="RX_REGION_CODE" order="55" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_REGION_CODE"/>
+        <keyMapping columnObjectName="FLAGS" columnName="RX_REGION_CODE"/>
+      </attribute>
+      <attribute id="RX_DISTRICT_CODE" order="56" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DISTRICT_CODE"/>
+        <keyMapping columnObjectName="FLAGS" columnName="RX_DISTRICT_CODE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="_B631_S_AMOUNT_NEGATIVE" order="19" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_B631_S_AMOUNT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D1AMT" order="27" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Sun"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D1AMT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D2AMT" order="28" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Mon"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D2AMT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D3AMT" order="29" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Tue"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D3AMT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D4AMT" order="30" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Wed"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D4AMT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D5AMT" order="31" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Thu"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D5AMT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D6AMT" order="32" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Fri"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D6AMT"/>
+      </measure>
+      <measure id="_BIC_ZIO_D7AMT" order="33" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Store Amount for Sat"/>
+        <measureMapping columnObjectName="FLAGS" columnName="_BIC_ZIO_D7AMT"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures>
+      <measure id="_B631_S_AMOUNT" hidden="false" order="44" aggregationType="sum" engineAggregation="sum" measureType="simple" datatype="DECIMAL" expressionLanguage="COLUMN_ENGINE" length="34" scale="3">
+        <descriptions defaultDescription="Amount"/>
+        <formula>&quot;_B631_S_AMOUNT_NEGATIVE&quot; *-1</formula>
+      </measure>
+    </calculatedMeasures>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="325" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="WEEKLY_SNAPSHOT_DS05" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="23" y="975"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="STORE_ATTR_ACTUAL" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="705"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="PC_HIER" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="177" y="975"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_4" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="100" y="879"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="GL_HIER" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="254" y="879"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_6" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="783"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="705"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_2" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="97" y="609"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="RETAIL_CAL" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="251" y="609"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="172" y="513"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="WEEK_NUMBER" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="172" y="435"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COMP_FLAG_LY" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="326" y="435"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_3" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="248" y="339"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="PROFIT_CENTER_TEXT" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="402" y="339"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_5" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="325" y="243"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="FLAGS" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="325" y="165"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

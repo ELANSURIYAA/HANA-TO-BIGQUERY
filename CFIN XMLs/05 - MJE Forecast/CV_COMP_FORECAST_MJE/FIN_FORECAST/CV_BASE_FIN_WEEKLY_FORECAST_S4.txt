@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_FIN_WEEKLY_FORECAST_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for Store Reporting Financials Forecast Live DSO - DS04 "/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="26"/>
+  <dataSources>
+    <DataSource id="AZSRP_DS041_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="AZSRP_DS041_VT_S4"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions>
+        <comment text="Remove MANDT filter"/>
+      </descriptions>
+      <viewAttributes>
+        <viewAttribute id="FISCPER"/>
+        <viewAttribute id="FISCVARNT"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="FISCYEAR"/>
+        <viewAttribute id="FISCPER3"/>
+        <viewAttribute id="_B631_S_CHRTACCT"/>
+        <viewAttribute id="_B631_S_CO_AREA"/>
+        <viewAttribute id="_BIC_ZIO_CMPCD"/>
+        <viewAttribute id="_B631_S_PROFTCTR"/>
+        <viewAttribute id="_B631_S_COSTCNTR"/>
+        <viewAttribute id="_B631_S_FUNCAREA"/>
+        <viewAttribute id="_BIC_ZIO_VER"/>
+        <viewAttribute id="_BIC_ZIO_SAUDT"/>
+        <viewAttribute id="MANDT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="120"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="RECORDMODE"/>
+        <viewAttribute id="_B631_S_GL_ACCT"/>
+        <viewAttribute id="_BIC_ZWWPC_PA1"/>
+        <viewAttribute id="_BIC_ZWWSC_PA1"/>
+        <viewAttribute id="_B631_S_AMOUNT_NEGATIVE"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="_BIC_ZIO_AMT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#AZSRP_DS041_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER" source="FISCPER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCVARNT" source="FISCVARNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCYEAR" source="FISCYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FISCPER3" source="FISCPER3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CHRTACCT" source="_B631_S_CHRTACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_CO_AREA" source="_B631_S_CO_AREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_CMPCD" source="_BIC_ZIO_CMPCD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_PROFTCTR" source="_BIC_ZIO_PCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_COSTCNTR" source="_BIC_ZIO_CCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_FUNCAREA" source="_B631_S_FUNCAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_VER" source="_BIC_ZIO_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SAUDT" source="_BIC_ZIO_SAUDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDMODE" source="RECORDMODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_GL_ACCT" source="_B631_S_GL_ACCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWPC_PA1" source="_BIC_ZWWPC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZWWSC_PA1" source="_BIC_ZWWSC_PA1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_B631_S_AMOUNT_NEGATIVE" source="_B631_S_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_AMT" source="_BIC_ZIO_AMT"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="FISCPER" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year/period"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCPER"/>
+      </attribute>
+      <attribute id="FISCVARNT" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year Variant"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCVARNT"/>
+      </attribute>
+      <attribute id="FISCYEAR" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal year"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCYEAR"/>
+      </attribute>
+      <attribute id="FISCPER3" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Posting period"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FISCPER3"/>
+      </attribute>
+      <attribute id="MANDT" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RECORDMODE" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="BW Delta Process: Record Mode"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RECORDMODE"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Week"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="_B631_S_CHRTACCT" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Chart of Accounts"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_CHRTACCT"/>
+      </attribute>
+      <attribute id="_B631_S_CO_AREA" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_CO_AREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_CMPCD" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Company Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_CMPCD"/>
+      </attribute>
+      <attribute id="_B631_S_PROFTCTR" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_PROFTCTR"/>
+      </attribute>
+      <attribute id="_B631_S_COSTCNTR" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_COSTCNTR"/>
+      </attribute>
+      <attribute id="_B631_S_FUNCAREA" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Functional Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_FUNCAREA"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_VER" order="14" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Version"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_VER"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SAUDT" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Audit trail"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_SAUDT"/>
+      </attribute>
+      <attribute id="_B631_S_GL_ACCT" order="16" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="G/L Account"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_B631_S_GL_ACCT"/>
+      </attribute>
+      <attribute id="_BIC_ZWWPC_PA1" order="17" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Product  Class"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZWWPC_PA1"/>
+      </attribute>
+      <attribute id="_BIC_ZWWSC_PA1" order="18" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Sales Channel"/>
+        <keyMapping columnObjectName="Projection_1" columnName="_BIC_ZWWSC_PA1"/>
+      </attribute>
+      <attribute id="CURRENCY" order="20" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Currency"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CURRENCY"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="_B631_S_AMOUNT" order="19" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="_B631_S_AMOUNT_NEGATIVE"/>
+      </measure>
+      <measure id="_BIC_ZIO_AMT" order="21" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Annual Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="_BIC_ZIO_AMT"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

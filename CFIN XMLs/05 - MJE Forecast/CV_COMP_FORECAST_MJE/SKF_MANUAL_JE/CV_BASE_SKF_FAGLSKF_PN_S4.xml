@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_SKF_FAGLSKF_PN_S4" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for FAGLSKF_PN (Item) - General Ledger"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="33"/>
+  <dataSources>
+    <DataSource id="FAGLSKF_PN_VT_S4" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="FAGLSKF_PN_VT_S4"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="RCLNT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="120"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="STAGR"/>
+        <viewAttribute id="DATE_FROM"/>
+        <viewAttribute id="DOCNR"/>
+        <viewAttribute id="DOCLN"/>
+        <viewAttribute id="DATE_TO"/>
+        <viewAttribute id="RBUKRS"/>
+        <viewAttribute id="RCNTR"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="RFAREA"/>
+        <viewAttribute id="RBUSA"/>
+        <viewAttribute id="KOKRS"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="ACTIV"/>
+        <viewAttribute id="OBART"/>
+        <viewAttribute id="RUNIT"/>
+        <viewAttribute id="LOGSYS"/>
+        <viewAttribute id="RRCTY"/>
+        <viewAttribute id="RVERS"/>
+        <viewAttribute id="MSL"/>
+        <viewAttribute id="REFDOCNR"/>
+        <viewAttribute id="CANC_DOCNR"/>
+        <viewAttribute id="USNAM"/>
+        <viewAttribute id="TIMESTAMP"/>
+        <viewAttribute id="DELTA_IND"/>
+        <viewAttribute id="ZZSCODE"/>
+        <viewAttribute id="ZZWEEK"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#FAGLSKF_PN_VT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCLNT" source="RCLNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STAGR" source="STAGR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DATE_FROM" source="DATE_FROM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOCNR" source="DOCNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOCLN" source="DOCLN"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DATE_TO" source="DATE_TO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBUKRS" source="RBUKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCNTR" source="RCNTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RFAREA" source="RFAREA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RBUSA" source="RBUSA"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="KOKRS" source="KOKRS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ACTIV" source="ACTIV"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="OBART" source="OBART"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RUNIT" source="RUNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOGSYS" source="LOGSYS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RRCTY" source="RRCTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RVERS" source="RVERS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MSL" source="MSL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REFDOCNR" source="REFDOCNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CANC_DOCNR" source="CANC_DOCNR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="USNAM" source="USNAM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TIMESTAMP" source="TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DELTA_IND" source="DELTA_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZSCODE" source="ZZSCODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="RCLNT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RCLNT"/>
+      </attribute>
+      <attribute id="STAGR" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Statistical key figure"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STAGR"/>
+      </attribute>
+      <attribute id="DATE_FROM" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valid From"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DATE_FROM"/>
+      </attribute>
+      <attribute id="DOCNR" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Doc. Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DOCNR"/>
+      </attribute>
+      <attribute id="DOCLN" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Six-Character Posting Item for Ledger"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DOCLN"/>
+      </attribute>
+      <attribute id="DATE_TO" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Valid To"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DATE_TO"/>
+      </attribute>
+      <attribute id="RBUKRS" order="7" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Company Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RBUKRS"/>
+      </attribute>
+      <attribute id="RCNTR" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Cost Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RCNTR"/>
+      </attribute>
+      <attribute id="PRCTR" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="RFAREA" order="10" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Functional Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RFAREA"/>
+      </attribute>
+      <attribute id="RBUSA" order="11" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RBUSA"/>
+      </attribute>
+      <attribute id="KOKRS" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Controlling Area"/>
+        <keyMapping columnObjectName="Projection_1" columnName="KOKRS"/>
+      </attribute>
+      <attribute id="SEGMENT" order="13" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Segment for Segmental Reporting"/>
+        <keyMapping columnObjectName="Projection_1" columnName="SEGMENT"/>
+      </attribute>
+      <attribute id="ACTIV" order="14" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FI-SL Business Transaction"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ACTIV"/>
+      </attribute>
+      <attribute id="OBART" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Object Type"/>
+        <keyMapping columnObjectName="Projection_1" columnName="OBART"/>
+      </attribute>
+      <attribute id="RUNIT" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Unit of measure"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RUNIT"/>
+      </attribute>
+      <attribute id="LOGSYS" order="17" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Logical system"/>
+        <keyMapping columnObjectName="Projection_1" columnName="LOGSYS"/>
+      </attribute>
+      <attribute id="RRCTY" order="18" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Record Type"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RRCTY"/>
+      </attribute>
+      <attribute id="RVERS" order="19" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Version"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RVERS"/>
+      </attribute>
+      <attribute id="REFDOCNR" order="21" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Reference document number of an accounting document"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REFDOCNR"/>
+      </attribute>
+      <attribute id="CANC_DOCNR" order="22" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Document Number of Reversed Original Document"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CANC_DOCNR"/>
+      </attribute>
+      <attribute id="USNAM" order="23" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="User Name"/>
+        <keyMapping columnObjectName="Projection_1" columnName="USNAM"/>
+      </attribute>
+      <attribute id="TIMESTAMP" order="24" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="UTC Time Stamp in Short Form (YYYYMMDDhhmmss)"/>
+        <keyMapping columnObjectName="Projection_1" columnName="TIMESTAMP"/>
+      </attribute>
+      <attribute id="DELTA_IND" order="25" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Mode for Posting Stat. Key Figures in FI (Entered in FI)"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DELTA_IND"/>
+      </attribute>
+      <attribute id="ZZSCODE" order="26" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZSCODE"/>
+      </attribute>
+      <attribute id="ZZWEEK" order="27" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZWEEK"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="MSL" order="20" aggregationType="sum" engineAggregation="sum" measureType="simple">
+        <descriptions defaultDescription="Quantity"/>
+        <measureMapping columnObjectName="Projection_1" columnName="MSL"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>
