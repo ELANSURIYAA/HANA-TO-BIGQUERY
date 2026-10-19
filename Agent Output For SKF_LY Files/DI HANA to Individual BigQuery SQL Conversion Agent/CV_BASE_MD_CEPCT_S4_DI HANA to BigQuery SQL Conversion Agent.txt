@@ -1,0 +1,80 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.CEPCT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: CEPCT.MANDT → output: MANDT)
+- SPRAS (source: CEPCT.SPRAS → output: SPRAS)
+- PRCTR (source: CEPCT.PRCTR → output: PRCTR)
+- DATBI (source: CEPCT.DATBI → output: DATBI)
+- KOKRS (source: CEPCT.KOKRS → output: KOKRS)
+- KTEXT (source: CEPCT.KTEXT → output: KTEXT)
+- LTEXT (source: CEPCT.LTEXT → output: LTEXT)
+- MCTXT (source: CEPCT.MCTXT → output: MCTXT)
+- Filter: MANDT IN (120, 200)
+- No calculated columns, measures, parameters, or placeholders
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single projection node ("Projection_1") on the base table SAP_S4.CEPCT.
+- The projection includes columns: MANDT, SPRAS, PRCTR, DATBI, KOKRS, KTEXT, LTEXT, MCTXT.
+- A filter is applied: MANDT IN (120, 200).
+- All columns are mapped directly from the source table to the output.
+- No calculated columns, measures, joins, unions, aggregations, parameters, or placeholders are defined.
+- Root element attributes: dataCategory="DIMENSION", outputViewType="Projection".
+- Since dataCategory is "DIMENSION" and outputViewType is "Projection", the view produces row-level output with no aggregation or GROUP BY required.
+
+CONVERTED_BIGQUERY_SQL:
+WITH Projected_Profit_Center_Texts AS (
+    SELECT
+        MANDT,
+        SPRAS,
+        PRCTR,
+        DATBI,
+        KOKRS,
+        KTEXT,
+        LTEXT,
+        MCTXT
+    FROM
+        PROJECT.DATASET.CEPCT
+    WHERE
+        MANDT IN (120, 200)
+)
+SELECT
+    MANDT,
+    SPRAS,
+    PRCTR,
+    DATBI,
+    KOKRS,
+    KTEXT,
+    LTEXT,
+    MCTXT
+FROM
+    Projected_Profit_Center_Texts
+
+CONVERSION_NOTES:
+- The SAP HANA Calculation View XML was interpreted semantically: source table, projection logic, filter, and output columns.
+- The intermediate CTE name "Projection_1" was renamed to "Projected_Profit_Center_Texts" to reflect its function, per the functional naming rule for generic intermediate CTEs.
+- All output columns are mapped exactly as defined in the Calculation View XML.
+- No aggregation, GROUP BY, calculated columns, parameters, or placeholders are present.
+- The filter on MANDT is preserved exactly as in the source; datatype validation for MANDT is unresolved but assumed numeric based on typical SAP usage.
+- The BigQuery table reference uses PROJECT.DATASET.CEPCT as a placeholder; actual mapping must be provided.
+- No HANA-specific functions required conversion.
+- All existing meaningful names (columns, business identifiers) are preserved.
+- No changes to logic, output schema, or column mappings.
+
+ASSUMPTIONS:
+- MANDT is numeric (integer) based on typical SAP conventions, but actual datatype must be validated in the target BigQuery schema.
+- PROJECT.DATASET.CEPCT is a placeholder for the actual BigQuery table mapping.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAP_S4.CEPCT.
+- Datatype for MANDT, SPRAS, PRCTR, DATBI, KOKRS, KTEXT, LTEXT, MCTXT is not specified in the XML; assumed based on SAP conventions but requires validation.
+- No external Calculation Views, parameters, or placeholders are referenced.
+
+CONFIDENCE:
+High

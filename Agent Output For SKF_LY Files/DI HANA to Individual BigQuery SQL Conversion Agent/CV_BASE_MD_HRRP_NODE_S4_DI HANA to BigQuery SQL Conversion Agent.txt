@@ -1,0 +1,84 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_HRRP_NODE_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.HRRP_NODE
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: MANDT, filter: IN (120, 200))
+- HRYID (source: HRYID)
+- HRYVER (source: HRYVER)
+- NODECLS (source: NODECLS)
+- HRYNODE (source: HRYNODE)
+- PARNODE (source: PARNODE)
+- HRYVALTO (source: HRYVALTO)
+- HRYVALFROM (source: HRYVALFROM)
+- BALIND (source: BALIND)
+- NODETYPE (source: NODETYPE)
+- NODEVALUE (source: NODEVALUE)
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single projection node ("Projection_1") over the base table SAP_S4.HRRP_NODE.
+- The only transformation is a filter applied to the MANDT column, restricting rows to those where MANDT is either 120 or 200.
+- All other columns are mapped directly from the source table to the output without transformation or calculation.
+- No joins, unions, calculated columns, aggregations, parameters, or placeholders are defined.
+- Root element attributes: dataCategory="DIMENSION", outputViewType="Projection"
+- Because dataCategory="DIMENSION" and outputViewType="Projection", the view produces row-level output (no aggregation or GROUP BY required).
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Projected_HRRP_Node AS (
+  SELECT
+    MANDT,
+    HRYID,
+    HRYVER,
+    NODECLS,
+    HRYNODE,
+    PARNODE,
+    HRYVALTO,
+    HRYVALFROM,
+    BALIND,
+    NODETYPE,
+    NODEVALUE
+  FROM
+    PROJECT.DATASET.HRRP_NODE
+  WHERE
+    MANDT IN (120, 200)
+)
+SELECT
+  MANDT,
+  HRYID,
+  HRYVER,
+  NODECLS,
+  HRYNODE,
+  PARNODE,
+  HRYVALTO,
+  HRYVALFROM,
+  BALIND,
+  NODETYPE,
+  NODEVALUE
+FROM
+  Projected_HRRP_Node
+```
+
+CONVERSION_NOTES:
+- The only transformation is the filter on MANDT (IN (120, 200)), which is applied in the WHERE clause.
+- All columns are mapped 1:1 from the source table SAP_S4.HRRP_NODE to the output.
+- The intermediate CTE "Projected_HRRP_Node" replaces the generic "Projection_1" with a functional name describing the operation (a projection with a filter).
+- No calculated columns, joins, unions, parameters, or placeholders are present in the source artifact.
+- No aggregation or GROUP BY is applied, in accordance with dataCategory="DIMENSION" and outputViewType="Projection".
+- The table reference PROJECT.DATASET.HRRP_NODE is a placeholder; actual BigQuery project and dataset names must be supplied.
+
+ASSUMPTIONS:
+- The source table SAP_S4.HRRP_NODE maps to BigQuery as PROJECT.DATASET.HRRP_NODE. Actual project and dataset names must be provided.
+- The datatype of MANDT is assumed to be numeric (as literals 120 and 200 are used without quotes), but this should be validated against the actual schema.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset name for HRRP_NODE table is not specified.
+- Source column datatypes are not specified in the XML and should be validated during implementation.
+
+CONFIDENCE:
+High

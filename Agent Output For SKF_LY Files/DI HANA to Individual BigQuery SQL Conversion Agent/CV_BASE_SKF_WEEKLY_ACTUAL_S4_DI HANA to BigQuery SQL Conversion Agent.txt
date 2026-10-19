@@ -1,0 +1,129 @@
+SOURCE_ARTIFACT:
+CV_BASE_SKF_WEEKLY_ACTUAL_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.AZSRP_DS112_VT_S4
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+Attributes (columns, all mapped 1:1 from source table):
+- FISCPER → FISCPER
+- FISCVARNT → FISCVARNT
+- _BIC_ZIO_SWEEK → _BIC_ZIO_SWEEK
+- FISCYEAR → FISCYEAR
+- FISCPER3 → FISCPER3
+- _BIC_ZIO_PSTY → _BIC_ZIO_PSTY
+- _BIC_ZIO_PSKF → _BIC_ZIO_PSKF
+- _B631_S_CO_AREA → _B631_S_CO_AREA
+- _BIC_ZIO_CMPCD → _BIC_ZIO_CMPCD
+- _B631_S_PROFTCTR → _B631_S_PROFTCTR
+- _B631_S_COSTCNTR → _B631_S_COSTCNTR
+- _B631_S_FUNCAREA → _B631_S_FUNCAREA
+- _BIC_ZIO_VER → _BIC_ZIO_VER
+- _BIC_ZIO_SAUDT → _BIC_ZIO_SAUDT
+- MANDT → MANDT (with filter: IN (110, 200))
+- RECORDMODE → RECORDMODE
+- UNIT → UNIT
+
+Measures (all aggregated by SUM):
+- _BIC_ZIO_SKFQ → SUM(_BIC_ZIO_SKFQ)
+- _BIC_ZIO_D1SKQ → SUM(_BIC_ZIO_D1SKQ)
+- _BIC_ZIO_D2SKQ → SUM(_BIC_ZIO_D2SKQ)
+- _BIC_ZIO_D3SKQ → SUM(_BIC_ZIO_D3SKQ)
+- _BIC_ZIO_D4SKQ → SUM(_BIC_ZIO_D4SKQ)
+- _BIC_ZIO_D5SKQ → SUM(_BIC_ZIO_D5SKQ)
+- _BIC_ZIO_D6SKQ → SUM(_BIC_ZIO_D6SKQ)
+- _BIC_ZIO_D7SKQ → SUM(_BIC_ZIO_D7SKQ)
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation".
+- The only data source is the table CVS_FRIP.AZSRP_DS112_VT_S4.
+- All columns are mapped directly from the table without renaming or transformation.
+- The attribute MANDT is filtered to values IN (110, 200).
+- No calculated columns, calculated measures, restricted measures, joins, or unions are defined.
+- The logical model defines 17 attributes and 8 measures.
+- All measures have aggregationType="sum"; all other columns are grouped.
+- No variables, parameters, or placeholders are defined.
+- No procedural steps or additional logic is present.
+- Root element: dataCategory="CUBE", outputViewType="Aggregation" → Final output REQUIRES GROUP BY (all non-measure columns) and SUM aggregation (all measures).
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  RECORDMODE,
+  UNIT,
+  _BIC_ZIO_SWEEK,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  SUM(_BIC_ZIO_SKFQ) AS _BIC_ZIO_SKFQ,
+  SUM(_BIC_ZIO_D1SKQ) AS _BIC_ZIO_D1SKQ,
+  SUM(_BIC_ZIO_D2SKQ) AS _BIC_ZIO_D2SKQ,
+  SUM(_BIC_ZIO_D3SKQ) AS _BIC_ZIO_D3SKQ,
+  SUM(_BIC_ZIO_D4SKQ) AS _BIC_ZIO_D4SKQ,
+  SUM(_BIC_ZIO_D5SKQ) AS _BIC_ZIO_D5SKQ,
+  SUM(_BIC_ZIO_D6SKQ) AS _BIC_ZIO_D6SKQ,
+  SUM(_BIC_ZIO_D7SKQ) AS _BIC_ZIO_D7SKQ
+FROM
+  `PROJECT.DATASET.AZSRP_DS112_VT_S4`
+WHERE
+  MANDT IN (110, 200)
+GROUP BY
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  RECORDMODE,
+  UNIT,
+  _BIC_ZIO_SWEEK,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT
+```
+
+CONVERSION_NOTES:
+- This is a direct translation of a Calculation View with dataCategory="CUBE" and outputViewType="Aggregation". All non-measure columns are grouped, and all measures are summed.
+- The source table name was converted to a placeholder BigQuery table reference: `PROJECT.DATASET.AZSRP_DS112_VT_S4`. The actual project and dataset must be provided.
+- The filter on MANDT (IN (110, 200)) is preserved as a WHERE clause.
+- No calculated columns, calculated measures, or restricted measures are present, so no additional logic is required.
+- All column names and mappings are preserved exactly as in the source.
+- No generic intermediate CTEs are required for this simple projection/aggregation; no CTE renaming logic applies.
+- Data types and NULL handling are not specified in the XML and should be validated in the BigQuery schema.
+- No parameters, placeholders, or external Calculation Views are referenced.
+- No joins, unions, or procedural logic are present.
+- Output columns match the Calculation View logical model: 17 attributes + 8 measures = 25 output columns.
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.AZSRP_DS112_VT_S4 contains all columns listed with compatible data types.
+- The values 110 and 200 for MANDT are valid as integers (if in the source they are strings, this must be validated).
+- No hidden logic, calculated columns, or additional metadata is present outside the provided XML.
+- No additional filters, joins, or business rules are required.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the table mapping are unknown and must be supplied.
+- Data type validation for all columns is required (especially for MANDT, whether it is integer or string).
+- If the source table or columns use different naming or casing conventions, those must be mapped accordingly.
+- If the source system uses case-sensitive column names, BigQuery may require backticks or explicit column references.
+
+CONFIDENCE:
+High
