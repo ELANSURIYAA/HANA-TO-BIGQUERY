@@ -1,0 +1,129 @@
+SOURCE_ARTIFACT:
+CVS_FRIP.CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES
+
+SOURCE_TYPE:
+HANA SQLScript Procedure
+
+SOURCE_OBJECTS:
+- Calculation View: _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_SRPACT_S4
+- Calculation View: _SYS_BIC.CVS_FRIP.Base.Master/CV_BASE_MD_COMPFL_S4
+- Function: CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK (external, definition unavailable)
+- Table: CVS_FRIP.CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT
+- Table: CVS_FRIP.CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Variables: V_WEEK (prior fiscal week, assigned via external function), V_LY_WEEK (not used)
+- TBL_WSS_SRP_ATTR_ACT columns (explicit target mapping):
+  MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT, RX_HRS_OPER, FS_OPEN_DAT, FS_CLOSE_DAT, FS_HRS_OPER,
+  REP_MKT_CODE, REP_MKT_DESC, ADDRESS, CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC, DIVISION_MGR, AREA_CODE,
+  AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR, DISTRICT_CODE, DISTRICT_DESC, DISTRICT_MGR, ZONE_CODE,
+  ZONE_DESC, MAJOR_REGION_CODE, MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC, RX_STORE, RX_STORE_DESC, DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT, CONST_OPEN_DAT,
+  CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT, EMERG_MKT_IND, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT, ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER,
+  COUNTY_CODE, COUNTY_DESC, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE,
+  ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND, CREATEDBY, CREATED_ON, SNAPSHOT_TIMESTAMP,
+  SNAPSHOT_CREATED_BY
+- TBL_WSS_SRP_COMPFLAG columns (explicit target mapping):
+  MANDT, PRCTR, STRNUM, COMP_VER, ZWEEK, ZMONTH, ZYEAR, FS_COMP_PRE, RX_COMP_PRE, FS_COMP_MON, RX_COMP_MON,
+  FS_COMP_WK, RX_COMP_WK, SNAPSHOT_TIMESTAMP, CREATED_BY
+- Source-to-target mapping: direct column mapping from calculation views to target tables, plus CURRENT_TIMESTAMP and SESSION_USER for audit columns.
+- Parameters/placeholders: V_WEEK is set via external function call.
+
+SOURCE_LOGIC:
+- Procedure logic:
+  1. Declare variables V_WEEK and V_LY_WEEK.
+  2. Assign V_WEEK from the result of CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK().
+  3. Delete all rows from TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG.
+  4. Insert all rows from CV_BASE_MD_SRPACT_S4 into TBL_WSS_SRP_ATTR_ACT, mapping columns directly and adding audit columns (CURRENT_TIMESTAMP, SESSION_USER).
+  5. Insert rows from CV_BASE_MD_COMPFL_S4 into TBL_WSS_SRP_COMPFLAG, filtered to ZWEEK = V_WEEK, mapping columns directly and adding audit columns (CURRENT_TIMESTAMP, SESSION_USER).
+  6. Return a summary SELECT statement concatenating the audit message and V_WEEK (for procedural feedback).
+- No aggregation or grouping logic; all inserts are row-level.
+- No joins or calculated columns in the procedure itself; all logic comes from the calculation views and the external function.
+- External dependencies: calculation views and function definition are not included.
+
+CONVERTED_BIGQUERY_SQL:
+-- BigQuery scripting equivalent of the HANA SQLScript procedure
+-- Note: External function logic for SFN_PRIOR_FISCAL_WEEK is unresolved and must be implemented or mapped in BigQuery.
+
+DECLARE V_WEEK STRING;
+DECLARE V_LY_WEEK STRING; -- Not used
+
+-- Initialize V_WEEK to prior week (external function mapping required)
+-- Placeholder for function mapping: implement logic to fetch prior fiscal week as per business requirement.
+SET V_WEEK = (SELECT SFN_PRIOR_FISCAL_WEEK() AS prior_week); -- SFN_PRIOR_FISCAL_WEEK must be implemented in BigQuery
+
+-- Delete data from tables
+DELETE FROM PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT;
+
+DELETE FROM PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG;
+
+-- Insert data into TBL_WSS_SRP_ATTR_ACT from Calculation View CV_BASE_MD_SRPACT_S4
+INSERT INTO PROJECT.DATASET.TBL_WSS_SRP_ATTR_ACT (
+  MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT, RX_HRS_OPER, FS_OPEN_DAT, FS_CLOSE_DAT, FS_HRS_OPER,
+  REP_MKT_CODE, REP_MKT_DESC, ADDRESS, CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC, DIVISION_MGR, AREA_CODE,
+  AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR, DISTRICT_CODE, DISTRICT_DESC, DISTRICT_MGR, ZONE_CODE,
+  ZONE_DESC, MAJOR_REGION_CODE, MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC, RX_STORE, RX_STORE_DESC, DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT, CONST_OPEN_DAT,
+  CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT, EMERG_MKT_IND, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT, ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER,
+  COUNTY_CODE, COUNTY_DESC, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE,
+  ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND, CREATEDBY, CREATED_ON, SNAPSHOT_TIMESTAMP,
+  SNAPSHOT_CREATED_BY
+)
+SELECT
+  MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT, RX_HRS_OPER, FS_OPEN_DAT, FS_CLOSE_DAT, FS_HRS_OPER,
+  REP_MKT_CODE, REP_MKT_DESC, ADDRESS, CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC, DIVISION_MGR, AREA_CODE,
+  AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR, DISTRICT_CODE, DISTRICT_DESC, DISTRICT_MGR, ZONE_CODE,
+  ZONE_DESC, MAJOR_REGION_CODE, MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC, RX_STORE, RX_STORE_DESC, DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT, CONST_OPEN_DAT,
+  CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT, EMERG_MKT_IND, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT, ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER,
+  COUNTY_CODE, COUNTY_DESC, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE,
+  ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND, CREATEDBY, CREATED_ON,
+  CURRENT_TIMESTAMP(), SESSION_USER()
+FROM PROJECT.DATASET.CV_BASE_MD_SRPACT_S4;
+
+-- Insert data into TBL_WSS_SRP_COMPFLAG from Calculation View CV_BASE_MD_COMPFL_S4
+INSERT INTO PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG (
+  MANDT, PRCTR, STRNUM, COMP_VER, ZWEEK, ZMONTH, ZYEAR, FS_COMP_PRE, RX_COMP_PRE, FS_COMP_MON, RX_COMP_MON,
+  FS_COMP_WK, RX_COMP_WK, SNAPSHOT_TIMESTAMP, CREATED_BY
+)
+SELECT
+  MANDT, PRCTR, STRNUM, COMP_VER, ZWEEK, ZMONTH, ZYEAR, FS_COMP_PRE, RX_COMP_PRE, FS_COMP_MON, RX_COMP_MON,
+  FS_COMP_WK, RX_COMP_WK, CURRENT_TIMESTAMP(), SESSION_USER()
+FROM PROJECT.DATASET.CV_BASE_MD_COMPFL_S4
+WHERE ZWEEK = V_WEEK;
+
+-- Summary output (BigQuery scripting: use SELECT to return summary message)
+SELECT CONCAT('Store attribute table loaded & Comp Flag table loaded for ', V_WEEK) AS Summary;
+
+CONVERSION_NOTES:
+- The HANA SQLScript procedure was converted to a BigQuery scripting multi-statement script, preserving procedural steps: variable declaration, assignment, DELETE, INSERT, SELECT.
+- The external function CVS_FRIP.CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK() is not defined in the source artifact. In BigQuery, this must be implemented as a UDF, stored procedure, or query logic to fetch the prior fiscal week.
+- Calculation Views CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4 are referenced as source tables/views in BigQuery. Their internal logic is not provided; conversion assumes direct mapping to BigQuery views or tables with the same structure.
+- SESSION_USER() is used as the closest BigQuery equivalent to HANA SESSION_USER. If exact session handling differs, validation is required.
+- CURRENT_TIMESTAMP() is used as the BigQuery equivalent to HANA CURRENT_TIMESTAMP.
+- Table and view references are mapped to PROJECT.DATASET.TABLE as placeholders; actual BigQuery project/dataset/table names must be mapped.
+- No generic intermediate CTEs are present in the original logic; therefore, no functional renaming is required.
+- No aggregation or grouping logic is present in the procedure; all inserts are row-level.
+- All target column mappings are preserved as per the original HANA logic.
+- Datatype mapping is assumed to be compatible; actual types must be validated against BigQuery schema.
+- The summary SELECT statement is preserved as a procedural feedback message.
+
+ASSUMPTIONS:
+- The external function SFN_PRIOR_FISCAL_WEEK() can be implemented or mapped in BigQuery to provide the prior fiscal week value.
+- The calculation views CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4 are available as BigQuery tables or views with the required columns.
+- Table and view names will be mapped to actual BigQuery project/dataset/table names.
+
+UNRESOLVED_ITEMS:
+- Definition and implementation of SFN_PRIOR_FISCAL_WEEK() in BigQuery.
+- Internal logic, schema, and mapping of calculation views CV_BASE_MD_SRPACT_S4 and CV_BASE_MD_COMPFL_S4.
+- Actual BigQuery project, dataset, and table/view names.
+- Data types of columns in source and target tables/views (validation required).
+- SESSION_USER() mapping may require validation for session context in BigQuery.
+
+CONFIDENCE:
+Medium
+
+Explanation: The conversion preserves all procedural logic and mappings from the original HANA SQLScript procedure. However, unresolved external dependencies (function and calculation views), schema mapping, and session handling require validation in BigQuery. No aggregation or functional CTE renaming is required. The result is a faithful procedural script, but full conversion depends on the implementation of external objects and mappings.

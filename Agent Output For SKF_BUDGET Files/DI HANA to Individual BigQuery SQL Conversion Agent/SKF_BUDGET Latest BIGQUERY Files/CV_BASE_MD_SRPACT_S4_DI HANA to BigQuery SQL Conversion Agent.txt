@@ -1,0 +1,209 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_SRPACT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTSRP_ATTR_ACT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns from SAP_S4.ZTSRP_ATTR_ACT are mapped 1:1 to the output, with the exception of the MANDT column, which is filtered to values 120 and 200.
+- Output columns (attributes) as defined in <logicalModel><attributes>:
+  - MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT, FS_OPEN_DAT, FS_CLOSE_DAT, REP_MKT_CODE, REP_MKT_DESC, ADDRESS, CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC, DIVISION_MGR, AREA_CODE, AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR, DISTRICT_CODE, DISTRICT_DESC, ZONE_CODE, DISTRICT_MGR, ZONE_DESC, MAJOR_REGION_CODE, MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC, RX_STORE, RX_STORE_DESC, DISTRIBUTION_CNTR, DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT, CONST_OPEN_DAT, CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT, EMERG_MKT_IND, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC, ORIGINAL_FS_OPEN_DAT, ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER, COUNTY_CODE, COUNTY_DESC, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE, ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND, CREATEDBY, CREATED_ON, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+- Measures (aggregated with SUM):
+  - RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT
+
+SOURCE_LOGIC:
+- The Calculation View is defined with dataCategory="CUBE" and outputViewType="Aggregation", which means the final output must be aggregated with GROUP BY on all non-measure columns and aggregation (SUM) on all measure columns.
+- Data is sourced from the SAP_S4.ZTSRP_ATTR_ACT table.
+- The only explicit filter is on MANDT: only rows where MANDT IN (120, 200) are included.
+- All other columns are projected directly from the source table to the output.
+- No calculated columns, joins, or unions are present.
+- No input parameters, variables, or placeholders are defined or mapped.
+- The output columns and measures are explicitly listed in the logical model.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_Store_Profile_Attributes AS (
+  SELECT
+    *
+  FROM
+    `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE
+    MANDT IN ('120', '200')
+)
+SELECT
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+  SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+  SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+  SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+FROM
+  Filtered_Store_Profile_Attributes
+GROUP BY
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The Calculation View is a simple projection with a filter and explicit aggregation.
+- The only transformation is the filter on MANDT (client), which is implemented as a WHERE clause.
+- The output is aggregated as required by dataCategory="CUBE" and outputViewType="Aggregation": all non-measure columns are grouped, and all measure columns are summed.
+- The CTE name "Filtered_Store_Profile_Attributes" replaces the generic "PROJECTION_1" to describe the filter on MANDT; no other generic intermediate CTEs exist.
+- All column names, output column order, and measure aggregations match the Calculation View logical model.
+- The source table is referenced as `PROJECT.DATASET.ZTSRP_ATTR_ACT` as a placeholder; the actual BigQuery project/dataset/table must be mapped.
+- All columns are projected 1:1; no calculated columns, joins, unions, or parameters are present.
+- The filter values for MANDT are preserved as strings, matching the likely SAP client ID datatype (typically CHAR(3)), but datatype is not explicitly confirmed in the XML.
+
+ASSUMPTIONS:
+- The SAP_S4.ZTSRP_ATTR_ACT table is available in BigQuery as PROJECT.DATASET.ZTSRP_ATTR_ACT.
+- The MANDT column is of string/character type, so the filter values '120' and '200' are correct.
+- No additional business logic, calculated columns, or parameters are required beyond what is specified in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table names are placeholders and must be mapped to real values.
+- Source column datatypes are not specified in the XML; mapping assumes direct compatibility.
+- If the SAP_S4.ZTSRP_ATTR_ACT table contains additional columns not listed in the logical model, they are not included in the output.
+
+CONFIDENCE:
+High

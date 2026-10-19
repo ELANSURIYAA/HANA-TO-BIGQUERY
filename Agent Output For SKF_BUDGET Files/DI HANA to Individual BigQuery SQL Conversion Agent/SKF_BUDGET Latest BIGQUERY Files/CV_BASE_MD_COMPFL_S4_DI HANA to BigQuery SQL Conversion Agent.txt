@@ -1,0 +1,102 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_COMPFL_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTSRP_COMPFL
+- Calculation View Node: Projection_1 (generic intermediate node; eligible for functional renaming)
+- No external Calculation Views, procedures, functions, or parameters are referenced
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Output Columns (attributes, all mapped directly from source table):
+  - MANDT (Client) [filtered: IN (110, 200)]
+  - PRCTR (Profit Center (Retail Store))
+  - STRNUM (Store Number)
+  - COMP_VER (Comp flag version)
+  - ZWEEK (Week Number)
+  - ZMONTH (Month)
+  - ZYEAR (Year)
+  - FS_COMP_PRE (FS Comp Flag Prelim)
+  - RX_COMP_PRE (RX Comp Flag Prelim)
+  - FS_COMP_MON (FS Comp Flag Final Monthly)
+  - RX_COMP_MON (RX Comp Flag Final Monthly)
+  - FS_COMP_WK (FS Comp Flag Final Weekly)
+  - RX_COMP_WK (RX Comp Flag Final Weekly)
+- Source-to-target mapping is 1:1 for all columns (from SAP_S4.ZTSRP_COMPFL to output)
+- No calculated columns, measures, parameters, or placeholders are defined
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single projection node ("Projection_1") over the base table SAP_S4.ZTSRP_COMPFL.
+- A filter is applied to the MANDT column: only rows with MANDT IN (110, 200) are included.
+- All other columns are projected directly, with no transformations or calculations.
+- No joins, unions, calculated columns, or aggregations are present.
+- Root element attributes:
+  - dataCategory="DIMENSION"
+  - outputViewType="Projection"
+- As a result, the final output is row-level (not aggregated); GROUP BY and aggregation are NOT required.
+- The output schema is defined by the <logicalModel> attributes, matching the projection node.
+
+CONVERTED_BIGQUERY_SQL:
+-- This SQL represents the Calculation View logic as a BigQuery Standard SQL query.
+-- The intermediate projection node "Projection_1" is renamed to "Filtered_Store_Profile_Comp_Flags" for functional clarity.
+-- All column names, mappings, and output schema are preserved exactly as defined in the Calculation View XML.
+
+WITH Filtered_Store_Profile_Comp_Flags AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+  FROM PROJECT.DATASET.ZTSRP_COMPFL
+  WHERE MANDT IN (110, 200)
+)
+SELECT
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK
+FROM Filtered_Store_Profile_Comp_Flags
+
+CONVERSION_NOTES:
+- Calculation View XML node "Projection_1" was renamed to "Filtered_Store_Profile_Comp_Flags" in the BigQuery SQL, as its purpose (filtering and projecting store profile comp flag records) is clear from the XML.
+- All column names and mappings are preserved exactly as defined in the Calculation View and logicalModel.
+- The filter on MANDT (IN (110, 200)) is applied in the WHERE clause.
+- No calculated columns, measures, parameters, placeholders, joins, or aggregations are present, so none are converted.
+- The output is row-level, matching the Calculation View's dataCategory="DIMENSION" and outputViewType="Projection".
+- The source table is referenced as PROJECT.DATASET.ZTSRP_COMPFL; actual BigQuery project and dataset names must be mapped as appropriate.
+- No datatype conversions were required; datatypes are assumed compatible unless otherwise specified in the source artifact.
+- No business meaning was invented; functional naming was applied only to the eligible generic intermediate node.
+- No external dependencies, unresolved parameters, or placeholders are referenced.
+
+ASSUMPTIONS:
+- The column names and datatypes in BigQuery match those in SAP_S4.ZTSRP_COMPFL.
+- PROJECT.DATASET.ZTSRP_COMPFL is a placeholder for the actual BigQuery project and dataset mapping.
+- The filter values for MANDT (110, 200) are valid for the target datatype; if MANDT is not numeric, datatype validation is required.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset mapping for SAP_S4.ZTSRP_COMPFL is not provided; PROJECT.DATASET.ZTSRP_COMPFL is used as a placeholder.
+- Datatype compatibility for MANDT filter values (110, 200) is assumed but not explicitly validated.
+- None otherwise.
+
+CONFIDENCE:
+High

@@ -1,0 +1,80 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.CEPCT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT: mapped from CEPCT.MANDT, filtered to IN (120, 200)
+- SPRAS: mapped from CEPCT.SPRAS
+- PRCTR: mapped from CEPCT.PRCTR
+- DATBI: mapped from CEPCT.DATBI
+- KOKRS: mapped from CEPCT.KOKRS
+- KTEXT: mapped from CEPCT.KTEXT
+- LTEXT: mapped from CEPCT.LTEXT
+- MCTXT: mapped from CEPCT.MCTXT
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single data source (SAP_S4.CEPCT) and a single projection node (Projection_1).
+- Projection_1 maps all columns directly from CEPCT, with a filter applied to MANDT (MANDT IN (120, 200)).
+- No joins, unions, calculated columns, aggregations, measures, parameters, or placeholders are defined.
+- The logical model defines the output columns as MANDT, SPRAS, PRCTR, DATBI, KOKRS, KTEXT, LTEXT, MCTXT.
+- Root element attributes: dataCategory="DIMENSION", outputViewType="Projection".
+- As dataCategory is "DIMENSION" and outputViewType is "Projection", the output is row-level (not aggregated), and no GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+-- This SQL represents the Calculation View logic from CV_BASE_MD_CEPCT_S4 in BigQuery Standard SQL.
+-- Replace PROJECT.DATASET.CEPCT with the actual BigQuery project, dataset, and table name as required.
+
+WITH Filtered_CEPCT AS (
+    SELECT
+        MANDT,
+        SPRAS,
+        PRCTR,
+        DATBI,
+        KOKRS,
+        KTEXT,
+        LTEXT,
+        MCTXT
+    FROM
+        PROJECT.DATASET.CEPCT
+    WHERE
+        MANDT IN (120, 200)
+)
+
+SELECT
+    MANDT,
+    SPRAS,
+    PRCTR,
+    DATBI,
+    KOKRS,
+    KTEXT,
+    LTEXT,
+    MCTXT
+FROM
+    Filtered_CEPCT
+
+CONVERSION_NOTES:
+- The Calculation View XML defines only a projection with a filter on MANDT (IN 120, 200).
+- All columns are mapped directly from the source table with no renaming, calculated columns, or aggregations.
+- The generic intermediate CTE name "Projection_1" was replaced with the functional name "Filtered_CEPCT" to reflect its purpose (projection with filter).
+- No joins, unions, or calculated columns are present, so no additional transformation logic is required.
+- No parameters, placeholders, or measures are defined or used.
+- The output columns are preserved exactly as defined in the logical model.
+- No datatype conversions were performed; the filter values (120, 200) are preserved as numeric literals, assuming MANDT is numeric (as in typical SAP systems).
+- The BigQuery table reference is a placeholder ("PROJECT.DATASET.CEPCT"); actual mapping is required.
+- No aggregation or GROUP BY is needed as the view is not a CUBE/Aggregation type.
+
+ASSUMPTIONS:
+- MANDT is numeric, so filter values 120 and 200 are used without quotes. If MANDT is not numeric, datatype validation is required.
+- PROJECT.DATASET.CEPCT is a placeholder for the actual BigQuery table mapping.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAP_S4.CEPCT is not provided and must be resolved.
+- Datatype of MANDT is assumed to be numeric based on typical SAP conventions; validation may be required if this is not the case.
+
+CONFIDENCE:
+High

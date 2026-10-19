@@ -1,0 +1,218 @@
+SOURCE_ARTIFACT:
+CV_BASE_SKF_WEEKLY_BUDGET_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.AZSRP_DS092_VT_S4
+- Table: CVS_FRIP.AZSRP_DS031_VT_S4
+- Calculation View Projections: Frozen_Cube, Live_Cube
+- Calculation View Union: Union_1
+- Parameters: IP_VERSION, IP_FC_COUNT (with derivation from external function CVS_FRIP.Composite.Master::SFN_SKF_FC_FLAG)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Columns: FISCPER, FISCVARNT, _BIC_ZIO_SWEEK, FISCYEAR, FISCPER3, _B631_S_CHRTACCT, _BIC_ZIO_PSTY, _BIC_ZIO_PSKF, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT, MANDT, RECORDMODE, UNIT, _BIC_ZIO_SKFQ, _B631_S_COMPCODE, _BIC_ZIO_CCTR, _BIC_ZIO_PCTR
+- Mappings:
+  - Frozen_Cube: Direct mapping from CVS_FRIP.AZSRP_DS092_VT_S4 for all columns; filter: MANDT in ('110','200') AND IP_FC_COUNT != 0
+  - Live_Cube: Direct mapping from CVS_FRIP.AZSRP_DS031_VT_S4 for all columns; filter: MANDT in ('110','200') AND IP_FC_COUNT = 0
+  - Union_1: UNION ALL of Frozen_Cube (FLAG='FC') and Live_Cube (FLAG='LC'), with some columns set to NULL or empty string in Live_Cube as per mapping.
+- Calculated/Restricted Measures:
+  - _BIC_ZIO_SKFQ_DUMMY: SUM(_BIC_ZIO_SKFQ)
+  - RES_QUANT_FC: SUM(_BIC_ZIO_SKFQ_DUMMY) WHERE FLAG='FC'
+  - RES_QUANT_LC: SUM(_BIC_ZIO_SKFQ_DUMMY) WHERE FLAG='LC'
+  - _BIC_ZIO_SKFQ: IF(ISNULL(RES_QUANT_FC), RES_QUANT_LC, RES_QUANT_FC)
+- Parameters:
+  - IP_VERSION (input parameter)
+  - IP_FC_COUNT (derived from function, requires IP_VERSION)
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation".
+- Data is sourced from two tables: CVS_FRIP.AZSRP_DS092_VT_S4 (Frozen_Cube) and CVS_FRIP.AZSRP_DS031_VT_S4 (Live_Cube).
+- Frozen_Cube filters for MANDT in ('110','200') and IP_FC_COUNT != 0; Live_Cube filters for MANDT in ('110','200') and IP_FC_COUNT = 0.
+- Both cubes are projected to a common set of columns, with Live_Cube setting _B631_S_CHRTACCT and _B631_S_FUNCAREA to empty string (NULL).
+- The cubes are UNIONed together (Union_1), with an additional column FLAG indicating 'FC' (Frozen) or 'LC' (Live).
+- The logical model defines all output columns and one visible measure (_BIC_ZIO_SKFQ), which is calculated as IF(ISNULL(RES_QUANT_FC), RES_QUANT_LC, RES_QUANT_FC), where RES_QUANT_FC and RES_QUANT_LC are sums of _BIC_ZIO_SKFQ restricted by FLAG.
+- As a CUBE/Aggregation view, the final output requires GROUP BY of all non-measure columns and SUM aggregation of the measure.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+-- Parameters (require implementation in BigQuery, e.g., with scripting or as UDFs)
+-- DECLARE IP_VERSION STRING DEFAULT NULL;
+-- DECLARE IP_FC_COUNT STRING DEFAULT NULL; -- Should be set via equivalent logic to CVS_FRIP.Composite.Master::SFN_SKF_FC_FLAG(IP_VERSION)
+
+WITH
+Frozen_Cube AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    RECORDMODE,
+    UNIT,
+    _BIC_ZIO_SKFQ
+  FROM
+    PROJECT.DATASET.AZSRP_DS092_VT_S4
+  WHERE
+    MANDT IN ('110', '200')
+    AND @IP_FC_COUNT != '0'
+),
+Live_Cube AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_COMPCODE,
+    _BIC_ZIO_CCTR,
+    _BIC_ZIO_PCTR,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    RECORDMODE,
+    UNIT,
+    _BIC_ZIO_SKFQ
+  FROM
+    PROJECT.DATASET.AZSRP_DS031_VT_S4
+  WHERE
+    MANDT IN ('110', '200')
+    AND @IP_FC_COUNT = '0'
+),
+Combined_Frozen_Live_Data AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    RECORDMODE,
+    UNIT,
+    _BIC_ZIO_SKFQ,
+    'FC' AS FLAG
+  FROM
+    Frozen_Cube
+  UNION ALL
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    '' AS _B631_S_CHRTACCT,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_PCTR AS _B631_S_PROFTCTR,
+    _BIC_ZIO_CCTR AS _B631_S_COSTCNTR,
+    '' AS _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    RECORDMODE,
+    UNIT,
+    _BIC_ZIO_SKFQ,
+    'LC' AS FLAG
+  FROM
+    Live_Cube
+)
+SELECT
+  FISCPER,
+  FISCVARNT,
+  _BIC_ZIO_SWEEK,
+  FISCYEAR,
+  FISCPER3,
+  _B631_S_CHRTACCT,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  MANDT,
+  RECORDMODE,
+  UNIT,
+  -- Calculated measure as per Calculation View logic
+  IF(
+    SUM(CASE WHEN FLAG = 'FC' THEN _BIC_ZIO_SKFQ ELSE NULL END) IS NULL,
+    SUM(CASE WHEN FLAG = 'LC' THEN _BIC_ZIO_SKFQ ELSE NULL END),
+    SUM(CASE WHEN FLAG = 'FC' THEN _BIC_ZIO_SKFQ ELSE NULL END)
+  ) AS _BIC_ZIO_SKFQ
+FROM
+  Combined_Frozen_Live_Data
+GROUP BY
+  FISCPER,
+  FISCVARNT,
+  _BIC_ZIO_SWEEK,
+  FISCYEAR,
+  FISCPER3,
+  _B631_S_CHRTACCT,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  MANDT,
+  RECORDMODE,
+  UNIT
+;
+```
+
+CONVERSION_NOTES:
+- The Calculation View XML is a CUBE with outputViewType="Aggregation", so the final SQL includes GROUP BY for all non-measure output columns and applies SUM aggregation to the measure (_BIC_ZIO_SKFQ).
+- The parameters IP_VERSION and IP_FC_COUNT are referenced as variables; IP_FC_COUNT is derived from an external function (CVS_FRIP.Composite.Master::SFN_SKF_FC_FLAG), which is not defined in the XML. In BigQuery, these should be provided as parameters or session variables, or implemented via scripting/UDF if possible.
+- The columns _B631_S_CHRTACCT and _B631_S_FUNCAREA are set to empty string in the Live_Cube projection, matching the Calculation View mapping.
+- The columns _B631_S_PROFTCTR and _B631_S_COSTCNTR are mapped from _BIC_ZIO_PCTR and _BIC_ZIO_CCTR respectively in Live_Cube, per the union mapping.
+- The calculated measure _BIC_ZIO_SKFQ is implemented using conditional aggregation and IF(ISNULL()) logic as defined in the Calculation View formula.
+- No CTEs were renamed except the generic union of Frozen_Cube and Live_Cube, which is functionally named Combined_Frozen_Live_Data for clarity.
+- Table references use PROJECT.DATASET.TABLE as a placeholder; actual BigQuery mappings are required.
+
+ASSUMPTIONS:
+- The BigQuery environment supports parameterization (e.g., @IP_FC_COUNT) or scripting variables; otherwise, these must be replaced with actual values at runtime.
+- The external function CVS_FRIP.Composite.Master::SFN_SKF_FC_FLAG and its mapping of IP_VERSION to IP_FC_COUNT must be implemented or provided elsewhere.
+- Datatypes for columns are assumed to be compatible with those in BigQuery; validation is required if types differ.
+
+UNRESOLVED_ITEMS:
+- The logic for deriving IP_FC_COUNT from IP_VERSION via CVS_FRIP.Composite.Master::SFN_SKF_FC_FLAG is not defined in the XML and must be implemented externally.
+- Actual BigQuery project, dataset, and table names must be supplied (PROJECT.DATASET.AZSRP_DS092_VT_S4 and PROJECT.DATASET.AZSRP_DS031_VT_S4 are placeholders).
+- If the HANA source types differ from assumed BigQuery types, datatype compatibility must be validated.
+- If parameter passing is not supported in the target environment, the parameter logic must be adapted.
+
+CONFIDENCE:
+Medium
+

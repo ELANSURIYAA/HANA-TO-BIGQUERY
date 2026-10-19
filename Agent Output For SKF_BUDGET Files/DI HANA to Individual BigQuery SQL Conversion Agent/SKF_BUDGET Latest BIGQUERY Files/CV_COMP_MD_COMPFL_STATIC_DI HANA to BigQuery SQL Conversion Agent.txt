@@ -1,0 +1,75 @@
+SOURCE_ARTIFACT:
+CV_COMP_MD_COMPFL_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG
+- Calculation View: CV_COMP_MD_COMPFL_STATIC (Projection View node: Projection_1)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Columns from source table mapped one-to-one to output:
+    - MANDT → MANDT
+    - PRCTR → PRCTR
+    - STRNUM → STRNUM
+    - COMP_VER → COMP_VER
+    - ZWEEK → ZWEEK
+    - ZMONTH → ZMONTH
+    - ZYEAR → ZYEAR
+    - FS_COMP_PRE → FS_COMP_PRE
+    - RX_COMP_PRE → RX_COMP_PRE
+    - FS_COMP_MON → FS_COMP_MON
+    - RX_COMP_MON → RX_COMP_MON
+    - FS_COMP_WK → FS_COMP_WK
+    - RX_COMP_WK → RX_COMP_WK
+- No calculated columns, measures, parameters, or placeholders are defined in this Calculation View XML.
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single Projection node (Projection_1) that selects all columns from the source table CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG and maps them one-to-one to the output.
+- No filters, joins, calculated columns, aggregations, parameters, placeholders, or procedural steps are defined.
+- Root element attributes:
+    - dataCategory="DIMENSION"
+    - outputViewType="Projection"
+- Because dataCategory="DIMENSION" and outputViewType="Projection", the view produces row-level output with no aggregation or grouping required.
+- The output columns are explicitly defined in <logicalModel><attributes> and must be preserved in the final SQL.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  PRCTR,
+  STRNUM,
+  COMP_VER,
+  ZWEEK,
+  ZMONTH,
+  ZYEAR,
+  FS_COMP_PRE,
+  RX_COMP_PRE,
+  FS_COMP_MON,
+  RX_COMP_MON,
+  FS_COMP_WK,
+  RX_COMP_WK
+FROM
+  PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG
+```
+
+CONVERSION_NOTES:
+- The Calculation View XML is a simple wrapper projection over the source table CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG.
+- No calculated columns, filters, joins, aggregations, parameters, or placeholders are present, so the conversion consists of a direct SELECT of mapped columns.
+- The output column order and names are preserved exactly as in the Calculation View's logical model.
+- The generic intermediate CTE name "Projection_1" is replaced by the final SELECT statement, as no further transformation is required. No intermediate CTE is needed for this simple projection.
+- The BigQuery table reference PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG is a placeholder; actual BigQuery project and dataset names must be mapped.
+- No datatype conversions or function conversions are needed.
+
+ASSUMPTIONS:
+- The source table CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG exists in BigQuery as PROJECT.DATASET.TBL_WSS_SRP_COMPFLAG.
+- All column names are valid in BigQuery and do not require quoting or escaping.
+- No additional business logic, filters, or parameters are required beyond the explicit projection.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG are not provided and require mapping.
+- Datatype information for columns is not specified in the Calculation View XML; validation may be required if datatype compatibility issues arise.
+
+CONFIDENCE:
+High
