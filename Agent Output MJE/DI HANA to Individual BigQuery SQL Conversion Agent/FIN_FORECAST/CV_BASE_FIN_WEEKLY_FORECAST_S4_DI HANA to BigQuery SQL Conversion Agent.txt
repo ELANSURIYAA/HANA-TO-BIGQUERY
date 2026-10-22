@@ -1,0 +1,141 @@
+SOURCE_ARTIFACT:
+CV_BASE_FIN_WEEKLY_FORECAST_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.AZSRP_DS041_VT_S4
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- FISCPER: mapped from FISCPER
+- FISCVARNT: mapped from FISCVARNT
+- _BIC_ZIO_SWEEK: mapped from _BIC_ZIO_SWEEK
+- FISCYEAR: mapped from FISCYEAR
+- FISCPER3: mapped from FISCPER3
+- _B631_S_CHRTACCT: mapped from _B631_S_CHRTACCT
+- _B631_S_CO_AREA: mapped from _B631_S_CO_AREA
+- _BIC_ZIO_CMPCD: mapped from _BIC_ZIO_CMPCD
+- _B631_S_PROFTCTR: mapped from _BIC_ZIO_PCTR
+- _B631_S_COSTCNTR: mapped from _BIC_ZIO_CCTR
+- _B631_S_FUNCAREA: mapped from _B631_S_FUNCAREA
+- _BIC_ZIO_VER: mapped from _BIC_ZIO_VER
+- _BIC_ZIO_SAUDT: mapped from _BIC_ZIO_SAUDT
+- MANDT: mapped from MANDT, filtered to IN (120, 200)
+- RECORDMODE: mapped from RECORDMODE
+- _B631_S_GL_ACCT: mapped from _B631_S_GL_ACCT
+- _BIC_ZWWPC_PA1: mapped from _BIC_ZWWPC_PA1
+- _BIC_ZWWSC_PA1: mapped from _BIC_ZWWSC_PA1
+- _B631_S_AMOUNT_NEGATIVE: mapped from _B631_S_AMOUNT
+- CURRENCY: mapped from CURRENCY
+- _BIC_ZIO_AMT: mapped from _BIC_ZIO_AMT
+- Measures:
+  - _B631_S_AMOUNT: SUM aggregation of _B631_S_AMOUNT_NEGATIVE (which is mapped from _B631_S_AMOUNT)
+  - _BIC_ZIO_AMT: SUM aggregation of _BIC_ZIO_AMT
+
+SOURCE_LOGIC:
+- The Calculation View XML is a CUBE-type aggregation view (dataCategory="CUBE", outputViewType="Aggregation").
+- Source table: CVS_FRIP.AZSRP_DS041_VT_S4.
+- Projection node ("Projection_1") selects and maps columns from the source table.
+- The only filter applied is MANDT IN (120, 200).
+- No calculated attributes or measures are defined beyond the mappings and aggregations.
+- Output columns are defined explicitly in <logicalModel> and include both attributes and measures.
+- Measures _B631_S_AMOUNT and _BIC_ZIO_AMT are aggregated with SUM.
+- The final output requires GROUP BY on all non-measure columns and SUM aggregation on the measures, as per CUBE/Aggregation rules.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_Projection AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_PCTR AS _B631_S_PROFTCTR,
+    _BIC_ZIO_CCTR AS _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    RECORDMODE,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    _B631_S_AMOUNT AS _B631_S_AMOUNT_NEGATIVE,
+    CURRENCY,
+    _BIC_ZIO_AMT
+  FROM PROJECT.DATASET.AZSRP_DS041_VT_S4
+  WHERE MANDT IN (120, 200)
+)
+SELECT
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  RECORDMODE,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  CURRENCY,
+  SUM(_B631_S_AMOUNT_NEGATIVE) AS _B631_S_AMOUNT,
+  SUM(_BIC_ZIO_AMT) AS _BIC_ZIO_AMT
+FROM Filtered_Projection
+GROUP BY
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  RECORDMODE,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CHRTACCT,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _B631_S_FUNCAREA,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  _B631_S_GL_ACCT,
+  _BIC_ZWWPC_PA1,
+  _BIC_ZWWSC_PA1,
+  CURRENCY
+```
+
+CONVERSION_NOTES:
+- The Calculation View XML was interpreted semantically. The root element specifies dataCategory="CUBE" and outputViewType="Aggregation", requiring GROUP BY and aggregation.
+- All output columns are explicitly mapped from the source table, with two columns (_B631_S_PROFTCTR, _B631_S_COSTCNTR) mapped from _BIC_ZIO_PCTR and _BIC_ZIO_CCTR, respectively.
+- The only filter is MANDT IN (120, 200), preserved exactly.
+- No calculated columns, joins, or unions are present; only a single projection node and aggregation.
+- Generic intermediate CTE "Projection_1" was renamed to "Filtered_Projection" to reflect its function: projecting and filtering the source data.
+- All output columns and aggregation logic strictly follow the Calculation View logical model.
+- The source table was mapped to PROJECT.DATASET.AZSRP_DS041_VT_S4 as a placeholder; actual BigQuery table mapping must be resolved.
+- The SQL is valid BigQuery Standard SQL and preserves all explicit source-to-target mappings.
+- No HANA-specific functions required conversion.
+
+ASSUMPTIONS:
+- The source table CVS_FRIP.AZSRP_DS041_VT_S4 is available in BigQuery as PROJECT.DATASET.AZSRP_DS041_VT_S4.
+- The datatypes of the filter values (MANDT) are compatible with BigQuery and do not require explicit casting.
+- The column mappings are valid and present in the BigQuery source table.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for CVS_FRIP.AZSRP_DS041_VT_S4 must be resolved.
+- Datatype validation for MANDT and all columns is required; source datatypes are not specified in the XML.
+- No information about external dependencies, parameters, or placeholders was present or required for this conversion.
+
+CONFIDENCE:
+High
