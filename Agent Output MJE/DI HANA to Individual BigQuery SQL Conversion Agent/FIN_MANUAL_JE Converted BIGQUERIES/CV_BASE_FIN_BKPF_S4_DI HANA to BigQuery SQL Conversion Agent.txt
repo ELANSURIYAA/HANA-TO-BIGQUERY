@@ -1,0 +1,356 @@
+SOURCE_ARTIFACT:
+CV_BASE_FIN_BKPF_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.BKPF_VT_S4
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns from CVS_FRIP.BKPF_VT_S4 are projected as output columns.
+- Explicit attribute-to-attribute mappings for each column (e.g., MANDT → MANDT, BUKRS → BUKRS, etc.).
+- Measures (aggregationType="sum"): KZKRS, KURSX, FRATH, KUR2X, KUR3X, KURS2, KURS3, ANXPERC, KURSF, TXKRS, ANXAMNT, CTXKRS.
+- All other columns are treated as attributes (dimensions).
+- Filter: MANDT IN ('120','200') (applied at the projection node).
+- No calculated columns, calculated attributes, or input parameters are defined.
+
+SOURCE_LOGIC:
+- The Calculation View is defined as a CUBE with outputViewType="Aggregation".
+- The data source is the table CVS_FRIP.BKPF_VT_S4.
+- The only transformation is a projection of all columns, with a filter applied to the MANDT column (MANDT IN ('120','200')).
+- All measures defined in <baseMeasures> are aggregated using SUM().
+- The final output must GROUP BY all non-measure (attribute) columns as per the Calculation View's logical model.
+- No joins, unions, calculated columns, or additional transformations are present in the XML.
+- No input parameters, placeholders, or variables are defined or used.
+- Root element attributes: dataCategory="CUBE", outputViewType="Aggregation" → final output requires GROUP BY and aggregation.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Projected_BKPF_VT_S4 AS (
+  SELECT
+    *
+  FROM
+    `PROJECT.DATASET.BKPF_VT_S4`
+  WHERE
+    MANDT IN ('120', '200')
+)
+
+SELECT
+  -- Attributes (dimensions)
+  MANDT,
+  BUKRS,
+  BELNR,
+  GJAHR,
+  BLART,
+  BUDAT,
+  XREF2_HD,
+  KNUMV,
+  XREORG,
+  PSOKS,
+  LOTKZ,
+  GJAHR_SENDER,
+  AWKEY,
+  CCNUM,
+  REINDAT,
+  CO_BELNR_SENDER,
+  XBLNR,
+  XSTOV,
+  PYBASTYP,
+  SUBSET,
+  BSTAT,
+  PSOSG,
+  XWVOF,
+  INTSUBID,
+  FIKRS,
+  SSBLK,
+  RLDNR,
+  KOKRS_SENDER,
+  DBBLG,
+  STODT,
+  PYBASNO,
+  KURST,
+  XNETB,
+  PSOFN,
+  STGRD,
+  AWORG_REV,
+  MONAT,
+  HWAER,
+  BATCH,
+  LDGRP,
+  _DATAAGING,
+  DBBLG_GJAHR,
+  XMWST,
+  PYBASDAT,
+  INTFORM,
+  PPNAM,
+  AWREF_REV,
+  CPUDT,
+  HWAE2,
+  SNAME,
+  PROPMANO,
+  TRAVA_PN,
+  DBBLG_BUKRS,
+  CURT2,
+  PYIBAN,
+  XRUEB,
+  INTDATE,
+  PPDAT,
+  XREVERSING,
+  CPUTM,
+  HWAE3,
+  SAMPLED,
+  XBLNR_ALT,
+  LDGRPSPEC_PN,
+  STBLG,
+  CURT3,
+  INWARDNO_HD,
+  GLVOR,
+  PSOBT,
+  PPTME,
+  XREVERSED,
+  AEDAT,
+  EXCLUDE_FLAG,
+  VATDATE,
+  AFABESPEC_PN,
+  STJAH,
+  KUTY2,
+  INWARDDT_HD,
+  XMCA,
+  GRPID,
+  PSOZL,
+  BRNCH,
+  GLBTGRP,
+  UPDDT,
+  BLIND,
+  DOCCAT,
+  XSECONDARY,
+  BKTXT,
+  KUTY3,
+  _SAPF15_STATUS,
+  DUEFL,
+  RESUBMISSION,
+  DOKID,
+  PSODT,
+  NUMPG,
+  CO_VRGNG,
+  WWERT,
+  BASW2,
+  OFFSET_STATUS,
+  XSPLIT,
+  REPROCESSING_STATUS_CODE,
+  WAERS,
+  XSNET,
+  ZVAT_INDC,
+  AWSYS,
+  LOGSYSTEM_SENDER,
+  ARCID,
+  PSOTM,
+  ADISC,
+  CO_REFBT,
+  USNAM,
+  BASW3,
+  OFFSET_REFER_DAT,
+  CASH_ALLOC,
+  ANXTYPE,
+  AUSBK,
+  PSOTY,
+  BUKRS_SENDER,
+  IBLAR,
+  FM_UMART,
+  XREF1_HD,
+  CO_ALEBN,
+  TCODE,
+  UMRD2,
+  PENRC,
+  FOLLOW_ON,
+  KZWRS,
+  XUSVR,
+  PSOAK,
+  BELNR_SENDER,
+  AWTYP,
+  CCINS,
+  XREVERSAL,
+  CO_VALDT,
+  BVORG,
+  UMRD3,
+  -- Measures (aggregated)
+  SUM(KZKRS) AS KZKRS,
+  SUM(KURSX) AS KURSX,
+  SUM(FRATH) AS FRATH,
+  SUM(KUR2X) AS KUR2X,
+  SUM(KUR3X) AS KUR3X,
+  SUM(KURS2) AS KURS2,
+  SUM(KURS3) AS KURS3,
+  SUM(ANXPERC) AS ANXPERC,
+  SUM(KURSF) AS KURSF,
+  SUM(TXKRS) AS TXKRS,
+  SUM(ANXAMNT) AS ANXAMNT,
+  SUM(CTXKRS) AS CTXKRS
+FROM
+  Projected_BKPF_VT_S4
+GROUP BY
+  -- List all non-measure columns as per the logical model, in the same order as SELECT above
+  MANDT,
+  BUKRS,
+  BELNR,
+  GJAHR,
+  BLART,
+  BUDAT,
+  XREF2_HD,
+  KNUMV,
+  XREORG,
+  PSOKS,
+  LOTKZ,
+  GJAHR_SENDER,
+  AWKEY,
+  CCNUM,
+  REINDAT,
+  CO_BELNR_SENDER,
+  XBLNR,
+  XSTOV,
+  PYBASTYP,
+  SUBSET,
+  BSTAT,
+  PSOSG,
+  XWVOF,
+  INTSUBID,
+  FIKRS,
+  SSBLK,
+  RLDNR,
+  KOKRS_SENDER,
+  DBBLG,
+  STODT,
+  PYBASNO,
+  KURST,
+  XNETB,
+  PSOFN,
+  STGRD,
+  AWORG_REV,
+  MONAT,
+  HWAER,
+  BATCH,
+  LDGRP,
+  _DATAAGING,
+  DBBLG_GJAHR,
+  XMWST,
+  PYBASDAT,
+  INTFORM,
+  PPNAM,
+  AWREF_REV,
+  CPUDT,
+  HWAE2,
+  SNAME,
+  PROPMANO,
+  TRAVA_PN,
+  DBBLG_BUKRS,
+  CURT2,
+  PYIBAN,
+  XRUEB,
+  INTDATE,
+  PPDAT,
+  XREVERSING,
+  CPUTM,
+  HWAE3,
+  SAMPLED,
+  XBLNR_ALT,
+  LDGRPSPEC_PN,
+  STBLG,
+  CURT3,
+  INWARDNO_HD,
+  GLVOR,
+  PSOBT,
+  PPTME,
+  XREVERSED,
+  AEDAT,
+  EXCLUDE_FLAG,
+  VATDATE,
+  AFABESPEC_PN,
+  STJAH,
+  KUTY2,
+  INWARDDT_HD,
+  XMCA,
+  GRPID,
+  PSOZL,
+  BRNCH,
+  GLBTGRP,
+  UPDDT,
+  BLIND,
+  DOCCAT,
+  XSECONDARY,
+  BKTXT,
+  KUTY3,
+  _SAPF15_STATUS,
+  DUEFL,
+  RESUBMISSION,
+  DOKID,
+  PSODT,
+  NUMPG,
+  CO_VRGNG,
+  WWERT,
+  BASW2,
+  OFFSET_STATUS,
+  XSPLIT,
+  REPROCESSING_STATUS_CODE,
+  WAERS,
+  XSNET,
+  ZVAT_INDC,
+  AWSYS,
+  LOGSYSTEM_SENDER,
+  ARCID,
+  PSOTM,
+  ADISC,
+  CO_REFBT,
+  USNAM,
+  BASW3,
+  OFFSET_REFER_DAT,
+  CASH_ALLOC,
+  ANXTYPE,
+  AUSBK,
+  PSOTY,
+  BUKRS_SENDER,
+  IBLAR,
+  FM_UMART,
+  XREF1_HD,
+  CO_ALEBN,
+  TCODE,
+  UMRD2,
+  PENRC,
+  FOLLOW_ON,
+  KZWRS,
+  XUSVR,
+  PSOAK,
+  BELNR_SENDER,
+  AWTYP,
+  CCINS,
+  XREVERSAL,
+  CO_VALDT,
+  BVORG,
+  UMRD3
+```
+
+CONVERSION_NOTES:
+- The source Calculation View is a simple projection of all columns from CVS_FRIP.BKPF_VT_S4, with a filter restricting MANDT to '120' or '200'.
+- The Calculation View is of type CUBE with outputViewType="Aggregation", so the final output must aggregate all measures using SUM and group by all other columns.
+- All columns are mapped one-to-one from the source table; no calculated columns, joins, or unions are present.
+- The filter on MANDT is preserved exactly as in the HANA logic. The values '120' and '200' are treated as strings, consistent with typical SAP client field types, but datatype validation is required.
+- The CTE name "Projected_BKPF_VT_S4" replaces the generic projection node name for clarity, as its sole purpose is to apply the MANDT filter.
+- The final SELECT and GROUP BY clauses explicitly list all non-measure columns, as required for CUBE/Aggregation Calculation Views.
+- All measure columns are aggregated using SUM(), as per the logical model's aggregationType="sum".
+- No calculated measures or restricted measures exist in the source artifact.
+- The output column order matches the logical model's attribute and measure order.
+
+ASSUMPTIONS:
+- The table CVS_FRIP.BKPF_VT_S4 is mapped to `PROJECT.DATASET.BKPF_VT_S4` in BigQuery; replace PROJECT and DATASET with the correct values for your environment.
+- The MANDT field is string-typed, consistent with SAP conventions, but this should be validated against the actual schema.
+- No additional filters, joins, calculated columns, or parameters are present or required.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the source table are unknown and must be specified.
+- Datatype of MANDT and all other columns should be validated against the BigQuery schema to ensure correct literal handling and aggregation.
+- If any columns in the source table are not present in the output, or vice versa, the column mapping must be reviewed for completeness.
+
+CONFIDENCE:
+High
+
+This conversion is high confidence because all transformation logic is explicit in the XML, no external dependencies or parameters are present, and the aggregation/grouping logic is fully determined by the Calculation View's logical model. The only required validation is for the target BigQuery table location and column datatypes.

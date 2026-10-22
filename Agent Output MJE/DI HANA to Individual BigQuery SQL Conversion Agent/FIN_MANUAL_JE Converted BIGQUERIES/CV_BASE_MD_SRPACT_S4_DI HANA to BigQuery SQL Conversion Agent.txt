@@ -1,0 +1,214 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_SRPACT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTSRP_ATTR_ACT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns from SAP_S4.ZTSRP_ATTR_ACT, mapped 1:1 to output columns.
+- Explicit filter on column MANDT: only values 120 and 200 allowed.
+- Measures (with aggregationType="sum"):
+    - RX_HRS_OPER (sum)
+    - FS_HRS_OPER (sum)
+    - RETAIL_SQFT_AMT (sum)
+    - TOTAL_SQFT_AMT (sum)
+- All other columns are output attributes (grouping columns).
+- No calculated columns, parameters, placeholders, or calculated measures are defined.
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation".
+- The only data source is the base table SAP_S4.ZTSRP_ATTR_ACT.
+- There is a single projection node (Projection_1) that selects all columns from the base table, applies a filter on MANDT (MANDT IN (120, 200)), and exposes all columns.
+- The logical model defines which columns are output attributes and which are measures (aggregated by SUM).
+- The final output must GROUP BY all non-measure attributes and aggregate the measure columns using SUM().
+- No joins, unions, or calculated columns are present.
+- No parameters, placeholders, or external dependencies are present.
+- The view's root element has dataCategory="CUBE" and outputViewType="Aggregation", so aggregation and GROUP BY are required for the final output.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_Store_Profile_Attributes AS (
+  SELECT
+    *
+  FROM
+    `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE
+    MANDT IN (120, 200)
+)
+SELECT
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+  SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+  SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+  SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+FROM
+  Filtered_Store_Profile_Attributes
+GROUP BY
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The source Calculation View is a simple projection of a base table, with a filter on MANDT (values 120, 200) and explicit aggregation logic required by the CUBE/Aggregation configuration.
+- All columns are mapped directly from the source table; the filter is applied as a WHERE clause.
+- The four columns marked as measures (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT) are aggregated using SUM().
+- All other columns are included in both the SELECT and GROUP BY clauses as required by the Calculation View's CUBE/Aggregation semantics.
+- The intermediate CTE is renamed from a generic "Projection" to "Filtered_Store_Profile_Attributes" to reflect its filtering purpose, as permitted by the functional naming rule.
+- No calculated columns, calculated measures, or restricted measures are present, so none are converted.
+- No parameters, placeholders, or external Calculation Views are present, so none are converted or marked unresolved.
+- The output columns and aggregation logic match the Calculation View logical model.
+- The table reference `PROJECT.DATASET.ZTSRP_ATTR_ACT` is a placeholder; the actual BigQuery project and dataset must be supplied.
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.ZTSRP_ATTR_ACT contains columns with the same names and compatible data types as the SAP_S4.ZTSRP_ATTR_ACT table in HANA.
+- The values 120 and 200 for MANDT are of the correct type (string or integer) for the filter; datatype validation may be required.
+- No additional business rules, calculated columns, or hidden filters exist beyond what is defined in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the source table are not provided and must be mapped.
+- Source column data types are not specified; datatype compatibility between HANA and BigQuery should be validated for all columns, especially for the MANDT filter and measure columns.
+
+CONFIDENCE:
+High
