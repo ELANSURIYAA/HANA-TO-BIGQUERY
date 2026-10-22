@@ -1,0 +1,62 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_RCALWEEK_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTFIGL_RCALWEEK
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- RCLNT (source: RCLNT, filter: IN (120, 200))
+- ZZWEEK (source: ZZWEEK)
+- ZCALYRP (source: ZCALYRP)
+- ZRYEAR (source: ZRYEAR)
+- ZRPERIOD (source: ZRPERIOD)
+- ZRYRP (source: ZRYRP)
+- ZRYRQTR (source: ZRYRQTR)
+- ZRWSTRTDATE (source: ZRWSTRTDATE)
+- ZRWENDDATE (source: ZRWENDDATE)
+
+SOURCE_LOGIC:
+This Calculation View XML defines a single projection node over the base table SAP_S4.ZTFIGL_RCALWEEK. The projection outputs the following columns: RCLNT, ZZWEEK, ZCALYRP, ZRYEAR, ZRPERIOD, ZRYRP, ZRYRQTR, ZRWSTRTDATE, ZRWENDDATE. There is a filter applied to RCLNT, restricting values to IN (120, 200). No calculated columns, joins, unions, or aggregations are defined. No parameters or placeholders are present. The root <Calculation:scenario> element specifies dataCategory="DIMENSION" and outputViewType="Projection", indicating that the output is row-level and does not require GROUP BY or aggregation. All output columns are mapped directly from the source table.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  RCLNT,
+  ZZWEEK,
+  ZCALYRP,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  ZRYRQTR,
+  ZRWSTRTDATE,
+  ZRWENDDATE
+FROM
+  PROJECT.DATASET.ZTFIGL_RCALWEEK
+WHERE
+  RCLNT IN (120, 200)
+```
+
+CONVERSION_NOTES:
+- The source Calculation View is a simple projection (row-level output) with a filter on the RCLNT column.
+- The filter `RCLNT IN (120, 200)` is preserved exactly as in the source logic.
+- All output columns are mapped directly from the source table with no transformations or calculations.
+- No aggregations, grouping, joins, calculated columns, parameters, or placeholders are present.
+- The output table name is represented as PROJECT.DATASET.ZTFIGL_RCALWEEK, as the actual BigQuery project and dataset are not specified in the source XML.
+- No generic intermediate CTEs were generated, so no CTE renaming was required.
+- All source and output column names are preserved exactly.
+- No HANA-specific functions or datatypes are present in the logic.
+
+ASSUMPTIONS:
+- The BigQuery table PROJECT.DATASET.ZTFIGL_RCALWEEK contains columns with exactly the same names as in the SAP source table.
+- RCLNT is a numeric or string column that supports IN (120, 200) semantics; datatype validation may be required in BigQuery if the table definition differs.
+- No additional filters, joins, or calculations are required beyond what is specified in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for ZTFIGL_RCALWEEK (represented as PROJECT.DATASET).
+- Datatype validation for RCLNT and other columns (assumed compatible but not explicitly defined in the XML).
+
+CONFIDENCE:
+High

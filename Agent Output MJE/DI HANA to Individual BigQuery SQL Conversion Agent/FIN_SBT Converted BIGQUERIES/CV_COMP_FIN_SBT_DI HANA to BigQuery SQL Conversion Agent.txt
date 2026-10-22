@@ -1,0 +1,341 @@
+SOURCE_ARTIFACT:
+CV_COMP_FIN_SBT
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- CV_BASE_FIN_BKPF_S4 (Calculation View, external, unresolved)
+- CV_BASE_FIN_ACDOCA_S4 (Calculation View, external, unresolved)
+- CV_BASE_MD_SRPACT_S4 (Calculation View, external, unresolved)
+- CV_BASE_MD_RCALWEEK_S4 (Calculation View, external, unresolved)
+- CV_BASE_MD_CEPCT_S4 (Calculation View, external, unresolved)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Parameters: IP_WEEK_ENDING_FROM (NVARCHAR(7)), IP_WEEK_ENDING_TO (NVARCHAR(7)), both required and derived from CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK
+- BKPF: MANDT, BUKRS, BELNR, GJAHR, XREF2_HD (filter: = 'A1'), BUDAT, BLART (filter: = 'ZT')
+- ACDOCA: RCLNT, RBUKRS, BELNR, GJAHR, WSL, PRCTR (filter: IN ('0000562057', '0000562058')), RACCT (filter: = '0004403000'), ZZWEEK (filter: BETWEEN $$IP_WEEK_ENDING_FROM$$ AND $$IP_WEEK_ENDING_TO$$), RWCUR
+- SBT: INNER JOIN of BKPF and ACDOCA on BUKRS, BELNR, GJAHR; output columns as above
+- STORE_ATTRIBUTES: MANDT, STRNUM, PRCTR, REP_MKT_CODE, REP_MKT_DESC, CITY, STATE, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, FS_OPEN_DAT, RX_OPEN_DAT, EMERG_MKT_IND, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+- Join_1: LEFT OUTER JOIN SBT to STORE_ATTRIBUTES on PRCTR
+- RETAIL_CALENAR: ZZWEEK, ZRWENDDATE, ZRWSTRTDATE, RCLNT
+- Join_2: LEFT OUTER JOIN Join_1 to RETAIL_CALENAR on ZZWEEK
+- COMP_FLAG: calculated columns
+    - CAL_COMP_FLAG: CASE WHEN PRCTR = '0000562057' THEN '1' ELSE '0' END
+    - CAL_WEEK_NUMBER: RIGHT(ZZWEEK, 2)
+- PROFIT_CENTER_TEXT: MANDT, PRCTR, PROFIT_CENTER_TEXT (from LTEXT)
+- Join_3: LEFT OUTER JOIN COMP_FLAG to PROFIT_CENTER_TEXT on PRCTR
+- Output columns (from Join_3/logicalModel): PRCTR, BUDAT, XREF2_HD, GJAHR, BELNR, BUKRS, MANDT, REP_MKT_CODE, REP_MKT_DESC, CITY, STATE, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, ZZWEEK, STRNUM, CAL_COMP_FLAG, CAL_WEEK_NUMBER, ZRWENDDATE, ZRWSTRTDATE, RWCUR, PROFIT_CENTER_TEXT, FS_OPEN_DAT, RX_OPEN_DAT, EMERG_MKT_IND, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+- Measures:
+    - WSL_NEGATIVE: sum(WSL)
+    - WSL: sum(WSL_NEGATIVE) * -1
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation", requiring GROUP BY and aggregation in the final output.
+- Data flow:
+    - BKPF: Projects and filters records from CV_BASE_FIN_BKPF_S4 by XREF2_HD='A1', BLART='ZT'.
+    - ACDOCA: Projects and filters records from CV_BASE_FIN_ACDOCA_S4 by PRCTR IN (...), RACCT='0004403000', ZZWEEK BETWEEN :IP_WEEK_ENDING_FROM AND :IP_WEEK_ENDING_TO.
+    - SBT: INNER JOIN BKPF and ACDOCA on BUKRS, BELNR, GJAHR.
+    - STORE_ATTRIBUTES: Projects from CV_BASE_MD_SRPACT_S4.
+    - Join_1: LEFT OUTER JOIN SBT with STORE_ATTRIBUTES on PRCTR.
+    - RETAIL_CALENAR: Projects from CV_BASE_MD_RCALWEEK_S4.
+    - Join_2: LEFT OUTER JOIN Join_1 with RETAIL_CALENAR on ZZWEEK.
+    - COMP_FLAG: Adds calculated columns CAL_COMP_FLAG (CASE logic) and CAL_WEEK_NUMBER (RIGHTSTR/RIGHT).
+    - PROFIT_CENTER_TEXT: Projects from CV_BASE_MD_CEPCT_S4, mapping LTEXT to PROFIT_CENTER_TEXT.
+    - Join_3: LEFT OUTER JOIN COMP_FLAG with PROFIT_CENTER_TEXT on PRCTR.
+- The logicalModel defines output columns and requires:
+    - SUM(WSL_NEGATIVE) as intermediate aggregation
+    - WSL as calculated measure: SUM(WSL_NEGATIVE) * -1
+    - GROUP BY all other attributes
+- The final SELECT must output all columns as defined in logicalModel, with aggregation/grouping as specified.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH BKPF AS (
+  SELECT
+    MANDT,
+    BUKRS,
+    BELNR,
+    GJAHR,
+    XREF2_HD,
+    BUDAT,
+    BLART
+  FROM PROJECT.DATASET.CV_BASE_FIN_BKPF_S4
+  WHERE XREF2_HD = 'A1'
+    AND BLART = 'ZT'
+),
+ACDOCA AS (
+  SELECT
+    RCLNT,
+    RBUKRS,
+    BELNR,
+    GJAHR,
+    WSL,
+    PRCTR,
+    RACCT,
+    ZZWEEK,
+    RWCUR
+  FROM PROJECT.DATASET.CV_BASE_FIN_ACDOCA_S4
+  WHERE PRCTR IN ('0000562057', '0000562058')
+    AND RACCT = '0004403000'
+    AND ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+),
+SBT AS (
+  SELECT
+    BKPF.MANDT,
+    BKPF.BUKRS,
+    BKPF.BELNR,
+    BKPF.GJAHR,
+    BKPF.XREF2_HD,
+    BKPF.BUDAT,
+    ACDOCA.WSL,
+    ACDOCA.PRCTR,
+    ACDOCA.RACCT,
+    ACDOCA.ZZWEEK,
+    ACDOCA.RWCUR
+  FROM BKPF
+  INNER JOIN ACDOCA
+    ON BKPF.BUKRS = ACDOCA.RBUKRS
+    AND BKPF.BELNR = ACDOCA.BELNR
+    AND BKPF.GJAHR = ACDOCA.GJAHR
+),
+STORE_ATTRIBUTES AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    EMERG_MKT_IND,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM PROJECT.DATASET.CV_BASE_MD_SRPACT_S4
+),
+Join_1 AS (
+  SELECT
+    SBT.MANDT,
+    SBT.BUKRS,
+    SBT.BELNR,
+    SBT.GJAHR,
+    SBT.XREF2_HD,
+    SBT.BUDAT,
+    SBT.PRCTR,
+    SBT.WSL,
+    SBT.ZZWEEK,
+    SBT.RWCUR,
+    SA.REP_MKT_CODE,
+    SA.REP_MKT_DESC,
+    SA.CITY,
+    SA.STATE,
+    SA.DIVISION_CODE,
+    SA.DIVISION_DESC,
+    SA.AREA_CODE,
+    SA.AREA_DESC,
+    SA.REGION_CODE,
+    SA.REGION_DESC,
+    SA.DISTRICT_CODE,
+    SA.DISTRICT_DESC,
+    SA.STRNUM,
+    SA.FS_OPEN_DAT,
+    SA.RX_OPEN_DAT,
+    SA.EMERG_MKT_IND,
+    SA.RX_DIVISION_CODE,
+    SA.RX_AREA_CODE,
+    SA.RX_REGION_CODE,
+    SA.RX_DISTRICT_CODE
+  FROM SBT
+  LEFT OUTER JOIN STORE_ATTRIBUTES AS SA
+    ON SBT.PRCTR = SA.PRCTR
+),
+RETAIL_CALENAR AS (
+  SELECT
+    ZZWEEK,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    RCLNT
+  FROM PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4
+),
+Join_2 AS (
+  SELECT
+    J1.*,
+    RC.ZRWENDDATE,
+    RC.ZRWSTRTDATE
+  FROM Join_1 AS J1
+  LEFT OUTER JOIN RETAIL_CALENAR AS RC
+    ON J1.ZZWEEK = RC.ZZWEEK
+),
+COMP_FLAG AS (
+  SELECT
+    *,
+    CASE WHEN PRCTR = '0000562057' THEN '1' ELSE '0' END AS CAL_COMP_FLAG,
+    RIGHT(CAST(ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER
+  FROM Join_2
+),
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM PROJECT.DATASET.CV_BASE_MD_CEPCT_S4
+),
+Join_3 AS (
+  SELECT
+    CF.PRCTR,
+    CF.BUDAT,
+    CF.XREF2_HD,
+    CF.GJAHR,
+    CF.BELNR,
+    CF.BUKRS,
+    CF.MANDT,
+    CF.REP_MKT_CODE,
+    CF.REP_MKT_DESC,
+    CF.CITY,
+    CF.STATE,
+    CF.DIVISION_CODE,
+    CF.DIVISION_DESC,
+    CF.AREA_CODE,
+    CF.AREA_DESC,
+    CF.REGION_CODE,
+    CF.REGION_DESC,
+    CF.DISTRICT_CODE,
+    CF.DISTRICT_DESC,
+    CF.ZZWEEK,
+    CF.STRNUM,
+    CF.CAL_COMP_FLAG,
+    CF.CAL_WEEK_NUMBER,
+    CF.ZRWENDDATE,
+    CF.ZRWSTRTDATE,
+    CF.RWCUR,
+    CF.WSL,
+    PCT.PROFIT_CENTER_TEXT,
+    CF.FS_OPEN_DAT,
+    CF.RX_OPEN_DAT,
+    CF.EMERG_MKT_IND,
+    CF.RX_DIVISION_CODE,
+    CF.RX_AREA_CODE,
+    CF.RX_REGION_CODE,
+    CF.RX_DISTRICT_CODE
+  FROM COMP_FLAG AS CF
+  LEFT OUTER JOIN PROFIT_CENTER_TEXT AS PCT
+    ON CF.PRCTR = PCT.PRCTR
+)
+SELECT
+  PRCTR,
+  BUDAT,
+  XREF2_HD,
+  GJAHR,
+  BELNR,
+  BUKRS,
+  MANDT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CITY,
+  STATE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZZWEEK,
+  STRNUM,
+  CAL_COMP_FLAG,
+  CAL_WEEK_NUMBER,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  RWCUR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  EMERG_MKT_IND,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  -- Aggregation: WSL_NEGATIVE = SUM(WSL)
+  SUM(WSL) AS WSL_NEGATIVE,
+  -- Calculated measure: WSL = SUM(WSL_NEGATIVE) * -1
+  SUM(WSL) * -1 AS WSL
+FROM Join_3
+GROUP BY
+  PRCTR,
+  BUDAT,
+  XREF2_HD,
+  GJAHR,
+  BELNR,
+  BUKRS,
+  MANDT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CITY,
+  STATE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZZWEEK,
+  STRNUM,
+  CAL_COMP_FLAG,
+  CAL_WEEK_NUMBER,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  RWCUR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  EMERG_MKT_IND,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- All CTE names from the original Calculation View are preserved, as none were generic. No renaming was performed except for mapping calculation nodes to their original names.
+- Parameters IP_WEEK_ENDING_FROM and IP_WEEK_ENDING_TO are represented as BigQuery query parameters (@IP_WEEK_ENDING_FROM, @IP_WEEK_ENDING_TO). Their derivation rule (scalar function) is unresolved.
+- HANA RIGHTSTR is mapped to BigQuery RIGHT. Assumes ZZWEEK is string-compatible; if not, explicit CAST may be needed.
+- Calculated measure WSL is computed as SUM(WSL_NEGATIVE) * -1, following Calculation View aggregation rules (apply formula after aggregation).
+- All non-measure output columns are included in the GROUP BY clause as required by dataCategory="CUBE" and outputViewType="Aggregation".
+- Filters and joins are preserved exactly as in the Calculation View logic.
+- External Calculation Views are referenced using PROJECT.DATASET.TABLE placeholders, as actual BigQuery mappings are unknown.
+- No global renaming or simplification of output columns or CTE names was performed.
+- All output columns match the logicalModel definition.
+
+ASSUMPTIONS:
+- All referenced Calculation Views (CV_BASE_FIN_BKPF_S4, CV_BASE_FIN_ACDOCA_S4, etc.) exist as BigQuery tables or views in the appropriate dataset.
+- ZZWEEK is string-compatible for RIGHT function.
+- WSL is numeric and compatible with SUM and multiplication.
+- Parameters @IP_WEEK_ENDING_FROM and @IP_WEEK_ENDING_TO are supplied at runtime.
+
+UNRESOLVED_ITEMS:
+- Definitions of all external Calculation Views (CV_BASE_FIN_BKPF_S4, CV_BASE_FIN_ACDOCA_S4, CV_BASE_MD_SRPACT_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4) are not included; column existence and datatypes are assumed based on mapping.
+- The derivation logic for parameters IP_WEEK_ENDING_FROM and IP_WEEK_ENDING_TO (scalar function CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK) is unresolved.
+- Actual BigQuery dataset and project names are unknown; placeholders are used.
+- Data types for all columns are assumed based on HANA naming and Calculation View logic; validation required.
+- If any input column is not string-compatible for RIGHT, further conversion may be required.
+
+CONFIDENCE:
+Medium
+
+- The main Calculation View logic is faithfully reproduced, including all joins, filters, calculated columns, and aggregation/grouping logic.
+- Some external dependencies and parameter derivations remain unresolved, requiring further validation. No unsupported assumptions were made about business meaning or data types.
