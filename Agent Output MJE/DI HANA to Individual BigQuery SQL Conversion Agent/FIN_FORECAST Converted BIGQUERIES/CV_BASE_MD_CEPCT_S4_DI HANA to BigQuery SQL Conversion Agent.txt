@@ -1,0 +1,74 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- SAP_S4.CEPCT (base table)
+- Calculation View node: Projection_1
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Columns from SAP_S4.CEPCT mapped directly:
+  - MANDT (Client)
+  - SPRAS (Language Key)
+  - PRCTR (Profit Center)
+  - DATBI (Valid To Date)
+  - KOKRS (Controlling Area)
+  - KTEXT (General Name)
+  - LTEXT (Long Text)
+  - MCTXT (Search term for matchcode search)
+- Mapping is 1:1 from source table CEPCT to output columns.
+- Filter applied to MANDT: only values IN (120, 200).
+- No calculated columns, measures, parameters, or placeholders defined.
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single projection node (Projection_1) over the SAP_S4.CEPCT table.
+- The projection includes only the columns listed above, mapped 1:1 from the source table.
+- A filter is applied to the MANDT column, restricting output to rows where MANDT IN (120, 200).
+- No joins, unions, aggregations, calculated columns, parameters, or placeholders are present.
+- Root element attributes:
+  - dataCategory="DIMENSION"
+  - outputViewType="Projection"
+- Since dataCategory is DIMENSION and outputViewType is Projection, the final output is row-level (not aggregated), and no GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+-- This SQL represents a direct conversion of the Calculation View XML logic to BigQuery Standard SQL.
+-- The source BigQuery table mapping for SAP_S4.CEPCT is unknown and must be provided; placeholder used below.
+
+SELECT
+  MANDT,
+  SPRAS,
+  PRCTR,
+  DATBI,
+  KOKRS,
+  KTEXT,
+  LTEXT,
+  MCTXT
+FROM
+  PROJECT.DATASET.CEPCT
+WHERE
+  MANDT IN (120, 200)
+
+CONVERSION_NOTES:
+- The SAP HANA Calculation View XML is interpreted as a single projection node with a filter on MANDT.
+- All output columns are mapped directly from the source table SAP_S4.CEPCT.
+- The filter on MANDT is preserved exactly as defined; values '120' and '200' are treated as numeric based on the XML, but datatype validation is required.
+- No calculated columns, measures, parameters, placeholders, joins, unions, or aggregations are present.
+- CTE naming: Only one intermediate node (Projection_1), which is generic and would be renamed if used as a CTE in a more complex view, but here is not needed since the SQL is a single flat SELECT statement.
+- No HANA-specific functions are used, so no function conversion is required.
+- No aggregation or GROUP BY is required, as the view is a DIMENSION with outputViewType Projection.
+- The target BigQuery table mapping for SAP_S4.CEPCT is unresolved; PROJECT.DATASET.CEPCT is a placeholder.
+
+ASSUMPTIONS:
+- The column values for MANDT are numeric (120, 200), as per the XML, but datatype validation is required.
+- The source table CEPCT exists in the target BigQuery environment as PROJECT.DATASET.CEPCT, but actual mapping must be provided.
+- No additional transformation logic exists beyond what is defined in the Calculation View XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAP_S4.CEPCT (placeholder used: PROJECT.DATASET.CEPCT).
+- Datatype validation for MANDT (numeric vs. string).
+- No external objects, parameters, placeholders, or dependencies remain unresolved.
+
+CONFIDENCE:
+High
