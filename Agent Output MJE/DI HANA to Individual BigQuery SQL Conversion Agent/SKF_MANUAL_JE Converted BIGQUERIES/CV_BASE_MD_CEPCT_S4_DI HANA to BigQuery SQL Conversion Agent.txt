@@ -1,0 +1,65 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.CEPCT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (Client): mapped from CEPCT.MANDT; filter applied (IN (120, 200))
+- SPRAS (Language Key): mapped from CEPCT.SPRAS
+- PRCTR (Profit Center): mapped from CEPCT.PRCTR
+- DATBI (Valid To Date): mapped from CEPCT.DATBI
+- KOKRS (Controlling Area): mapped from CEPCT.KOKRS
+- KTEXT (General Name): mapped from CEPCT.KTEXT
+- LTEXT (Long Text): mapped from CEPCT.LTEXT
+- MCTXT (Search term for matchcode search): mapped from CEPCT.MCTXT
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single data source (SAP_S4.CEPCT), projecting all columns listed above.
+- A filter is applied to the MANDT column, restricting results to records where MANDT IN (120, 200).
+- No joins, unions, calculated columns, measures, parameters, placeholders, or aggregation logic are present.
+- The root <Calculation:scenario> element specifies dataCategory="DIMENSION" and outputViewType="Projection".
+- As a result, the final output is row-level (not aggregated), and no GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  MANDT,
+  SPRAS,
+  PRCTR,
+  DATBI,
+  KOKRS,
+  KTEXT,
+  LTEXT,
+  MCTXT
+FROM
+  PROJECT.DATASET.CEPCT
+WHERE
+  MANDT IN (120, 200)
+```
+
+CONVERSION_NOTES:
+- The Calculation View XML logic was interpreted semantically: a single projection of SAP_S4.CEPCT with a filter on MANDT.
+- All columns defined in <logicalModel><attributes> are explicitly projected.
+- The filter on MANDT is preserved exactly as defined (IN (120, 200)); datatype validation is required to ensure 120 and 200 are correct numeric values in BigQuery.
+- No calculated columns, measures, aggregation, grouping, parameters, or placeholders are present or required.
+- As the Calculation View is of type DIMENSION and outputViewType is Projection, row-level output is correct and no GROUP BY is required.
+- The target BigQuery table reference is PROJECT.DATASET.CEPCT; actual project/dataset mapping is unresolved and must be provided.
+- No intermediate CTEs are present; therefore, no generic CTE naming or renaming is required.
+- All column mappings and names are preserved exactly as defined in the Calculation View XML.
+- No HANA-specific functions or syntax required conversion.
+
+ASSUMPTIONS:
+- The values 120 and 200 for MANDT are numeric, as per typical SAP client conventions; datatype validation is required in the target BigQuery schema.
+- The table SAP_S4.CEPCT is mapped to PROJECT.DATASET.CEPCT in BigQuery; actual mapping must be confirmed.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the CEPCT table are not provided and must be mapped.
+- Datatype of MANDT in BigQuery must be validated to ensure IN (120, 200) is correct (numeric vs. string).
+- No additional unresolved items.
+
+CONFIDENCE:
+High

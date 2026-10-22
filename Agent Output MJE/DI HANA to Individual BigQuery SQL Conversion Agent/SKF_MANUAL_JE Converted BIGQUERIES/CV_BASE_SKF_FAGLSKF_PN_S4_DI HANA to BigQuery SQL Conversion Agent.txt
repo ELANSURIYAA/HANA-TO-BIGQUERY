@@ -1,0 +1,135 @@
+SOURCE_ARTIFACT:
+CV_BASE_SKF_FAGLSKF_PN_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.FAGLSKF_PN_VT_S4
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- RCLNT (Client) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RCLNT (with filter: RCLNT IN (120, 200))
+- STAGR (Statistical key figure) ← CVS_FRIP.FAGLSKF_PN_VT_S4.STAGR
+- DATE_FROM (Valid From) ← CVS_FRIP.FAGLSKF_PN_VT_S4.DATE_FROM
+- DOCNR (Doc. Number) ← CVS_FRIP.FAGLSKF_PN_VT_S4.DOCNR
+- DOCLN (Six-Character Posting Item for Ledger) ← CVS_FRIP.FAGLSKF_PN_VT_S4.DOCLN
+- DATE_TO (Valid To) ← CVS_FRIP.FAGLSKF_PN_VT_S4.DATE_TO
+- RBUKRS (Company Code) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RBUKRS
+- RCNTR (Cost Center) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RCNTR
+- PRCTR (Profit Center) ← CVS_FRIP.FAGLSKF_PN_VT_S4.PRCTR
+- RFAREA (Functional Area) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RFAREA
+- RBUSA (Business Area) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RBUSA
+- KOKRS (Controlling Area) ← CVS_FRIP.FAGLSKF_PN_VT_S4.KOKRS
+- SEGMENT (Segment for Segmental Reporting) ← CVS_FRIP.FAGLSKF_PN_VT_S4.SEGMENT
+- ACTIV (FI-SL Business Transaction) ← CVS_FRIP.FAGLSKF_PN_VT_S4.ACTIV
+- OBART (Object Type) ← CVS_FRIP.FAGLSKF_PN_VT_S4.OBART
+- RUNIT (Unit of measure) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RUNIT
+- LOGSYS (Logical system) ← CVS_FRIP.FAGLSKF_PN_VT_S4.LOGSYS
+- RRCTY (Record Type) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RRCTY
+- RVERS (Version) ← CVS_FRIP.FAGLSKF_PN_VT_S4.RVERS
+- MSL (Quantity) ← CVS_FRIP.FAGLSKF_PN_VT_S4.MSL (aggregationType="sum", measure)
+- REFDOCNR (Reference document number of an accounting document) ← CVS_FRIP.FAGLSKF_PN_VT_S4.REFDOCNR
+- CANC_DOCNR (Document Number of Reversed Original Document) ← CVS_FRIP.FAGLSKF_PN_VT_S4.CANC_DOCNR
+- USNAM (User Name) ← CVS_FRIP.FAGLSKF_PN_VT_S4.USNAM
+- TIMESTAMP (UTC Time Stamp in Short Form (YYYYMMDDhhmmss)) ← CVS_FRIP.FAGLSKF_PN_VT_S4.TIMESTAMP
+- DELTA_IND (Mode for Posting Stat. Key Figures in FI (Entered in FI)) ← CVS_FRIP.FAGLSKF_PN_VT_S4.DELTA_IND
+- ZZSCODE (Source code) ← CVS_FRIP.FAGLSKF_PN_VT_S4.ZZSCODE
+- ZZWEEK (Week Number) ← CVS_FRIP.FAGLSKF_PN_VT_S4.ZZWEEK
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE (dataCategory="CUBE") and has outputViewType="Aggregation", indicating that the final output must be aggregated.
+- The only measure is MSL (Quantity), which is to be summed (aggregationType="sum").
+- All other columns are attributes and must be included in the GROUP BY clause.
+- The data source is the table CVS_FRIP.FAGLSKF_PN_VT_S4.
+- There is a filter applied to the RCLNT column: only rows where RCLNT IN (120, 200) are included.
+- No calculated columns, joins, unions, or additional parameters/placeholders are defined in this Calculation View.
+- The Projection node passes through all columns from the source table, applying the RCLNT filter.
+- Output columns are defined explicitly in the logicalModel, and all mappings are direct from the source table except for the aggregation on MSL.
+- No additional transformation logic, calculated attributes, or procedural logic is present.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  RCLNT,
+  STAGR,
+  DATE_FROM,
+  DOCNR,
+  DOCLN,
+  DATE_TO,
+  RBUKRS,
+  RCNTR,
+  PRCTR,
+  RFAREA,
+  RBUSA,
+  KOKRS,
+  SEGMENT,
+  ACTIV,
+  OBART,
+  RUNIT,
+  LOGSYS,
+  RRCTY,
+  RVERS,
+  REFDOCNR,
+  CANC_DOCNR,
+  USNAM,
+  TIMESTAMP,
+  DELTA_IND,
+  ZZSCODE,
+  ZZWEEK,
+  SUM(MSL) AS MSL
+FROM
+  `PROJECT.DATASET.FAGLSKF_PN_VT_S4`
+WHERE
+  RCLNT IN (120, 200)
+GROUP BY
+  RCLNT,
+  STAGR,
+  DATE_FROM,
+  DOCNR,
+  DOCLN,
+  DATE_TO,
+  RBUKRS,
+  RCNTR,
+  PRCTR,
+  RFAREA,
+  RBUSA,
+  KOKRS,
+  SEGMENT,
+  ACTIV,
+  OBART,
+  RUNIT,
+  LOGSYS,
+  RRCTY,
+  RVERS,
+  REFDOCNR,
+  CANC_DOCNR,
+  USNAM,
+  TIMESTAMP,
+  DELTA_IND,
+  ZZSCODE,
+  ZZWEEK
+```
+
+CONVERSION_NOTES:
+- The Calculation View is a simple projection with a filter and aggregation. There are no joins, calculated columns, or unions.
+- The only filter applied is RCLNT IN (120, 200), which is translated directly into the WHERE clause.
+- The measure MSL is aggregated using SUM(MSL) as required by aggregationType="sum".
+- All other columns are included in the GROUP BY clause as per the requirements for a CUBE/Aggregation Calculation View output.
+- The source table is referenced as `PROJECT.DATASET.FAGLSKF_PN_VT_S4` because the BigQuery project and dataset names are not specified in the source artifact.
+- No generic CTEs (such as PROJECTION_1) are present in the logic, so no functional renaming was required.
+- All column mappings are 1:1 from the source table to the output, except for the aggregation on MSL.
+- No parameters, placeholders, or calculated columns are present in this Calculation View.
+- Datatype handling is not explicitly addressed as the types are not specified in the XML, but the logic preserves the original structure.
+
+ASSUMPTIONS:
+- The BigQuery dataset and project names are not provided and are represented as placeholders (PROJECT.DATASET).
+- The column data types are assumed to be compatible with the aggregation and grouping operations as per the HANA Calculation View definition.
+- No additional transformation logic, calculated columns, or business rules are present beyond what is specified in the XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the source table CVS_FRIP.FAGLSKF_PN_VT_S4 are unknown and must be mapped before deployment.
+- Column data types are not specified in the XML and may require validation for compatibility with BigQuery.
+- If additional logic exists in the source system (e.g., calculated columns, joins, or parameters not present in this XML), it is not included in this conversion.
+
+CONFIDENCE:
+High

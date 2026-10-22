@@ -1,0 +1,356 @@
+SOURCE_ARTIFACT:
+CV_COMP_SKF_MANUAL_JE
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- CV_BASE_SKF_FAGLSKF_PN_S4 (Calculation View)
+- CV_BASE_MD_SRPACT_S4 (Calculation View)
+- CV_BASE_MD_HRRP_NODE_S4 (Calculation View)
+- CV_BASE_MD_COMPFL_S4 (Calculation View)
+- CV_BASE_MD_RCALWEEK_S4 (Calculation View)
+- CV_BASE_MD_CEPCT_S4 (Calculation View)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Input Parameters: 
+    - IP_WEEK_ENDING_FROM (NVARCHAR(7), mandatory)
+    - IP_WEEK_ENDING_TO (NVARCHAR(7), mandatory)
+    - IP_VERSION_COMP_FLAG (CHAR, optional)
+- Columns: 
+    - RCLNT, STAGR, DATE_FROM, MSL, PRCTR, ZZSCODE, ZZWEEK, RCNTR (from CV_BASE_SKF_FAGLSKF_PN_S4)
+    - MANDT, STRNUM, REP_MKT_CODE, REP_MKT_DESC, CITY, STATE, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, EMERG_MKT_IND, FS_OPEN_DAT, RX_OPEN_DAT, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE (from CV_BASE_MD_SRPACT_S4)
+    - PARNODE, HRYVALTO, NODEVALUE (from CV_BASE_MD_HRRP_NODE_S4)
+    - FS_COMP_WK, RX_COMP_WK, COMP_VER, ZWEEK, ZYEAR, ZMONTH (from CV_BASE_MD_COMPFL_S4)
+    - ZRWSTRTDATE, ZRWENDDATE (from CV_BASE_MD_RCALWEEK_S4)
+    - PROFIT_CENTER_TEXT (from CV_BASE_MD_CEPCT_S4, mapped from LTEXT)
+- Calculated Columns:
+    - CAL_MSL: CASE WHEN STAGR = '801000' THEN MSL ELSE MSL * 2 END
+    - CAL_WEEK_NUMBER: RIGHTSTR(ZZWEEK, 2)
+    - CAL_COMP_FLAG: RX_COMP_WK
+- Measures:
+    - MSL (sum over CAL_MSL)
+- Placeholders/Parameters:
+    - $$IP_WEEK_ENDING_FROM$$
+    - $$IP_WEEK_ENDING_TO$$
+    - $$IP_VERSION_COMP_FLAG$$
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation", so the final output requires GROUP BY and aggregation.
+- Data flow:
+    1. FAGLSKF_PN_S4: Projects and filters rows from CV_BASE_SKF_FAGLSKF_PN_S4:
+        - Filters: STAGR IN ('801000', '804013'), ZZWEEK BETWEEN $$IP_WEEK_ENDING_FROM$$ AND $$IP_WEEK_ENDING_TO$$, ZZSCODE != 'SLS'
+    2. HIER: Projects from CV_BASE_MD_HRRP_NODE_S4, filtered by PARNODE matching '*CORERET*' and HRYVALTO = '99991231'
+    3. Join_7: INNER JOIN FAGLSKF_PN_S4 and HIER ON RCNTR = NODEVALUE
+    4. STORE_ATTR_SKF_JOURNAL_ENT: Projects from CV_BASE_MD_SRPACT_S4 (attributes as above)
+    5. Join_2: LEFT OUTER JOIN Join_7 and STORE_ATTR_SKF_JOURNAL_ENT ON PRCTR
+    6. COMP_FLAG_SKF_JOURNAL_ENT: Projects from CV_BASE_MD_COMPFL_S4, filtered by COMP_VER = $$IP_VERSION_COMP_FLAG$$
+    7. Join_3: LEFT OUTER JOIN Join_2 and COMP_FLAG_SKF_JOURNAL_ENT ON PRCTR, ZZWEEK=ZWEEK
+    8. CAL_WEEK: Projects from CV_BASE_MD_RCALWEEK_S4 (attributes as above)
+    9. Join_6: LEFT OUTER JOIN Join_3 and CAL_WEEK ON ZZWEEK
+    10. PROFIT_CENTER_TEXT: Projects from CV_BASE_MD_CEPCT_S4, mapping LTEXT as PROFIT_CENTER_TEXT
+    11. Join_8: LEFT OUTER JOIN Join_6 and PROFIT_CENTER_TEXT ON PRCTR
+    12. SKF_QTY: Final projection with calculated columns CAL_MSL, CAL_WEEK_NUMBER, CAL_COMP_FLAG.
+- Output columns and measure: All columns from SKF_QTY node, with MSL as SUM(CAL_MSL).
+- Final output: GROUP BY all non-measure output columns, aggregate CAL_MSL as SUM(MSL).
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH FAGLSKF_PN_S4 AS (
+  SELECT
+    RCLNT,
+    STAGR,
+    DATE_FROM,
+    MSL,
+    PRCTR,
+    ZZSCODE,
+    ZZWEEK,
+    RCNTR
+  FROM PROJECT.DATASET.CV_BASE_SKF_FAGLSKF_PN_S4
+  WHERE STAGR IN ('801000', '804013')
+    AND ZZWEEK >= @IP_WEEK_ENDING_FROM
+    AND ZZWEEK <= @IP_WEEK_ENDING_TO
+    AND ZZSCODE != 'SLS'
+),
+HIER AS (
+  SELECT
+    MANDT,
+    PARNODE,
+    HRYVALTO,
+    NODEVALUE
+  FROM PROJECT.DATASET.CV_BASE_MD_HRRP_NODE_S4
+  WHERE REGEXP_CONTAINS(PARNODE, r'.*CORERET.*')
+    AND HRYVALTO = '99991231'
+),
+Joined_FAGLSKF_with_HIER AS (
+  SELECT
+    F.RCLNT,
+    F.STAGR,
+    F.DATE_FROM,
+    F.PRCTR,
+    F.ZZWEEK,
+    F.MSL,
+    H.NODEVALUE AS RCNTR,
+    F.ZZSCODE AS SOURCE_CODE
+  FROM FAGLSKF_PN_S4 F
+  INNER JOIN HIER H
+    ON F.RCNTR = H.NODEVALUE
+),
+STORE_ATTR_SKF_JOURNAL_ENT AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    EMERG_MKT_IND,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM PROJECT.DATASET.CV_BASE_MD_SRPACT_S4
+),
+Joined_FAGLSKF_HIER_with_STORE_ATTR AS (
+  SELECT
+    S.REP_MKT_CODE,
+    S.REP_MKT_DESC,
+    S.CITY,
+    S.STATE,
+    S.DIVISION_CODE,
+    S.DIVISION_DESC,
+    S.AREA_CODE,
+    S.AREA_DESC,
+    S.REGION_CODE,
+    S.REGION_DESC,
+    S.DISTRICT_CODE,
+    S.DISTRICT_DESC,
+    S.EMERG_MKT_IND,
+    F.RCLNT,
+    F.STAGR,
+    F.DATE_FROM,
+    F.PRCTR,
+    F.ZZWEEK,
+    F.MSL,
+    F.RCNTR,
+    S.FS_OPEN_DAT,
+    S.RX_OPEN_DAT,
+    S.STRNUM,
+    F.SOURCE_CODE,
+    S.RX_DIVISION_CODE,
+    S.RX_AREA_CODE,
+    S.RX_REGION_CODE,
+    S.RX_DISTRICT_CODE
+  FROM Joined_FAGLSKF_with_HIER F
+  LEFT JOIN STORE_ATTR_SKF_JOURNAL_ENT S
+    ON F.PRCTR = S.PRCTR
+),
+COMP_FLAG_SKF_JOURNAL_ENT AS (
+  SELECT
+    FS_COMP_WK,
+    RX_COMP_WK,
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZYEAR,
+    ZMONTH
+  FROM PROJECT.DATASET.CV_BASE_MD_COMPFL_S4
+  WHERE COMP_VER = @IP_VERSION_COMP_FLAG
+),
+Joined_StoreAttr_with_CompFlag AS (
+  SELECT
+    J.*,
+    C.FS_COMP_WK,
+    C.RX_COMP_WK
+  FROM Joined_FAGLSKF_HIER_with_STORE_ATTR J
+  LEFT JOIN COMP_FLAG_SKF_JOURNAL_ENT C
+    ON J.PRCTR = C.PRCTR
+    AND J.ZZWEEK = C.ZWEEK
+),
+CAL_WEEK AS (
+  SELECT
+    ZZWEEK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    RCLNT
+  FROM PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4
+),
+Joined_with_CAL_WEEK AS (
+  SELECT
+    J.*,
+    C.ZRWSTRTDATE,
+    C.ZRWENDDATE
+  FROM Joined_StoreAttr_with_CompFlag J
+  LEFT JOIN CAL_WEEK C
+    ON J.ZZWEEK = C.ZZWEEK
+),
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM PROJECT.DATASET.CV_BASE_MD_CEPCT_S4
+),
+Joined_with_ProfitCenterText AS (
+  SELECT
+    J.*,
+    P.PROFIT_CENTER_TEXT
+  FROM Joined_with_CAL_WEEK J
+  LEFT JOIN PROFIT_CENTER_TEXT P
+    ON J.PRCTR = P.PRCTR
+),
+SKF_QTY AS (
+  SELECT
+    EMERG_MKT_IND,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    AREA_DESC,
+    AREA_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    STATE,
+    CITY,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    ZZWEEK,
+    PRCTR,
+    DATE_FROM,
+    STAGR,
+    RCLNT,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    MSL,
+    RCNTR,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    STRNUM,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    -- Calculated columns:
+    CASE WHEN STAGR = '801000' THEN MSL ELSE MSL * 2 END AS CAL_MSL,
+    RIGHT(CAST(ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    RX_COMP_WK AS CAL_COMP_FLAG
+  FROM Joined_with_ProfitCenterText
+)
+SELECT
+  EMERG_MKT_IND,
+  DISTRICT_DESC,
+  DISTRICT_CODE,
+  REGION_DESC,
+  REGION_CODE,
+  AREA_DESC,
+  AREA_CODE,
+  DIVISION_DESC,
+  DIVISION_CODE,
+  STATE,
+  CITY,
+  REP_MKT_DESC,
+  REP_MKT_CODE,
+  ZZWEEK,
+  PRCTR,
+  DATE_FROM,
+  STAGR,
+  RCLNT,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  RCNTR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  CAL_WEEK_NUMBER,
+  CAL_COMP_FLAG AS COMP_FLAG,
+  STRNUM,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(CAL_MSL) AS MSL
+FROM SKF_QTY
+GROUP BY
+  EMERG_MKT_IND,
+  DISTRICT_DESC,
+  DISTRICT_CODE,
+  REGION_DESC,
+  REGION_CODE,
+  AREA_DESC,
+  AREA_CODE,
+  DIVISION_DESC,
+  DIVISION_CODE,
+  STATE,
+  CITY,
+  REP_MKT_DESC,
+  REP_MKT_CODE,
+  ZZWEEK,
+  PRCTR,
+  DATE_FROM,
+  STAGR,
+  RCLNT,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  RCNTR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  CAL_WEEK_NUMBER,
+  CAL_COMP_FLAG,
+  STRNUM,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- All source Calculation View names and output columns are preserved exactly as in the original artifact.
+- Only generic join/projection CTEs have been renamed to functional names based on their transformation logic. All other names are unchanged.
+- Parameters $$IP_WEEK_ENDING_FROM$$, $$IP_WEEK_ENDING_TO$$, and $$IP_VERSION_COMP_FLAG$$ are mapped to BigQuery query parameters (@IP_WEEK_ENDING_FROM, etc.).
+- HANA's RIGHTSTR function is mapped to BigQuery's RIGHT(CAST(ZZWEEK AS STRING), 2). If ZZWEEK is not a string, this may require datatype validation.
+- The CASE expression for CAL_MSL is preserved as-is.
+- The pattern-matching filter (match(PARNODE, '*CORERET*')) is mapped to REGEXP_CONTAINS(PARNODE, r'.*CORERET.*').
+- The final SELECT applies SUM aggregation to CAL_MSL (as MSL), and GROUP BY on all other output columns, as required for a CUBE/Aggregation Calculation View.
+- All joins, filters, and column mappings are preserved as per the Calculation View XML.
+- All references to renamed CTEs are updated consistently.
+- Output columns and measure match the logical model in the Calculation View XML.
+
+ASSUMPTIONS:
+- All referenced Calculation Views (CV_BASE_SKF_FAGLSKF_PN_S4, etc.) exist as BigQuery tables or views in PROJECT.DATASET. Their internal logic is not available and is treated as an external dependency.
+- Datatypes for columns are compatible with the BigQuery functions used (e.g., ZZWEEK can be cast to STRING).
+- Parameters are provided at query execution as BigQuery parameters.
+
+UNRESOLVED_ITEMS:
+- The internal logic, columns, and datatypes of referenced Calculation Views (CV_BASE_SKF_FAGLSKF_PN_S4, CV_BASE_MD_SRPACT_S4, CV_BASE_MD_HRRP_NODE_S4, CV_BASE_MD_COMPFL_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4) are not defined in the input and are treated as unresolved external dependencies.
+- The exact datatype of ZZWEEK is assumed to be string-compatible or convertible; if not, casting may require adjustment.
+- The mapping of input parameters to BigQuery parameters is assumed; actual parameter passing may require adjustment in the calling application.
+- Any business logic, data type, or transformation present in the external Calculation Views is not represented here and may affect the final result.
+
+CONFIDENCE:
+Medium
+
+(High confidence is not assigned because the external Calculation View definitions are unresolved and datatype compatibility for some fields is assumed.)
