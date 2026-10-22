@@ -1,0 +1,131 @@
+SOURCE_ARTIFACT:
+CV_BASE_SKF_WEEKLY_FORECAST_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.AZSRP_DS031_VT_S4
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- FISCPER (Fiscal year/period): mapped from AZSRP_DS031_VT_S4.FISCPER
+- FISCVARNT (Fiscal Year Variant): mapped from AZSRP_DS031_VT_S4.FISCVARNT
+- FISCYEAR (Fiscal year): mapped from AZSRP_DS031_VT_S4.FISCYEAR
+- FISCPER3 (Posting period): mapped from AZSRP_DS031_VT_S4.FISCPER3
+- MANDT (Client): mapped from AZSRP_DS031_VT_S4.MANDT, filtered IN (120, 200)
+- RECORDMODE (BW Delta Process: Record Mode): mapped from AZSRP_DS031_VT_S4.RECORDMODE
+- UNIT (Unit of Measure): mapped from AZSRP_DS031_VT_S4.UNIT
+- _BIC_ZIO_SWEEK (Store Week): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_SWEEK
+- _BIC_ZIO_PSTY (Plan SKF Type): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_PSTY
+- _BIC_ZIO_PSKF (Plan SKF Account): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_PSKF
+- _B631_S_CO_AREA (Controlling Area): mapped from AZSRP_DS031_VT_S4._B631_S_CO_AREA
+- _BIC_ZIO_CMPCD (Store Company Code): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_CMPCD
+- _B631_S_PROFTCTR (Profit Center): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_PCTR
+- _B631_S_COSTCNTR (Cost Center): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_CCTR
+- _BIC_ZIO_VER (Store Version): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_VER
+- _BIC_ZIO_SAUDT (Store Audit trail): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_SAUDT
+- _BIC_ZIO_SKFQ (Plan SKF Quantity): mapped from AZSRP_DS031_VT_S4._BIC_ZIO_SKFQ, aggregationType="sum" (measure)
+
+SOURCE_LOGIC:
+- The Calculation View is a TREE_BASED view with dataCategory="CUBE" and outputViewType="Aggregation".
+- The only node is a projection (Projection_1) of the base table CVS_FRIP.AZSRP_DS031_VT_S4.
+- The output columns are mapped directly from the source table, with two column renamings:
+    - _B631_S_PROFTCTR is mapped from _BIC_ZIO_PCTR
+    - _B631_S_COSTCNTR is mapped from _BIC_ZIO_CCTR
+- The only filter applied is on MANDT, restricting records to MANDT IN (120, 200).
+- The output measure _BIC_ZIO_SKFQ is defined as SUM(_BIC_ZIO_SKFQ).
+- All other output columns are attributes and must be included in the GROUP BY clause in the final output.
+- No calculated attributes, calculated measures, joins, unions, or additional filters are present.
+- No parameters, placeholders, or variables are defined or used.
+- The final output requires GROUP BY and aggregation due to dataCategory="CUBE" and outputViewType="Aggregation".
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH
+Filtered_Projection AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    RECORDMODE,
+    UNIT,
+    _BIC_ZIO_SWEEK,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_PCTR AS _B631_S_PROFTCTR,
+    _BIC_ZIO_CCTR AS _B631_S_COSTCNTR,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _BIC_ZIO_SKFQ
+  FROM
+    PROJECT.DATASET.AZSRP_DS031_VT_S4
+  WHERE
+    MANDT IN (120, 200)
+)
+SELECT
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  RECORDMODE,
+  UNIT,
+  _BIC_ZIO_SWEEK,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  SUM(_BIC_ZIO_SKFQ) AS _BIC_ZIO_SKFQ
+FROM
+  Filtered_Projection
+GROUP BY
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  MANDT,
+  RECORDMODE,
+  UNIT,
+  _BIC_ZIO_SWEEK,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _BIC_ZIO_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT
+```
+
+CONVERSION_NOTES:
+- The Calculation View XML was interpreted as a single projection node with a filter on MANDT.
+- The generic intermediate CTE name "Projection_1" was replaced with "Filtered_Projection" as its functional purpose is to filter and project records from the base table.
+- All source and output column names were preserved exactly as in the original artifact, except for column aliasing (_BIC_ZIO_PCTR → _B631_S_PROFTCTR, _BIC_ZIO_CCTR → _B631_S_COSTCNTR) which is explicitly defined in the XML.
+- The output measure _BIC_ZIO_SKFQ was aggregated using SUM(), as required by aggregationType="sum" in the logicalModel.
+- All other output attributes are included in the GROUP BY clause, per CUBE/Aggregation Calculation View rules.
+- The source table was referenced as PROJECT.DATASET.AZSRP_DS031_VT_S4; actual BigQuery mapping must be provided.
+- No calculated columns, parameters, placeholders, joins, or unions are present.
+- No datatype conversions were performed; datatype compatibility is assumed based on source artifact.
+- No HANA-specific functions required conversion.
+- No business meaning was invented; only explicit logic from the XML was used.
+
+ASSUMPTIONS:
+- The source table CVS_FRIP.AZSRP_DS031_VT_S4 is mapped to PROJECT.DATASET.AZSRP_DS031_VT_S4 in BigQuery; actual project and dataset names must be provided.
+- All columns are compatible with BigQuery datatypes as defined in the source artifact.
+- The filter values for MANDT (120, 200) are numeric; datatype validation may be required.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset mapping for CVS_FRIP.AZSRP_DS031_VT_S4 is required.
+- Datatype validation for all columns, especially MANDT, is required.
+- No external Calculation Views, parameters, placeholders, or unresolved dependencies are present.
+
+CONFIDENCE:
+High

@@ -1,0 +1,352 @@
+SOURCE_ARTIFACT:
+CV_COMP_SKF_FORECAST
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- CV_BASE_SKF_WEEKLY_FORECAST_S4 (Calculation View, external, definition not included)
+- CV_BASE_MD_SRPACT_S4 (Calculation View, external, definition not included)
+- CV_BASE_MD_COMPFL_S4 (Calculation View, external, definition not included)
+- CV_BASE_MD_RCALWEEK_S4 (Calculation View, external, definition not included)
+- CV_BASE_MD_CEPCT_S4 (Calculation View, external, definition not included)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Input parameters: IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO
+- Columns mapped through the calculation view nodes, including:
+  - FISCPER, FISCVARNT, FISCYEAR, FISCPER3, MANDT, RECORDMODE, _BIC_ZIO_SWEEK, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _BIC_ZIO_VER, _BIC_ZIO_SAUDT, _BIC_ZIO_PSTY, _BIC_ZIO_PSKF, UNIT, _BIC_ZIO_SKFQ
+  - REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, CITY, STATE, FS_OPEN_DAT, RX_OPEN_DAT, STRNUM, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+  - RX_COMP_WK (from COMP_FLAG_FCST), ZRWSTRTDATE, ZRWENDDATE (from CAL_WEEK), PROFIT_CENTER_TEXT (from PROFIT_CENTER_TEXT)
+- Calculated columns:
+  - CAL_WEEK_NUMBER: rightstr("_BIC_ZIO_SWEEK", 2) → RIGHT(_BIC_ZIO_SWEEK, 2)
+  - CAL_BIC_ZIO_SKFQ: CASE("_BIC_ZIO_PSKF", '804013', "_BIC_ZIO_SKFQ"*2, "_BIC_ZIO_SKFQ") → CASE WHEN _BIC_ZIO_PSKF = '804013' THEN _BIC_ZIO_SKFQ*2 ELSE _BIC_ZIO_SKFQ END
+- Measures (aggregationType="sum"):
+  - _BIC_ZIO_SKFQ_1: SUM(_BIC_ZIO_SKFQ)
+  - _BIC_ZIO_SKFQ: SUM(CAL_BIC_ZIO_SKFQ)
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation", so the final output is aggregated.
+- Input parameter IP_VERSION is used as a filter on _BIC_ZIO_VER (single value).
+- Input parameters IP_WEEK_ENDING_FROM and IP_WEEK_ENDING_TO are used as a range filter (BETWEEN) on _BIC_ZIO_SWEEK.
+- Filter on FISCVARNT = 'K4'.
+- Filter on _BIC_ZIO_SAUDT IN ('1', '10').
+- Filter on _BIC_ZIO_PSKF IN ('804013', '801000').
+- Various projection and join nodes:
+  - WEEKLY_SNAPSHOT_DS05: Projects and filters the forecast base view.
+  - STORE_ATTR_ACTUAL: Projects store/master attributes.
+  - Join_2: LEFT OUTER JOIN on _B631_S_PROFTCTR between WEEKLY_SNAPSHOT_DS05 and STORE_ATTR_ACTUAL.
+  - COMP_FLAG_FCST: Projects comp flag and filters by COMP_VER = IP_VERSION.
+  - Join_3: LEFT OUTER JOIN on _B631_S_PROFTCTR and _BIC_ZIO_SWEEK between Join_2 and COMP_FLAG_FCST.
+  - CAL_WEEK: Projects retail calendar week info.
+  - Join_4: LEFT OUTER JOIN on _BIC_ZIO_SWEEK between Join_3 and CAL_WEEK.
+  - PROFIT_CENTER_TEXT: Projects profit center descriptions.
+  - Join_1: LEFT OUTER JOIN on _B631_S_PROFTCTR between Join_4 and PROFIT_CENTER_TEXT.
+  - FLAGS: Final projection and calculation of CAL_WEEK_NUMBER and CAL_BIC_ZIO_SKFQ.
+- Final output columns and measures are defined in <logicalModel id="FLAGS">.
+- All non-measure output columns must be GROUPed BY, and measures must be aggregated (SUM).
+- The final SELECT must match the output columns and aggregation logic of the logical model.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    RECORDMODE,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    UNIT,
+    _BIC_ZIO_SKFQ
+  FROM PROJECT.DATASET.CV_BASE_SKF_WEEKLY_FORECAST_S4
+  WHERE
+    FISCVARNT = 'K4'
+    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND _BIC_ZIO_VER = @IP_VERSION
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+    AND _BIC_ZIO_PSKF IN ('804013', '801000')
+),
+STORE_ATTR_ACTUAL AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM PROJECT.DATASET.CV_BASE_MD_SRPACT_S4
+),
+Joined_WeeklySnapshot_StoreAttr AS (
+  SELECT
+    ws.*,
+    sa.REP_MKT_CODE,
+    sa.REP_MKT_DESC,
+    sa.EMERG_MKT_IND,
+    sa.DIVISION_CODE,
+    sa.DIVISION_DESC,
+    sa.AREA_CODE,
+    sa.AREA_DESC,
+    sa.REGION_CODE,
+    sa.REGION_DESC,
+    sa.DISTRICT_CODE,
+    sa.DISTRICT_DESC,
+    sa.CITY,
+    sa.STATE,
+    sa.FS_OPEN_DAT,
+    sa.RX_OPEN_DAT,
+    sa.STRNUM,
+    sa.RX_DIVISION_CODE,
+    sa.RX_AREA_CODE,
+    sa.RX_REGION_CODE,
+    sa.RX_DISTRICT_CODE
+  FROM WEEKLY_SNAPSHOT_DS05 ws
+  LEFT JOIN STORE_ATTR_ACTUAL sa
+    ON ws._B631_S_PROFTCTR = sa.PRCTR
+),
+COMP_FLAG_FCST AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    RX_COMP_WK,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    COMP_VER,
+    MANDT AS MANDT_1
+  FROM PROJECT.DATASET.CV_BASE_MD_COMPFL_S4
+  WHERE COMP_VER = @IP_VERSION
+),
+Joined_With_CompFlag AS (
+  SELECT
+    jws.*,
+    cfc.RX_COMP_WK
+  FROM Joined_WeeklySnapshot_StoreAttr jws
+  LEFT JOIN COMP_FLAG_FCST cfc
+    ON jws._B631_S_PROFTCTR = cfc.PRCTR
+    AND jws._BIC_ZIO_SWEEK = cfc.ZWEEK
+),
+CAL_WEEK AS (
+  SELECT
+    ZZWEEK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    RCLNT
+  FROM PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4
+),
+Joined_With_CalWeek AS (
+  SELECT
+    jwcf.*,
+    cw.ZRWSTRTDATE,
+    cw.ZRWENDDATE
+  FROM Joined_With_CompFlag jwcf
+  LEFT JOIN CAL_WEEK cw
+    ON jwcf._BIC_ZIO_SWEEK = cw.ZZWEEK
+),
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM PROJECT.DATASET.CV_BASE_MD_CEPCT_S4
+),
+Joined_With_ProfitCenterText AS (
+  SELECT
+    jwckw.*,
+    pct.PROFIT_CENTER_TEXT
+  FROM Joined_With_CalWeek jwckw
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON jwckw._B631_S_PROFTCTR = pct.PRCTR
+),
+FLAGS AS (
+  SELECT
+    _BIC_ZIO_SKFQ,
+    UNIT,
+    _BIC_ZIO_PSKF,
+    _BIC_ZIO_PSTY,
+    RX_COMP_WK,
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    RECORDMODE,
+    _BIC_ZIO_SWEEK,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _B631_S_PROFTCTR,
+    _B631_S_COSTCNTR,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    STRNUM,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    CASE
+      WHEN _BIC_ZIO_PSKF = '804013' THEN _BIC_ZIO_SKFQ * 2
+      ELSE _BIC_ZIO_SKFQ
+    END AS CAL_BIC_ZIO_SKFQ
+  FROM Joined_With_ProfitCenterText
+)
+SELECT
+  MANDT,
+  STRNUM,
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  RECORDMODE,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  EMERG_MKT_IND,
+  RX_COMP_WK,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  UNIT,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(_BIC_ZIO_SKFQ) AS _BIC_ZIO_SKFQ_1,
+  SUM(CAL_BIC_ZIO_SKFQ) AS _BIC_ZIO_SKFQ
+FROM FLAGS
+GROUP BY
+  MANDT,
+  STRNUM,
+  FISCPER,
+  FISCVARNT,
+  FISCYEAR,
+  FISCPER3,
+  RECORDMODE,
+  _BIC_ZIO_SWEEK,
+  _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD,
+  _B631_S_PROFTCTR,
+  _B631_S_COSTCNTR,
+  _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  EMERG_MKT_IND,
+  RX_COMP_WK,
+  _BIC_ZIO_PSTY,
+  _BIC_ZIO_PSKF,
+  UNIT,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- All external Calculation Views (CV_BASE_SKF_WEEKLY_FORECAST_S4, CV_BASE_MD_SRPACT_S4, etc.) are referenced as BigQuery tables/views with placeholder names (PROJECT.DATASET.TABLE). Their actual mappings are unresolved.
+- Input parameters (IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO) are represented as BigQuery parameter placeholders (@IP_VERSION, etc.), but their actual implementation in a BigQuery environment may require additional scripting or view definitions.
+- Filters, joins, and calculated columns are preserved per the Calculation View XML logic.
+- The calculated column CAL_WEEK_NUMBER uses RIGHT(CAST(_BIC_ZIO_SWEEK AS STRING), 2). Type is assumed to be string-compatible, but datatype is unresolved.
+- The calculated column CAL_BIC_ZIO_SKFQ uses a CASE WHEN expression. The logic and datatype are preserved as much as possible.
+- The final SELECT applies SUM aggregation to the measure columns (_BIC_ZIO_SKFQ, CAL_BIC_ZIO_SKFQ) and groups by all other output columns, as required for a CUBE/Aggregation Calculation View.
+- Only generic intermediate CTE names have been replaced with functional names (e.g., Joined_WeeklySnapshot_StoreAttr, Joined_With_CompFlag, etc.). All original business-defined names (e.g., FLAGS, COMP_FLAG_FCST) are preserved exactly.
+- All column mappings and aliases are preserved as defined in the XML.
+- No additional columns, logic, or business meaning have been invented.
+
+ASSUMPTIONS:
+- All referenced Calculation Views are available as BigQuery tables or views with the same columns and compatible types as used in the logic.
+- Input parameters can be passed to BigQuery as query parameters or handled in a way that matches their usage in the Calculation View.
+- All columns referenced exist in the respective source objects as mapped.
+- All columns are string-compatible where used in RIGHT() or CASE expressions.
+
+UNRESOLVED_ITEMS:
+- Definitions, schemas, and internal logic of external Calculation Views (CV_BASE_SKF_WEEKLY_FORECAST_S4, CV_BASE_MD_SRPACT_S4, CV_BASE_MD_COMPFL_S4, CV_BASE_MD_RCALWEEK_S4, CV_BASE_MD_CEPCT_S4) are not included and must be resolved for a complete conversion.
+- Actual handling and mapping of input parameters (IP_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO) in the BigQuery environment.
+- Data types for columns used in calculated expressions (e.g., _BIC_ZIO_SWEEK, _BIC_ZIO_PSKF, _BIC_ZIO_SKFQ) are assumed but not confirmed.
+- The placeholder table/view references (PROJECT.DATASET.TABLE) must be replaced with actual BigQuery object names.
+- Any semantic differences in NULL handling, datatype casting, or parameter passing between HANA and BigQuery require validation.
+
+CONFIDENCE:
+Medium
+
+(Conversion is complete for the Calculation View XML logic provided, but external view definitions, parameter implementations, and some datatype details remain unresolved. The main transformation logic, joins, filters, calculated columns, and aggregation/grouping are fully preserved per the XML.)

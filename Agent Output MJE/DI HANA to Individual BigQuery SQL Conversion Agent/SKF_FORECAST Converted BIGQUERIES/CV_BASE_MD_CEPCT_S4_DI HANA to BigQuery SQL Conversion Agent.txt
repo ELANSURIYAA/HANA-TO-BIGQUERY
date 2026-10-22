@@ -1,0 +1,69 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_CEPCT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.CEPCT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (Client): mapped from CEPCT.MANDT, filtered IN (120, 200)
+- SPRAS (Language Key): mapped from CEPCT.SPRAS
+- PRCTR (Profit Center): mapped from CEPCT.PRCTR
+- DATBI (Valid To Date): mapped from CEPCT.DATBI
+- KOKRS (Controlling Area): mapped from CEPCT.KOKRS
+- KTEXT (General Name): mapped from CEPCT.KTEXT
+- LTEXT (Long Text): mapped from CEPCT.LTEXT
+- MCTXT (Search term for matchcode search): mapped from CEPCT.MCTXT
+
+SOURCE_LOGIC:
+- The artifact is a Calculation View XML with root element <Calculation:scenario>.
+- dataCategory="DIMENSION"
+- outputViewType="Projection"
+- Data source is the SAP_S4.CEPCT table, exposing all columns via <viewAttributes>.
+- The only transformation is a filter on MANDT (Client) to include values 120 or 200.
+- All other columns are projected directly from the source table.
+- No joins, calculated columns, aggregations, measures, parameters, or placeholders are defined.
+- The output is row-level (not aggregated), as dataCategory is "DIMENSION" and outputViewType is "Projection". No GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+-- Calculation View XML: CV_BASE_MD_CEPCT_S4
+-- Data source: SAP_S4.CEPCT
+-- Output: Row-level projection with filter on MANDT
+
+SELECT
+  MANDT,
+  SPRAS,
+  PRCTR,
+  DATBI,
+  KOKRS,
+  KTEXT,
+  LTEXT,
+  MCTXT
+FROM
+  PROJECT.DATASET.CEPCT
+WHERE
+  MANDT IN (120, 200)
+
+CONVERSION_NOTES:
+- The SAP HANA Calculation View is a simple projection with a filter on MANDT for values 120 and 200.
+- All columns are mapped directly from the source table SAP_S4.CEPCT.
+- No calculated columns, parameters, placeholders, joins, or aggregation logic are present.
+- The filter on MANDT is preserved exactly.
+- The output columns and their order match the <logicalModel> attributes defined in the Calculation View XML.
+- PROJECT.DATASET.CEPCT is a placeholder for the actual BigQuery project, dataset, and table mapping; these must be resolved during deployment.
+- No generic intermediate CTE names are present in the source artifact, so no functional renaming is required.
+- No business meaning was invented; only the explicit logic in the XML was converted.
+
+ASSUMPTIONS:
+- The source table SAP_S4.CEPCT is mapped to PROJECT.DATASET.CEPCT in BigQuery.
+- MANDT is an integer column, as the filter values are 120 and 200 (not quoted).
+- No additional transformation logic, joins, or calculated columns exist beyond what is defined in the XML.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAP_S4.CEPCT is not specified and must be resolved.
+- Source column datatypes are assumed based on filter values; explicit datatype validation may be required.
+
+CONFIDENCE:
+High

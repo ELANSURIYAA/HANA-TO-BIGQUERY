@@ -1,0 +1,96 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_COMPFL_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: SAP_S4.ZTSRP_COMPFL
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- MANDT (source: MANDT, filter: IN (110, 200))
+- PRCTR (source: PRCTR)
+- STRNUM (source: STRNUM)
+- COMP_VER (source: COMP_VER)
+- ZWEEK (source: ZWEEK)
+- ZMONTH (source: ZMONTH)
+- ZYEAR (source: ZYEAR)
+- FS_COMP_PRE (source: FS_COMP_PRE)
+- RX_COMP_PRE (source: RX_COMP_PRE)
+- FS_COMP_MON (source: FS_COMP_MON)
+- RX_COMP_MON (source: RX_COMP_MON)
+- FS_COMP_WK (source: FS_COMP_WK)
+- RX_COMP_WK (source: RX_COMP_WK)
+- No calculated columns, measures, parameters, or placeholders identified.
+
+SOURCE_LOGIC:
+- The Calculation View XML defines a single Projection node ("Projection_1") that selects columns from the base table SAP_S4.ZTSRP_COMPFL.
+- The only transformation logic is a filter applied to the MANDT column: MANDT IN (110, 200).
+- All other columns are projected directly as-is from the base table.
+- No joins, unions, calculated columns, aggregations, measures, parameters, or placeholders are present.
+- Root element attributes: dataCategory="DIMENSION", outputViewType="Projection".
+- Because dataCategory="DIMENSION" and outputViewType="Projection", the final output is row-level, not aggregated. No GROUP BY or aggregation is required.
+
+CONVERTED_BIGQUERY_SQL:
+-- This BigQuery SQL is a direct conversion of the SAP HANA Calculation View XML logic.
+-- The source table mapping is unresolved; replace PROJECT.DATASET.ZTSRP_COMPFL with the actual BigQuery mapping as needed.
+
+WITH
+Projected_Store_Profile_Comp_Flag AS (
+    SELECT
+        MANDT,
+        PRCTR,
+        STRNUM,
+        COMP_VER,
+        ZWEEK,
+        ZMONTH,
+        ZYEAR,
+        FS_COMP_PRE,
+        RX_COMP_PRE,
+        FS_COMP_MON,
+        RX_COMP_MON,
+        FS_COMP_WK,
+        RX_COMP_WK
+    FROM
+        PROJECT.DATASET.ZTSRP_COMPFL
+    WHERE
+        MANDT IN (110, 200)
+)
+
+SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+FROM
+    Projected_Store_Profile_Comp_Flag
+
+CONVERSION_NOTES:
+- The Calculation View XML's Projection node ("Projection_1") was renamed to "Projected_Store_Profile_Comp_Flag" in the BigQuery SQL, as per the strict functional naming rule for generic intermediate CTEs. This name reflects the business description provided in the XML ("Base View for Store Profile - Comp Flag for Frozens").
+- All original column names are preserved exactly as in the source artifact. No calculated columns, measures, parameters, or placeholders exist in this view.
+- The filter on MANDT (IN (110, 200)) is preserved as a WHERE clause in BigQuery.
+- No aggregation, GROUP BY, or calculated columns are present or required.
+- The source table SAP_S4.ZTSRP_COMPFL is referenced as PROJECT.DATASET.ZTSRP_COMPFL; update this placeholder with the actual BigQuery mapping.
+- No datatype conversions, function conversions, or error handling adjustments are required or present.
+- No joins, unions, or additional nodes are present.
+- No parameters or placeholders are present.
+
+ASSUMPTIONS:
+- The source table SAP_S4.ZTSRP_COMPFL exists in BigQuery as PROJECT.DATASET.ZTSRP_COMPFL (actual mapping unresolved).
+- MANDT values 110 and 200 are integers; if they are strings, adjust the filter accordingly.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAP_S4.ZTSRP_COMPFL is not provided and must be resolved.
+- Source column datatypes are not explicitly defined in the Calculation View XML; validation may be required for datatype compatibility in BigQuery.
+
+CONFIDENCE:
+High
