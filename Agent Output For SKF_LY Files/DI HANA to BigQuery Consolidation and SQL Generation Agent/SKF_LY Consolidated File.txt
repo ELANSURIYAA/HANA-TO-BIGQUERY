@@ -1,10 +1,10 @@
 -- =====================================================================
 -- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_ACTUAL_STATIC
 -- =====================================================================
--- This SQL consolidates all upstream dependencies and produces a single
--- executable query that recreates the functionality of CV_COMP_SKF_ACTUAL_STATIC
--- from physical source tables.
---
+-- This SQL consolidates all upstream dependencies and expands them
+-- recursively until only physical source tables remain.
+-- Final consumer artifact: CV_COMP_SKF_ACTUAL_STATIC
+-- =====================================================================
 -- PARAMETERS (must be provided at runtime):
 --   @IP_VERSION (default: 'ACT01')
 --   @IP_VERSION_COMP_FLAG (derived from IP_VERSION)
@@ -13,9 +13,6 @@
 --   @IP_WEEK_LY (derived)
 --   @IP_WEEK_CY (derived)
 --
--- NOTE: Replace PROJECT.DATASET with actual BigQuery project and dataset names
--- =====================================================================
-
 WITH WEEKLY_SNAPSHOT_DS05 AS (
   -- Inlined from CV_BASE_SKF_WEEKLY_ACTUAL_S4
   -- Source: CVS_FRIP.AZSRP_DS112_VT_S4
@@ -132,14 +129,37 @@ Join_3 AS (
 
 Projection_1 AS (
   SELECT
-    j3.*,
+    j3.FISCPER,
+    j3.FISCVARNT,
+    j3.FISCYEAR,
+    j3.FISCPER3,
+    j3.MANDT,
+    j3.RECORDMODE,
+    j3.UNIT,
+    j3._BIC_ZIO_SWEEK,
+    j3._BIC_ZIO_PSTY,
+    j3._BIC_ZIO_PSKF,
+    j3._B631_S_CO_AREA,
+    j3._BIC_ZIO_CMPCD,
+    j3._B631_S_PROFTCTR,
+    j3._B631_S_COSTCNTR,
+    j3._B631_S_FUNCAREA,
+    j3._BIC_ZIO_VER,
+    j3._BIC_ZIO_SAUDT,
+    j3._BIC_ZIO_SKFQ,
+    j3._BIC_ZIO_D1SKQ,
+    j3._BIC_ZIO_D2SKQ,
+    j3._BIC_ZIO_D3SKQ,
+    j3._BIC_ZIO_D4SKQ,
+    j3._BIC_ZIO_D5SKQ,
+    j3._BIC_ZIO_D6SKQ,
+    j3._BIC_ZIO_D7SKQ,
     @IP_WEEK_CY AS CAL_WEEK
   FROM Join_3 j3
 ),
 
-STORE_ATTR_ACTUAL AS (
-  -- Inlined from CV_COMP_MD_SRPACT_STATIC
-  -- Which is populated by STP_WSS_SRP_ATTRIBUTES from CV_BASE_MD_SRPACT_S4
+STORE_ATTR_ACTUAL_BASE AS (
+  -- Inlined from CV_BASE_MD_SRPACT_S4
   -- Source: SAP_S4.ZTSRP_ATTR_ACT
   SELECT
     MANDT,
@@ -215,7 +235,6 @@ STORE_ATTR_ACTUAL AS (
     RX_DISTRICT_CODE,
     SUM(RX_HRS_OPER) AS RX_HRS_OPER,
     SUM(FS_HRS_OPER) AS FS_HRS_OPER,
-    SUM(RX_STORE) AS RX_STORE,
     SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
     SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
   FROM
@@ -296,6 +315,88 @@ STORE_ATTR_ACTUAL AS (
     RX_DISTRICT_CODE
 ),
 
+STORE_ATTR_ACTUAL AS (
+  -- Inlined from CV_COMP_MD_SRPACT_STATIC (aggregated wrapper)
+  -- Note: CV_COMP_MD_SRPACT_STATIC wraps the base with aggregation
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    KOKRS,
+    KOSTL,
+    RX_OPEN_DAT,
+    RX_CLOSE_DAT,
+    FS_OPEN_DAT,
+    FS_CLOSE_DAT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    ADDRESS,
+    CITY,
+    STATE,
+    ZIPCODE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    DIVISION_MGR,
+    AREA_CODE,
+    AREA_DESC,
+    AREA_MGR,
+    REGION_CODE,
+    REGION_DESC,
+    REGION_MGR,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZONE_CODE,
+    DISTRICT_MGR,
+    ZONE_DESC,
+    MAJOR_REGION_CODE,
+    MAJOR_REGION,
+    STORE_TYPE,
+    STORE_TYPE_DESC,
+    RX_STORE_DESC,
+    DISTRIBUTION_CNTR,
+    DISTRIBUTION_CNTR_DESC,
+    STORE_24_HR,
+    BUDGET_OPEN_DAT,
+    BUDGET_CLOSED_DAT,
+    BUDGET_RELOC_DAT,
+    CONST_OPEN_DAT,
+    CONST_CLOSE_DAT,
+    CONST_RELO_DAT,
+    RELOCATION_DAT,
+    EMERG_MKT_IND,
+    BUDGET_EMERG_MKT_IND,
+    COMPANY_CODE,
+    COMPANY_CODE_DESC,
+    ORIGINAL_FS_OPEN_DAT,
+    ORIGINAL_RX_OPEN_DAT,
+    GROUP_ONE,
+    GROUP_TWO,
+    ARD_SORT_KEY,
+    AREA_COST_CENTER,
+    REGIION_COST_CENTER,
+    COUNTY_CODE,
+    COUNTY_DESC,
+    SQFT_BRACKET_DESC,
+    SQFT_SORT_KEY,
+    ACQUISITION_CODE,
+    ACQUISITION_DESC,
+    PHOTO_LAB_ADD_DAT,
+    PHOTO_LAB_CLOSE_DAT,
+    MIN_HRS_IND,
+    CREATEDBY,
+    CREATED_ON,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    RX_HRS_OPER,
+    FS_HRS_OPER,
+    RX_STORE,
+    RETAIL_SQFT_AMT,
+    TOTAL_SQFT_AMT
+  FROM STORE_ATTR_ACTUAL_BASE
+),
+
 Join_2 AS (
   SELECT
     p1.FISCPER,
@@ -363,10 +464,8 @@ RETAIL_CAL AS (
     ZRYRQTR,
     ZRWSTRTDATE,
     ZRWENDDATE
-  FROM
-    `PROJECT.DATASET.ZTFIGL_RCALWEEK`
-  WHERE
-    RCLNT IN (120, 200)
+  FROM `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+  WHERE RCLNT IN (120, 200)
 ),
 
 Join_1 AS (
@@ -424,9 +523,8 @@ Join_1 AS (
     ON j2.CAL_WEEK = rc.ZZWEEK
 ),
 
-COMP_FLAG_ACT01 AS (
-  -- Inlined from CV_COMP_MD_COMPFL_STATIC
-  -- Which is populated by STP_WSS_SRP_ATTRIBUTES from CV_BASE_MD_COMPFL_S4
+COMP_FLAG_ACT01_BASE AS (
+  -- Inlined from CV_BASE_MD_COMPFL_S4
   -- Source: SAP_S4.ZTSRP_COMPFL
   SELECT
     MANDT,
@@ -446,7 +544,26 @@ COMP_FLAG_ACT01 AS (
     `PROJECT.DATASET.ZTSRP_COMPFL`
   WHERE
     MANDT IN (110, 200)
-    AND ZWEEK >= @IP_WEEK_ENDING_FROM
+),
+
+COMP_FLAG_ACT01 AS (
+  -- Inlined from CV_COMP_MD_COMPFL_STATIC (wrapper over base)
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+  FROM COMP_FLAG_ACT01_BASE
+  WHERE ZWEEK >= @IP_WEEK_ENDING_FROM
     AND ZWEEK <= @IP_WEEK_ENDING_TO
     AND COMP_VER = @IP_VERSION_COMP_FLAG
 ),
@@ -586,16 +703,13 @@ Join_5 AS (
 
 FLAGS AS (
   SELECT
+    MANDT,
     FISCPER,
     FISCVARNT,
     FISCYEAR,
     FISCPER3,
-    MANDT,
     RECORDMODE,
-    UNIT,
     _BIC_ZIO_SWEEK,
-    _BIC_ZIO_PSTY,
-    _BIC_ZIO_PSKF,
     _B631_S_CO_AREA,
     _BIC_ZIO_CMPCD,
     _B631_S_PROFTCTR,
@@ -603,18 +717,13 @@ FLAGS AS (
     _B631_S_FUNCAREA,
     _BIC_ZIO_VER,
     _BIC_ZIO_SAUDT,
-    _BIC_ZIO_SKFQ,
-    _BIC_ZIO_D1SKQ,
-    _BIC_ZIO_D2SKQ,
-    _BIC_ZIO_D3SKQ,
-    _BIC_ZIO_D4SKQ,
-    _BIC_ZIO_D5SKQ,
-    _BIC_ZIO_D6SKQ,
-    _BIC_ZIO_D7SKQ,
-    CAL_WEEK,
     REP_MKT_CODE,
     REP_MKT_DESC,
     EMERG_MKT_IND,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    UNIT,
+    RX_COMP_WK,
     DIVISION_CODE,
     DIVISION_DESC,
     AREA_CODE,
@@ -626,21 +735,29 @@ FLAGS AS (
     STRNUM,
     CITY,
     STATE,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    PROFIT_CENTER_TEXT,
     FS_OPEN_DAT,
     RX_OPEN_DAT,
+    CAL_WEEK,
     RX_DIVISION_CODE,
     RX_AREA_CODE,
     RX_REGION_CODE,
     RX_DISTRICT_CODE,
-    ZRWSTRTDATE,
-    ZRWENDDATE,
-    RX_COMP_WK,
-    PROFIT_CENTER_TEXT,
     RIGHT(CAL_WEEK, 2) AS CAL_WEEK_NUMBER,
     CASE
       WHEN _BIC_ZIO_PSKF = '804013' THEN CAST(_BIC_ZIO_SKFQ AS NUMERIC) * 2
       ELSE CAST(_BIC_ZIO_SKFQ AS NUMERIC)
-    END AS CAL_ZIO_SKFQ_QTY
+    END AS CAL_ZIO_SKFQ_QTY,
+    _BIC_ZIO_SKFQ,
+    _BIC_ZIO_D1SKQ,
+    _BIC_ZIO_D2SKQ,
+    _BIC_ZIO_D3SKQ,
+    _BIC_ZIO_D4SKQ,
+    _BIC_ZIO_D5SKQ,
+    _BIC_ZIO_D6SKQ,
+    _BIC_ZIO_D7SKQ
   FROM Join_5
 )
 
