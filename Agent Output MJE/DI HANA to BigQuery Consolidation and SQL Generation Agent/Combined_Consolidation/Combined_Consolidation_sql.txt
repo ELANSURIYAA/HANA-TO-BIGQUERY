@@ -1,0 +1,618 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL: CV_COMP_FORECAST_MJE_STATIC
+-- Source Lineage: CV_COMP_FIN_FORECAST, CV_COMP_SKF_FORECAST, CV_COMP_FIN_SBT, 
+--                 CV_COMP_FIN_MANUAL_JE, CV_COMP_SKF_MANUAL_JE → CV_COMP_FORECAST_MJE 
+--                 → STP_WSS_FORECAST_MJE → TBL_WSS_FORECAST_MJE → CV_COMP_FORECAST_MJE_STATIC
+-- Final Consumer: CV_COMP_FORECAST_MJE_STATIC
+-- Consolidation Date: 2024
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: FIN_FORECAST
+-- Logic: Filters financial forecast data for FS and RX flags from CV_COMP_FIN_FORECAST
+-- Source: CV_COMP_FIN_FORECAST (terminal calculation view)
+-- Filters: FS_RX_FLAG IN ('FS', 'RX')
+-- =====================================================================
+WITH FIN_FORECAST AS (
+  SELECT
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_PROFTCTR,
+    FS_RX_FLAG,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    COMP_FLAG,
+    _B631_S_AMOUNT,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    STRNUM,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    CURRENCY AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_FIN_FORECAST
+  WHERE
+    FS_RX_FLAG IN ('FS', 'RX')
+),
+
+-- =====================================================================
+-- CTE 2: SKF_FORECAST
+-- Logic: Projects all columns from SKF forecast calculation view
+-- Source: CV_COMP_SKF_FORECAST (terminal calculation view)
+-- =====================================================================
+SKF_FORECAST AS (
+  SELECT
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_PROFTCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    RX_COMP_WK,
+    _BIC_ZIO_SKFQ,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_SKF_FORECAST
+),
+
+-- =====================================================================
+-- CTE 3: FIN_SBT
+-- Logic: Projects all columns from financial SBT calculation view
+-- Source: CV_COMP_FIN_SBT (terminal calculation view)
+-- =====================================================================
+FIN_SBT AS (
+  SELECT
+    PRCTR,
+    BUDAT,
+    XREF2_HD,
+    GJAHR,
+    BELNR,
+    BUKRS,
+    MANDT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZZWEEK,
+    STRNUM,
+    CAL_COMP_FLAG,
+    CAL_WEEK_NUMBER,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    RWCUR,
+    WSL,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    EMERG_MKT_IND,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_FIN_SBT
+),
+
+-- =====================================================================
+-- CTE 4: FIN_MANUAL_JE
+-- Logic: Projects all columns from financial manual journal entries calculation view
+-- Source: CV_COMP_FIN_MANUAL_JE (terminal calculation view)
+-- =====================================================================
+FIN_MANUAL_JE AS (
+  SELECT
+    STRNUM,
+    RX_COMP_WK,
+    FS_COMP_WK,
+    EMERG_MKT_IND,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    RCLNT,
+    PRCTR,
+    ZZWEEK,
+    DISTRICT_DESC,
+    AREA_DESC,
+    DIVISION_DESC,
+    AREA_CODE,
+    DIVISION_CODE,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    KSL,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    PARNODE,
+    CAL_FS_SALES,
+    CAL_RX_SALES,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CITY,
+    STATE,
+    CAL_WEEK_NUMBER,
+    COMP_FLAG,
+    CAL_FS_RX_FLAG,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_FIN_MANUAL_JE
+),
+
+-- =====================================================================
+-- CTE 5: SKF_MANUAL_JE
+-- Logic: Projects all columns from SKF manual journal entries calculation view
+-- Source: CV_COMP_SKF_MANUAL_JE (terminal calculation view)
+-- =====================================================================
+SKF_MANUAL_JE AS (
+  SELECT
+    EMERG_MKT_IND,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    AREA_DESC,
+    AREA_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    STATE,
+    CITY,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    ZZWEEK,
+    PRCTR,
+    DATE_FROM,
+    STAGR,
+    RCLNT,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    STRNUM,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    MSL,
+    RCNTR,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CAL_WEEK_NUMBER,
+    COMP_FLAG,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_SKF_MANUAL_JE
+),
+
+-- =====================================================================
+-- CTE 6: COMBINED
+-- Logic: Unions five data sources with explicit column mapping and constant assignments
+-- Source: FIN_FORECAST, SKF_FORECAST, FIN_SBT, FIN_MANUAL_JE, SKF_MANUAL_JE
+-- Join: UNION ALL of five branches with different data categories
+-- Calculation: Maps source-specific columns to unified output structure with constants for missing fields
+-- =====================================================================
+COMBINED AS (
+  SELECT
+    FS_RX_FLAG,
+    _B631_S_AMOUNT AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Transactional Sales' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    _B631_S_PROFTCTR AS PRCTR,
+    MANDT,
+    FS_RX_FLAG AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_FCST' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_FORECAST
+
+  UNION ALL
+
+  SELECT
+    'RX' AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    _BIC_ZIO_SKFQ AS SKF_FCST_QTY,
+    'Transactional Sales' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    RX_COMP_WK AS COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    _B631_S_PROFTCTR AS PRCTR,
+    MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'SKF' AS CAL_DATA_CATEGORY1,
+    'SKF_FCST' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM SKF_FORECAST
+
+  UNION ALL
+
+  SELECT
+    'FS' AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    CAL_COMP_FLAG AS COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    MANDT,
+    'FS' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_SBT' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_SBT
+
+  UNION ALL
+
+  SELECT
+    CAL_FS_RX_FLAG AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    RCLNT AS MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_MJE' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    CAL_FS_SALES,
+    CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_MANUAL_JE
+
+  UNION ALL
+
+  SELECT
+    'RX' AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    RCLNT AS MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'SKF' AS CAL_DATA_CATEGORY1,
+    'SKF_MJE' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    MSL,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM SKF_MANUAL_JE
+),
+
+-- =====================================================================
+-- CTE 7: VARIANCES
+-- Logic: Renames and projects columns from COMBINED for final output structure
+-- Source: COMBINED
+-- Calculation: Renames FORECAST_CURRENCY to FIN_FORECAST_CURRENCY, WSL to SBT, MSL to SKF_MJE_QTY, CAL_FS_SALES to CAL_FS_SALES_MJE, CAL_RX_SALES to CAL_RX_SALES_MJE
+-- =====================================================================
+VARIANCES AS (
+  SELECT
+    MANDT,
+    CAL_SOURCE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    COMP_FLAG,
+    FS_RX_FLAG,
+    _BIC_ZIO_SWEEK,
+    FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FORECAST_CURRENCY AS FIN_FORECAST_CURRENCY,
+    FIN_FCST_AMOUNT,
+    SKF_FCST_QTY,
+    PROFIT_CENTER_TEXT,
+    CAL_DATA_CATEGORY1,
+    CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    WSL AS SBT,
+    MSL AS SKF_MJE_QTY,
+    CAL_FS_SALES AS CAL_FS_SALES_MJE,
+    CAL_RX_SALES AS CAL_RX_SALES_MJE,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM COMBINED
+)
+
+-- =====================================================================
+-- FINAL SELECT: CV_COMP_FORECAST_MJE_STATIC Output
+-- Logic: Aggregates measures by SUM and groups by all dimension columns, with calculated attributes
+-- Source: VARIANCES
+-- Aggregation: SUM on FIN_FCST_AMOUNT, SKF_FCST_QTY, SBT, SKF_MJE_QTY, CAL_FS_SALES_MJE, CAL_RX_SALES_MJE
+-- Calculation: CAL_COMP_FLAG_DESC (CASE on COMP_FLAG), CAL_EMERG_MKT_IND (CASE on EMERG_MKT_IND)
+-- =====================================================================
+SELECT
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(FIN_FCST_AMOUNT) AS FIN_FCST_AMOUNT,
+  SUM(SKF_FCST_QTY) AS SKF_FCST_QTY,
+  SUM(SBT) AS SBT,
+  SUM(SKF_MJE_QTY) AS SKF_MJE_QTY,
+  SUM(CAL_FS_SALES_MJE) AS CAL_FS_SALES_MJE,
+  SUM(CAL_RX_SALES_MJE) AS CAL_RX_SALES_MJE,
+  CASE COMP_FLAG
+    WHEN '1' THEN 'Comp'
+    WHEN '0' THEN 'Non-Comp'
+    ELSE ''
+  END AS CAL_COMP_FLAG_DESC,
+  CASE
+    WHEN EMERG_MKT_IND = 'Y' THEN 'Yes'
+    WHEN EMERG_MKT_IND = 'N' THEN 'No'
+    ELSE ''
+  END AS CAL_EMERG_MKT_IND
+FROM VARIANCES
+GROUP BY
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
