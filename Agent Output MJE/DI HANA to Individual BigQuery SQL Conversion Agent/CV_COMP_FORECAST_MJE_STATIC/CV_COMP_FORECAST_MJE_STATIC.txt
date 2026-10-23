@@ -1,0 +1,180 @@
+SOURCE_ARTIFACT:
+CV_COMP_FORECAST_MJE_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Table: CVS_FRIP.Table::TBL_WSS_FORECAST_MJE
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- All columns listed below are projected directly from the source table TBL_WSS_FORECAST_MJE, with a 1:1 mapping (no renaming, transformation, or calculation in the Calculation View XML):
+    - CAL_COMP_FLAG_DESC
+    - CAL_EMERG_MKT_IND
+    - MANDT
+    - CAL_SOURCE
+    - DIVISION_CODE
+    - DIVISION_DESC
+    - REGION_CODE
+    - REGION_DESC
+    - DISTRICT_CODE
+    - DISTRICT_DESC
+    - STRNUM
+    - PRCTR
+    - EMERG_MKT_IND
+    - REP_MKT_CODE
+    - REP_MKT_DESC
+    - COMP_FLAG
+    - FS_RX_FLAG
+    - _BIC_ZIO_SWEEK
+    - FS_RX_FLAG_EXT
+    - ZRWSTRTDATE
+    - ZRWENDDATE
+    - CAL_WEEK_NUMBER
+    - CITY
+    - STATE
+    - FIN_FORECAST_CURRENCY
+    - FIN_FCST_AMOUNT (measure, aggregationType="sum")
+    - SKF_FCST_QTY (measure, aggregationType="sum")
+    - PROFIT_CENTER_TEXT
+    - CAL_DATA_CATEGORY1
+    - CAL_DATA_CATEGORY2
+    - FS_OPEN_DAT
+    - RX_OPEN_DAT
+    - SBT (measure, aggregationType="sum")
+    - SKF_MJE_QTY (measure, aggregationType="sum")
+    - CAL_FS_SALES_MJE (measure, aggregationType="sum")
+    - CAL_RX_SALES_MJE (measure, aggregationType="sum")
+    - AREA_CODE
+    - AREA_DESC
+    - RX_DIVISION_CODE
+    - RX_AREA_CODE
+    - RX_REGION_CODE
+    - RX_DISTRICT_CODE
+
+Measures (aggregationType="sum"):
+    - FIN_FCST_AMOUNT
+    - SKF_FCST_QTY
+    - SBT
+    - SKF_MJE_QTY
+    - CAL_FS_SALES_MJE
+    - CAL_RX_SALES_MJE
+
+No calculated columns, calculated measures, filters, joins, input parameters, or placeholders are defined in this Calculation View.
+
+SOURCE_LOGIC:
+- This Calculation View is defined as a CUBE with dataCategory="CUBE" and outputViewType="Aggregation".
+- The view consists of a single Projection node that selects all columns from the source table CVS_FRIP.Table::TBL_WSS_FORECAST_MJE, mapping them 1:1 to the output.
+- No filters, joins, calculated columns, or additional transformations are defined.
+- The logical model specifies that the following columns are measures with aggregationType="sum": FIN_FCST_AMOUNT, SKF_FCST_QTY, SBT, SKF_MJE_QTY, CAL_FS_SALES_MJE, CAL_RX_SALES_MJE.
+- All other columns are output as attributes and must be included in the GROUP BY clause.
+- Therefore, the final output is an aggregation query that groups by all non-measure columns and sums each measure column.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+SELECT
+  CAL_COMP_FLAG_DESC,
+  CAL_EMERG_MKT_IND,
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(FIN_FCST_AMOUNT) AS FIN_FCST_AMOUNT,
+  SUM(SKF_FCST_QTY) AS SKF_FCST_QTY,
+  SUM(SBT) AS SBT,
+  SUM(SKF_MJE_QTY) AS SKF_MJE_QTY,
+  SUM(CAL_FS_SALES_MJE) AS CAL_FS_SALES_MJE,
+  SUM(CAL_RX_SALES_MJE) AS CAL_RX_SALES_MJE
+FROM
+  `PROJECT.DATASET.TBL_WSS_FORECAST_MJE`
+GROUP BY
+  CAL_COMP_FLAG_DESC,
+  CAL_EMERG_MKT_IND,
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The Calculation View is a simple wrapper around the source table, projecting all columns and aggregating the six measure columns by SUM, grouped by all other columns.
+- No calculated columns, calculated measures, filters, joins, input parameters, or placeholders are defined in the Calculation View XML.
+- All source-to-output column mappings are direct 1:1 mappings.
+- The BigQuery SQL uses the placeholder `PROJECT.DATASET.TBL_WSS_FORECAST_MJE` for the table reference; the actual BigQuery project and dataset names must be provided during implementation.
+- The CUBE/Aggregation logic is preserved by grouping on all non-measure columns and aggregating each measure using SUM, as specified in the Calculation View's logicalModel.
+- No CTEs or intermediate nodes are required, as there is only a single projection node and no further transformation.
+- All column names, aliases, and output structure are preserved exactly as in the Calculation View definition.
+
+ASSUMPTIONS:
+- The source table TBL_WSS_FORECAST_MJE is available in BigQuery with all columns as specified.
+- Data types for each column are compatible with the SUM aggregation for the specified measure columns; actual data types must be validated during implementation.
+- No additional business rules, filters, or transformations are required beyond what is explicitly defined in the Calculation View XML.
+- The placeholder `PROJECT.DATASET.TBL_WSS_FORECAST_MJE` will be replaced with the actual BigQuery table reference.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset names for the source table are not specified in the Calculation View XML.
+- Source column data types are not specified in the Calculation View XML and must be validated for SUM aggregation compatibility.
+- If the source table contains additional columns not listed in the Calculation View, they are not included in the output.
+
+CONFIDENCE:
+High
