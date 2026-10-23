@@ -1,0 +1,395 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_MANUAL_JE
+-- =====================================================================
+-- This consolidated SQL inlines all upstream dependencies from the
+-- HANA Calculation View CV_COMP_SKF_MANUAL_JE and its referenced views.
+-- 
+-- Dependencies expanded:
+--   1. CV_BASE_SKF_FAGLSKF_PN_S4 (Financial ledger data)
+--   2. CV_BASE_MD_HRRP_NODE_S4 (HR Reporting Node hierarchy)
+--   3. CV_BASE_MD_SRPACT_S4 (SRP Activity master data)
+--   4. CV_BASE_MD_COMPFL_S4 (Comparison Flag master data)
+--   5. CV_BASE_MD_RCALWEEK_S4 (Fiscal Calendar Week)
+--   6. CV_BASE_MD_CEPCT_S4 (Cost Element/Profit Center text)
+--
+-- Parameters:
+--   @IP_WEEK_ENDING_FROM (STRING) - Start week filter
+--   @IP_WEEK_ENDING_TO (STRING) - End week filter
+--   @IP_VERSION_COMP_FLAG (STRING) - Comparison version flag
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: FAGLSKF_PN_S4
+-- Logic: Extract financial ledger statistical key figures from FAGLSKF_PN_VT_S4
+--        filtered by client (120, 200), statistical key figure types (801000, 804013),
+--        week range parameters, and excluding source code 'SLS'
+-- Source: PROJECT.DATASET.FAGLSKF_PN_VT_S4 (physical table)
+-- Filters: RCLNT IN (120, 200), STAGR IN ('801000', '804013'), 
+--          ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO, ZZSCODE != 'SLS'
+-- =====================================================================
+WITH FAGLSKF_PN_S4 AS (
+  SELECT
+    RCLNT,
+    STAGR,
+    DATE_FROM,
+    MSL,
+    PRCTR,
+    ZZSCODE,
+    ZZWEEK,
+    RCNTR
+  FROM `PROJECT.DATASET.FAGLSKF_PN_VT_S4`
+  WHERE RCLNT IN (120, 200)
+    AND STAGR IN ('801000', '804013')
+    AND ZZWEEK >= @IP_WEEK_ENDING_FROM
+    AND ZZWEEK <= @IP_WEEK_ENDING_TO
+    AND ZZSCODE != 'SLS'
+),
+
+-- =====================================================================
+-- CTE 2: HIER
+-- Logic: Extract HR Reporting Node hierarchy data filtered by parent node
+--        containing 'CORERET' and valid-to date of '99991231'
+-- Source: PROJECT.DATASET.HRRP_NODE (physical table)
+-- Filters: MANDT IN (120, 200), PARNODE matches '.*CORERET.*', HRYVALTO = '99991231'
+-- =====================================================================
+HIER AS (
+  SELECT
+    MANDT,
+    PARNODE,
+    HRYVALTO,
+    NODEVALUE
+  FROM `PROJECT.DATASET.HRRP_NODE`
+  WHERE MANDT IN (120, 200)
+    AND REGEXP_CONTAINS(PARNODE, r'.*CORERET.*')
+    AND HRYVALTO = '99991231'
+),
+
+-- =====================================================================
+-- CTE 3: Joined_FAGLSKF_with_HIER
+-- Logic: Inner join financial ledger data with HR hierarchy to restrict
+--        to cost centers that are valid CORERET nodes
+-- Source: FAGLSKF_PN_S4, HIER
+-- Join: INNER JOIN on F.RCNTR = H.NODEVALUE
+-- =====================================================================
+Joined_FAGLSKF_with_HIER AS (
+  SELECT
+    F.RCLNT,
+    F.STAGR,
+    F.DATE_FROM,
+    F.PRCTR,
+    F.ZZWEEK,
+    F.MSL,
+    H.NODEVALUE AS RCNTR,
+    F.ZZSCODE AS SOURCE_CODE
+  FROM FAGLSKF_PN_S4 F
+  INNER JOIN HIER H
+    ON F.RCNTR = H.NODEVALUE
+),
+
+-- =====================================================================
+-- CTE 4: STORE_ATTR_SKF_JOURNAL_ENT
+-- Logic: Extract store profile attributes and master data from SRP Activity table
+-- Source: PROJECT.DATASET.ZTSRP_ATTR_ACT (physical table)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+STORE_ATTR_SKF_JOURNAL_ENT AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    EMERG_MKT_IND,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 5: Joined_FAGLSKF_HIER_with_STORE_ATTR
+-- Logic: Left join the financial ledger + hierarchy data with store attributes
+--        to enrich with store profile information
+-- Source: Joined_FAGLSKF_with_HIER, STORE_ATTR_SKF_JOURNAL_ENT
+-- Join: LEFT JOIN on F.PRCTR = S.PRCTR
+-- =====================================================================
+Joined_FAGLSKF_HIER_with_STORE_ATTR AS (
+  SELECT
+    S.REP_MKT_CODE,
+    S.REP_MKT_DESC,
+    S.CITY,
+    S.STATE,
+    S.DIVISION_CODE,
+    S.DIVISION_DESC,
+    S.AREA_CODE,
+    S.AREA_DESC,
+    S.REGION_CODE,
+    S.REGION_DESC,
+    S.DISTRICT_CODE,
+    S.DISTRICT_DESC,
+    S.EMERG_MKT_IND,
+    F.RCLNT,
+    F.STAGR,
+    F.DATE_FROM,
+    F.PRCTR,
+    F.ZZWEEK,
+    F.MSL,
+    F.RCNTR,
+    S.FS_OPEN_DAT,
+    S.RX_OPEN_DAT,
+    S.STRNUM,
+    F.SOURCE_CODE,
+    S.RX_DIVISION_CODE,
+    S.RX_AREA_CODE,
+    S.RX_REGION_CODE,
+    S.RX_DISTRICT_CODE
+  FROM Joined_FAGLSKF_with_HIER F
+  LEFT JOIN STORE_ATTR_SKF_JOURNAL_ENT S
+    ON F.PRCTR = S.PRCTR
+),
+
+-- =====================================================================
+-- CTE 6: COMP_FLAG_SKF_JOURNAL_ENT
+-- Logic: Extract comparison flag data filtered by comparison version parameter
+-- Source: PROJECT.DATASET.ZTSRP_COMPFL (physical table)
+-- Filters: MANDT IN (110, 200), COMP_VER = @IP_VERSION_COMP_FLAG
+-- =====================================================================
+COMP_FLAG_SKF_JOURNAL_ENT AS (
+  SELECT
+    FS_COMP_WK,
+    RX_COMP_WK,
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZYEAR,
+    ZMONTH
+  FROM `PROJECT.DATASET.ZTSRP_COMPFL`
+  WHERE MANDT IN (110, 200)
+    AND COMP_VER = @IP_VERSION_COMP_FLAG
+),
+
+-- =====================================================================
+-- CTE 7: Joined_StoreAttr_with_CompFlag
+-- Logic: Left join store-enriched data with comparison flags to add
+--        FS_COMP_WK and RX_COMP_WK indicators
+-- Source: Joined_FAGLSKF_HIER_with_STORE_ATTR, COMP_FLAG_SKF_JOURNAL_ENT
+-- Join: LEFT JOIN on J.PRCTR = C.PRCTR AND J.ZZWEEK = C.ZWEEK
+-- =====================================================================
+Joined_StoreAttr_with_CompFlag AS (
+  SELECT
+    J.*,
+    C.FS_COMP_WK,
+    C.RX_COMP_WK
+  FROM Joined_FAGLSKF_HIER_with_STORE_ATTR J
+  LEFT JOIN COMP_FLAG_SKF_JOURNAL_ENT C
+    ON J.PRCTR = C.PRCTR
+    AND J.ZZWEEK = C.ZWEEK
+),
+
+-- =====================================================================
+-- CTE 8: CAL_WEEK
+-- Logic: Extract fiscal calendar week data with start and end dates
+-- Source: PROJECT.DATASET.ZTFIGL_RCALWEEK (physical table)
+-- Filters: RCLNT IN (120, 200)
+-- =====================================================================
+CAL_WEEK AS (
+  SELECT
+    ZZWEEK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    RCLNT
+  FROM `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+  WHERE RCLNT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 9: Joined_with_CAL_WEEK
+-- Logic: Left join with calendar week data to add week start and end dates
+-- Source: Joined_StoreAttr_with_CompFlag, CAL_WEEK
+-- Join: LEFT JOIN on J.ZZWEEK = C.ZZWEEK
+-- =====================================================================
+Joined_with_CAL_WEEK AS (
+  SELECT
+    J.*,
+    C.ZRWSTRTDATE,
+    C.ZRWENDDATE
+  FROM Joined_StoreAttr_with_CompFlag J
+  LEFT JOIN CAL_WEEK C
+    ON J.ZZWEEK = C.ZZWEEK
+),
+
+-- =====================================================================
+-- CTE 10: PROFIT_CENTER_TEXT
+-- Logic: Extract profit center text descriptions
+-- Source: PROJECT.DATASET.CEPCT (physical table)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM `PROJECT.DATASET.CEPCT`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 11: Joined_with_ProfitCenterText
+-- Logic: Left join with profit center text to add descriptive names
+-- Source: Joined_with_CAL_WEEK, PROFIT_CENTER_TEXT
+-- Join: LEFT JOIN on J.PRCTR = P.PRCTR
+-- =====================================================================
+Joined_with_ProfitCenterText AS (
+  SELECT
+    J.*,
+    P.PROFIT_CENTER_TEXT
+  FROM Joined_with_CAL_WEEK J
+  LEFT JOIN PROFIT_CENTER_TEXT P
+    ON J.PRCTR = P.PRCTR
+),
+
+-- =====================================================================
+-- CTE 12: SKF_QTY
+-- Logic: Apply calculated columns for MSL quantity adjustment based on STAGR,
+--        week number extraction, and comparison flag mapping
+-- Source: Joined_with_ProfitCenterText
+-- Calculation: CAL_MSL = CASE WHEN STAGR = '801000' THEN MSL ELSE MSL * 2 END
+--              CAL_WEEK_NUMBER = RIGHT(CAST(ZZWEEK AS STRING), 2)
+--              CAL_COMP_FLAG = RX_COMP_WK
+-- =====================================================================
+SKF_QTY AS (
+  SELECT
+    EMERG_MKT_IND,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    AREA_DESC,
+    AREA_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    STATE,
+    CITY,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    ZZWEEK,
+    PRCTR,
+    DATE_FROM,
+    STAGR,
+    RCLNT,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    MSL,
+    RCNTR,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    STRNUM,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    CASE WHEN STAGR = '801000' THEN MSL ELSE MSL * 2 END AS CAL_MSL,
+    RIGHT(CAST(ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    RX_COMP_WK AS CAL_COMP_FLAG
+  FROM Joined_with_ProfitCenterText
+)
+
+-- =====================================================================
+-- FINAL SELECT: Aggregated Output
+-- Logic: Aggregate CAL_MSL as SUM(MSL) and group by all dimension attributes
+--        to produce the final manual journal entry dataset
+-- Source: SKF_QTY
+-- Aggregation: SUM(CAL_MSL) AS MSL
+-- =====================================================================
+SELECT
+  EMERG_MKT_IND,
+  DISTRICT_DESC,
+  DISTRICT_CODE,
+  REGION_DESC,
+  REGION_CODE,
+  AREA_DESC,
+  AREA_CODE,
+  DIVISION_DESC,
+  DIVISION_CODE,
+  STATE,
+  CITY,
+  REP_MKT_DESC,
+  REP_MKT_CODE,
+  ZZWEEK,
+  PRCTR,
+  DATE_FROM,
+  STAGR,
+  RCLNT,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  RCNTR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  CAL_WEEK_NUMBER,
+  CAL_COMP_FLAG AS COMP_FLAG,
+  STRNUM,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(CAL_MSL) AS MSL
+FROM SKF_QTY
+GROUP BY
+  EMERG_MKT_IND,
+  DISTRICT_DESC,
+  DISTRICT_CODE,
+  REGION_DESC,
+  REGION_CODE,
+  AREA_DESC,
+  AREA_CODE,
+  DIVISION_DESC,
+  DIVISION_CODE,
+  STATE,
+  CITY,
+  REP_MKT_DESC,
+  REP_MKT_CODE,
+  ZZWEEK,
+  PRCTR,
+  DATE_FROM,
+  STAGR,
+  RCLNT,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  RCNTR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  CAL_WEEK_NUMBER,
+  CAL_COMP_FLAG,
+  STRNUM,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
