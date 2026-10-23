@@ -1,0 +1,625 @@
+SOURCE_ARTIFACT:
+CV_COMP_FORECAST_MJE
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation Views: CV_COMP_FIN_FORECAST, CV_COMP_SKF_FORECAST, CV_COMP_FIN_SBT, CV_COMP_FIN_MANUAL_JE, CV_COMP_SKF_MANUAL_JE
+- Derived Calculation Views: FIN_FORECAST, SKF_FORECAST, FIN_SBT, FIN_MANUAL_JE, SKF_MANUAL_JE, COMBINED, VARIANCES
+- Input Parameters: IP_FIN_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO, IP_SKF_VERSION
+- External Scalar Functions (referenced in variable derivation): CVS_FRIP.Composite.Master::SFN_PRIOR_WEEK_FIN_FORECAST_VERSION, CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK, CVS_FRIP.Composite.Master::SFN_PRIOR_WEEK_SKF_FORECAST_VERSION
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Parameters/Variables: IP_FIN_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO, IP_SKF_VERSION (passed to underlying Calculation Views)
+- Source-to-target mappings for each Calculation View node as defined in the XML (see detailed mapping in each node)
+- Constants and nulls mapped explicitly in UNION (e.g., CAL_SOURCE, CAL_DATA_CATEGORY1/2, WSL, etc.)
+- Calculated Attributes (Logical Model):
+    - CAL_COMP_FLAG_DESC: case("COMP_FLAG",'1','Comp','0','Non-Comp','')
+    - CAL_EMERG_MKT_IND: if("EMERG_MKT_IND" = 'Y','Yes',if("EMERG_MKT_IND" = 'N','No',''))
+- Measures (Logical Model, aggregationType="sum"):
+    - FIN_FCST_AMOUNT, SKF_FCST_QTY, SBT, SKF_MJE_QTY, CAL_FS_SALES_MJE, CAL_RX_SALES_MJE
+
+SOURCE_LOGIC:
+- The Calculation View is a CUBE with outputViewType="Aggregation", requiring GROUP BY on all output columns except measures.
+- Data is sourced from five Calculation Views (CV_COMP_FIN_FORECAST, CV_COMP_SKF_FORECAST, CV_COMP_FIN_SBT, CV_COMP_FIN_MANUAL_JE, CV_COMP_SKF_MANUAL_JE), each mapped to a corresponding projection node (FIN_FORECAST, SKF_FORECAST, FIN_SBT, FIN_MANUAL_JE, SKF_MANUAL_JE).
+- FIN_FORECAST applies a filter on FS_RX_FLAG IN ('FS', 'RX').
+- All projection nodes map source columns to output columns as defined.
+- The COMBINED node unions the five projections, mapping columns and constants as defined in the XML, with explicit constant/null assignments for missing columns per source.
+- The VARIANCES node is a projection over COMBINED, mapping columns directly.
+- The logical model defines the output columns, calculated attributes, and measures.
+- The final output must aggregate (SUM) all measures and GROUP BY all other output columns.
+- No explicit joins or additional filters are defined beyond those mentioned.
+- Input parameters are mapped to the underlying Calculation Views but their usage in those views is not defined in this artifact.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH FIN_FORECAST AS (
+  SELECT
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_PROFTCTR,
+    FS_RX_FLAG,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    COMP_FLAG,
+    _B631_S_AMOUNT,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    STRNUM,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    CURRENCY AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_FIN_FORECAST
+  WHERE
+    FS_RX_FLAG IN ('FS', 'RX')
+),
+SKF_FORECAST AS (
+  SELECT
+    MANDT,
+    _BIC_ZIO_SWEEK,
+    _B631_S_PROFTCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    RX_COMP_WK,
+    _BIC_ZIO_SKFQ,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_SKF_FORECAST
+),
+FIN_SBT AS (
+  SELECT
+    PRCTR,
+    BUDAT,
+    XREF2_HD,
+    GJAHR,
+    BELNR,
+    BUKRS,
+    MANDT,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZZWEEK,
+    STRNUM,
+    CAL_COMP_FLAG,
+    CAL_WEEK_NUMBER,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    RWCUR,
+    WSL,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    EMERG_MKT_IND,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_FIN_SBT
+),
+FIN_MANUAL_JE AS (
+  SELECT
+    STRNUM,
+    RX_COMP_WK,
+    FS_COMP_WK,
+    EMERG_MKT_IND,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    RCLNT,
+    PRCTR,
+    ZZWEEK,
+    DISTRICT_DESC,
+    AREA_DESC,
+    DIVISION_DESC,
+    AREA_CODE,
+    DIVISION_CODE,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    KSL,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    PARNODE,
+    CAL_FS_SALES,
+    CAL_RX_SALES,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CITY,
+    STATE,
+    CAL_WEEK_NUMBER,
+    COMP_FLAG,
+    CAL_FS_RX_FLAG,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_FIN_MANUAL_JE
+),
+SKF_MANUAL_JE AS (
+  SELECT
+    EMERG_MKT_IND,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    AREA_DESC,
+    AREA_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    STATE,
+    CITY,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    ZZWEEK,
+    PRCTR,
+    DATE_FROM,
+    STAGR,
+    RCLNT,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    STRNUM,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    MSL,
+    RCNTR,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CAL_WEEK_NUMBER,
+    COMP_FLAG,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM
+    CV_COMP_SKF_MANUAL_JE
+),
+COMBINED AS (
+  SELECT
+    FS_RX_FLAG,
+    _B631_S_AMOUNT AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Transactional Sales' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    _B631_S_PROFTCTR AS PRCTR,
+    MANDT,
+    FS_RX_FLAG AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_FCST' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_FORECAST
+
+  UNION ALL
+
+  SELECT
+    'RX' AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    _BIC_ZIO_SKFQ AS SKF_FCST_QTY,
+    'Transactional Sales' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    RX_COMP_WK AS COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    _B631_S_PROFTCTR AS PRCTR,
+    MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'SKF' AS CAL_DATA_CATEGORY1,
+    'SKF_FCST' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM SKF_FORECAST
+
+  UNION ALL
+
+  SELECT
+    'FS' AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    CAL_COMP_FLAG AS COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    MANDT,
+    'FS' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_SBT' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_SBT
+
+  UNION ALL
+
+  SELECT
+    CAL_FS_RX_FLAG AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    RCLNT AS MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_MJE' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    CAL_FS_SALES,
+    CAL_RX_SALES,
+    NULL AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_MANUAL_JE
+
+  UNION ALL
+
+  SELECT
+    'RX' AS FS_RX_FLAG,
+    NULL AS FIN_FCST_AMOUNT,
+    NULL AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    RCLNT AS MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'SKF' AS CAL_DATA_CATEGORY1,
+    'SKF_MJE' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    NULL AS WSL,
+    NULL AS CAL_FS_SALES,
+    NULL AS CAL_RX_SALES,
+    MSL,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM SKF_MANUAL_JE
+),
+VARIANCES AS (
+  SELECT
+    MANDT,
+    CAL_SOURCE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    COMP_FLAG,
+    FS_RX_FLAG,
+    _BIC_ZIO_SWEEK,
+    FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FORECAST_CURRENCY AS FIN_FORECAST_CURRENCY,
+    FIN_FCST_AMOUNT,
+    SKF_FCST_QTY,
+    PROFIT_CENTER_TEXT,
+    CAL_DATA_CATEGORY1,
+    CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    WSL AS SBT,
+    MSL AS SKF_MJE_QTY,
+    CAL_FS_SALES AS CAL_FS_SALES_MJE,
+    CAL_RX_SALES AS CAL_RX_SALES_MJE,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM COMBINED
+)
+SELECT
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(FIN_FCST_AMOUNT) AS FIN_FCST_AMOUNT,
+  SUM(SKF_FCST_QTY) AS SKF_FCST_QTY,
+  SUM(SBT) AS SBT,
+  SUM(SKF_MJE_QTY) AS SKF_MJE_QTY,
+  SUM(CAL_FS_SALES_MJE) AS CAL_FS_SALES_MJE,
+  SUM(CAL_RX_SALES_MJE) AS CAL_RX_SALES_MJE,
+  CASE COMP_FLAG
+    WHEN '1' THEN 'Comp'
+    WHEN '0' THEN 'Non-Comp'
+    ELSE ''
+  END AS CAL_COMP_FLAG_DESC,
+  CASE
+    WHEN EMERG_MKT_IND = 'Y' THEN 'Yes'
+    WHEN EMERG_MKT_IND = 'N' THEN 'No'
+    ELSE ''
+  END AS CAL_EMERG_MKT_IND
+FROM VARIANCES
+GROUP BY
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- All source Calculation Views are referenced as external tables/views; their internal logic is not available in this artifact.
+- Input parameters (IP_FIN_VERSION, IP_WEEK_ENDING_FROM, IP_WEEK_ENDING_TO, IP_SKF_VERSION) are mapped to the underlying Calculation Views, but their usage is not defined here.
+- The filter FS_RX_FLAG IN ('FS', 'RX') is applied at the FIN_FORECAST node.
+- Union logic in COMBINED is implemented as a BigQuery UNION ALL with explicit column mapping and constants for missing fields per input.
+- The final SELECT applies SUM aggregation to all measure columns as defined in the logical model and groups by all other output columns.
+- Calculated attributes (CAL_COMP_FLAG_DESC, CAL_EMERG_MKT_IND) are implemented as CASE expressions after aggregation, as per HANA semantics.
+- All column names, aliases, and mappings are preserved exactly as defined in the logical model and calculation views.
+- Only generic node names (e.g., COMBINED, VARIANCES) are used as CTEs; all other names are preserved.
+- No joins are defined in this view; all logic is based on projections and unions.
+- Data types are preserved as NVARCHAR or as per original mapping where possible; explicit casting is not performed due to lack of type detail.
+- The artifact is designed as a CUBE with outputViewType="Aggregation", so aggregation and grouping are mandatory in the final output.
+- Calculated attributes are computed after aggregation (per HANA Calculation View semantics).
+
+ASSUMPTIONS:
+- All referenced Calculation Views (CV_COMP_FIN_FORECAST, CV_COMP_SKF_FORECAST, etc.) exist in BigQuery as external tables or views with the required columns.
+- Data types of all columns are compatible with the expressions used (e.g., SUM, CASE).
+- Input parameters are handled at the time of view execution by the underlying Calculation Views.
+- Null assignments in the unioned queries are acceptable for missing columns per source.
+
+UNRESOLVED_ITEMS:
+- Internal logic, filters, joins, and calculations of referenced Calculation Views (CV_COMP_FIN_FORECAST, CV_COMP_SKF_FORECAST, CV_COMP_FIN_SBT, CV_COMP_FIN_MANUAL_JE, CV_COMP_SKF_MANUAL_JE) are unavailable; only their output columns and parameter mappings are referenced.
+- Definitions and behaviors of the external scalar functions used for parameter derivation are unresolved (e.g., CVS_FRIP.Composite.Master::SFN_PRIOR_WEEK_FIN_FORECAST_VERSION).
+- Data type compatibility for all columns is assumed but not validated; explicit types may require confirmation.
+- How input parameters are used inside the Calculation Views is not defined here.
+- Actual BigQuery project, dataset, and table names for the Calculation Views are placeholders and require mapping.
+
+CONFIDENCE:
+Medium
+
+The conversion preserves all explicit logic and mappings present in the Calculation View XML, but the final result depends on unresolved external Calculation Views, input parameter usage, and data type compatibility. The main aggregation and grouping logic is correct per CUBE/Aggregation semantics.
