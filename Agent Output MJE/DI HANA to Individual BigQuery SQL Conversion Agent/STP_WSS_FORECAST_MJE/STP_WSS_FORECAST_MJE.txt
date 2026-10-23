@@ -1,0 +1,206 @@
+SOURCE_ARTIFACT:
+CVS_FRIP.Procedure.FI::STP_WSS_FORECAST_MJE
+
+SOURCE_TYPE:
+HANA SQLScript Procedure
+
+SOURCE_OBJECTS:
+- "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FORECAST_MJE" (Target HDBDD Table)
+- "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FORECAST_MJE" (HANA Calculation View, Source)
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+Target columns (in order, as per INSERT statement):
+- CAL_COMP_FLAG_DESC
+- CAL_EMERG_MKT_IND
+- MANDT
+- CAL_SOURCE
+- DIVISION_CODE
+- DIVISION_DESC
+- REGION_CODE
+- REGION_DESC
+- DISTRICT_CODE
+- DISTRICT_DESC
+- RX_DIVISION_CODE
+- RX_AREA_CODE
+- RX_REGION_CODE
+- RX_DISTRICT_CODE
+- STRNUM
+- PRCTR
+- EMERG_MKT_IND
+- REP_MKT_CODE
+- REP_MKT_DESC
+- COMP_FLAG
+- FS_RX_FLAG
+- _BIC_ZIO_SWEEK
+- FS_RX_FLAG_EXT
+- ZRWSTRTDATE
+- ZRWENDDATE
+- CAL_WEEK_NUMBER
+- CITY
+- STATE
+- FIN_FORECAST_CURRENCY
+- PROFIT_CENTER_TEXT
+- FIN_FCST_AMOUNT
+- SKF_FCST_QTY
+- CAL_DATA_CATEGORY1
+- CAL_DATA_CATEGORY2
+- FS_OPEN_DAT
+- RX_OPEN_DAT
+- SBT
+- SKF_MJE_QTY
+- CAL_FS_SALES_MJE
+- CAL_RX_SALES_MJE
+- SNAPSHOT_TIMESTAMP (populated as CURRENT_TIMESTAMP)
+- CREATED_BY (populated as SESSION_USER)
+- AREA_CODE
+- AREA_DESC
+
+Source columns (from Calculation View):
+- All columns above except SNAPSHOT_TIMESTAMP (replaced with CURRENT_TIMESTAMP in output) and CREATED_BY (replaced with SESSION_USER in output).
+- Columns are mapped 1:1 from source to target except for the two calculated columns.
+
+SOURCE_LOGIC:
+- The procedure performs two main steps:
+  1. Deletes all data from the target table "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FORECAST_MJE".
+  2. Inserts data into the same table by selecting all columns from the Calculation View "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FORECAST_MJE", mapping them 1:1 to the target columns.
+     - Two additional columns are populated:
+       - SNAPSHOT_TIMESTAMP: CURRENT_TIMESTAMP
+       - CREATED_BY: SESSION_USER
+- No explicit filters, joins, calculations, aggregations, or parameters are present in the procedure itself.
+- All transformation logic (if any) is assumed to reside within the referenced Calculation View, which is not provided.
+- The procedure is executed without input parameters.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+-- BigQuery Script Equivalent for HANA SQLScript Procedure: CVS_FRIP.Procedure.FI::STP_WSS_FORECAST_MJE
+-- Objective: Delete all data from the target table, then insert data from the Calculation View, with two additional columns (CURRENT_TIMESTAMP, SESSION_USER).
+
+-- NOTE: BigQuery scripting required for multi-statement logic. Replace `PROJECT.DATASET` with actual project and dataset names.
+
+BEGIN
+
+  -- Step 1: Delete all data from the target table
+  DELETE FROM `PROJECT.DATASET.TBL_WSS_FORECAST_MJE`;
+
+  -- Step 2: Insert data from the Calculation View into the target table
+  INSERT INTO `PROJECT.DATASET.TBL_WSS_FORECAST_MJE`
+  (
+    CAL_COMP_FLAG_DESC,
+    CAL_EMERG_MKT_IND,
+    MANDT,
+    CAL_SOURCE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    COMP_FLAG,
+    FS_RX_FLAG,
+    _BIC_ZIO_SWEEK,
+    FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FIN_FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    FIN_FCST_AMOUNT,
+    SKF_FCST_QTY,
+    CAL_DATA_CATEGORY1,
+    CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    SBT,
+    SKF_MJE_QTY,
+    CAL_FS_SALES_MJE,
+    CAL_RX_SALES_MJE,
+    SNAPSHOT_TIMESTAMP,
+    CREATED_BY,
+    AREA_CODE,
+    AREA_DESC
+  )
+  SELECT
+    CAL_COMP_FLAG_DESC,
+    CAL_EMERG_MKT_IND,
+    MANDT,
+    CAL_SOURCE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    COMP_FLAG,
+    FS_RX_FLAG,
+    _BIC_ZIO_SWEEK,
+    FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FIN_FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    FIN_FCST_AMOUNT,
+    SKF_FCST_QTY,
+    CAL_DATA_CATEGORY1,
+    CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    SBT,
+    SKF_MJE_QTY,
+    CAL_FS_SALES_MJE,
+    CAL_RX_SALES_MJE,
+    CURRENT_TIMESTAMP() AS SNAPSHOT_TIMESTAMP,
+    SESSION_USER() AS CREATED_BY,
+    AREA_CODE,
+    AREA_DESC
+  FROM `PROJECT.DATASET.CV_COMP_FORECAST_MJE`;
+
+END;
+```
+
+CONVERSION_NOTES:
+- The HANA DELETE and INSERT statements are converted to BigQuery scripting statements within a BEGIN ... END block to preserve procedural behavior.
+- The target and source table/view names ("TBL_WSS_FORECAST_MJE" and "CV_COMP_FORECAST_MJE") are preserved. The actual BigQuery project and dataset names are represented as placeholders (`PROJECT.DATASET`); these must be replaced with actual values.
+- The Calculation View "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FORECAST_MJE" is mapped to `PROJECT.DATASET.CV_COMP_FORECAST_MJE`. The internal logic of this Calculation View is not available; only the column mapping and procedural logic are converted.
+- The HANA function CURRENT_TIMESTAMP is mapped to BigQuery's CURRENT_TIMESTAMP().
+- The HANA function SESSION_USER is mapped to BigQuery's SESSION_USER() (available in BigQuery scripting).
+- Column ordering and mapping are preserved exactly as in the HANA procedure.
+- No filters, joins, calculations, parameters, or placeholders are present in the HANA procedure itself.
+- No CTE renaming was required as there are no CTEs or generic intermediate names present in this logic.
+
+ASSUMPTIONS:
+- The Calculation View "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FORECAST_MJE" is available in BigQuery as a table or view named `PROJECT.DATASET.CV_COMP_FORECAST_MJE`, with all required columns and compatible data types.
+- The target table `PROJECT.DATASET.TBL_WSS_FORECAST_MJE` exists in BigQuery with the same column structure as in HANA.
+- SESSION_USER() in BigQuery scripting provides the required user information. If not, this may need to be replaced with an alternative expression or left as UNRESOLVED.
+
+UNRESOLVED_ITEMS:
+- The internal logic, transformations, calculations, and data structure of the Calculation View "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FORECAST_MJE" are not available in the input and are treated as an unresolved dependency.
+- The actual BigQuery project and dataset names for both the source and target objects are not provided and must be mapped.
+- The semantic equivalence of SESSION_USER() between HANA and BigQuery requires validation; if user context is not available in BigQuery, this column may need an alternative approach.
+
+CONFIDENCE:
+Medium
+
+Explanation: The conversion accurately preserves all procedural and mapping logic present in the HANA SQLScript procedure. However, the actual logic of the Calculation View is not available, and the target/source object mappings require validation. The SESSION_USER() mapping also requires confirmation in the BigQuery environment.
