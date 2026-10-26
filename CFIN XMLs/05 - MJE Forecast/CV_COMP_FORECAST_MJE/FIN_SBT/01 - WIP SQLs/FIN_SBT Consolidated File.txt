@@ -1,0 +1,415 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_FIN_SBT
+-- Final Consumer: CV_COMP_FIN_SBT
+-- Description: Store-Based Transaction (SBT) Financial Reporting
+-- Dependencies: CV_BASE_FIN_BKPF_S4, CV_BASE_FIN_ACDOCA_S4, 
+--               CV_BASE_MD_SRPACT_S4, CV_BASE_MD_RCALWEEK_S4, 
+--               CV_BASE_MD_CEPCT_S4
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: BKPF_Source
+-- Logic: Filter and project accounting document header records from 
+--        BKPF table with client filter and document type filters
+-- Source: CVS_FRIP.BKPF_VT_S4 (physical table)
+-- Filters: MANDT IN ('120', '200'), XREF2_HD = 'A1', BLART = 'ZT'
+-- =====================================================================
+WITH BKPF_Source AS (
+  SELECT
+    MANDT,
+    BUKRS,
+    BELNR,
+    GJAHR,
+    XREF2_HD,
+    BUDAT,
+    BLART
+  FROM `PROJECT.DATASET.BKPF_VT_S4`
+  WHERE MANDT IN ('120', '200')
+    AND XREF2_HD = 'A1'
+    AND BLART = 'ZT'
+),
+
+-- =====================================================================
+-- CTE 2: ACDOCA_Source
+-- Logic: Filter and project universal journal entry line items with 
+--        client, profit center, account, and week filters
+-- Source: CVS_FRIP.ACDOCA_VT_S4 (physical table)
+-- Filters: RCLNT IN ('120', '200'), PRCTR IN ('0000562057', '0000562058'),
+--          RACCT = '0004403000', ZZWEEK BETWEEN parameters
+-- =====================================================================
+ACDOCA_Source AS (
+  SELECT
+    RCLNT,
+    RBUKRS,
+    BELNR,
+    GJAHR,
+    WSL,
+    PRCTR,
+    RACCT,
+    ZZWEEK,
+    RWCUR
+  FROM `PROJECT.DATASET.ACDOCA_VT_S4`
+  WHERE RCLNT IN ('120', '200')
+    AND PRCTR IN ('0000562057', '0000562058')
+    AND RACCT = '0004403000'
+    AND ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+),
+
+-- =====================================================================
+-- CTE 3: SBT
+-- Logic: Inner join document headers with journal line items to create
+--        the base SBT transaction dataset
+-- Source: BKPF_Source, ACDOCA_Source
+-- Join: INNER JOIN on BUKRS = RBUKRS, BELNR, GJAHR
+-- =====================================================================
+SBT AS (
+  SELECT
+    BKPF.MANDT,
+    BKPF.BUKRS,
+    BKPF.BELNR,
+    BKPF.GJAHR,
+    BKPF.XREF2_HD,
+    BKPF.BUDAT,
+    ACDOCA.WSL,
+    ACDOCA.PRCTR,
+    ACDOCA.RACCT,
+    ACDOCA.ZZWEEK,
+    ACDOCA.RWCUR
+  FROM BKPF_Source AS BKPF
+  INNER JOIN ACDOCA_Source AS ACDOCA
+    ON BKPF.BUKRS = ACDOCA.RBUKRS
+    AND BKPF.BELNR = ACDOCA.BELNR
+    AND BKPF.GJAHR = ACDOCA.GJAHR
+),
+
+-- =====================================================================
+-- CTE 4: STORE_ATTRIBUTES
+-- Logic: Project and aggregate store profile attributes with client filter
+-- Source: SAP_S4.ZTSRP_ATTR_ACT (physical table)
+-- Filters: MANDT IN (120, 200)
+-- Aggregation: SUM on measure columns, GROUP BY all dimension columns
+-- =====================================================================
+STORE_ATTRIBUTES AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    EMERG_MKT_IND,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+    SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+    SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+    SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+  FROM `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE MANDT IN (120, 200)
+  GROUP BY
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    EMERG_MKT_IND,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+),
+
+-- =====================================================================
+-- CTE 5: Join_1
+-- Logic: Left join SBT transactions with store attributes to enrich
+--        with store profile information
+-- Source: SBT, STORE_ATTRIBUTES
+-- Join: LEFT OUTER JOIN on PRCTR
+-- =====================================================================
+Join_1 AS (
+  SELECT
+    SBT.MANDT,
+    SBT.BUKRS,
+    SBT.BELNR,
+    SBT.GJAHR,
+    SBT.XREF2_HD,
+    SBT.BUDAT,
+    SBT.PRCTR,
+    SBT.WSL,
+    SBT.ZZWEEK,
+    SBT.RWCUR,
+    SA.REP_MKT_CODE,
+    SA.REP_MKT_DESC,
+    SA.CITY,
+    SA.STATE,
+    SA.DIVISION_CODE,
+    SA.DIVISION_DESC,
+    SA.AREA_CODE,
+    SA.AREA_DESC,
+    SA.REGION_CODE,
+    SA.REGION_DESC,
+    SA.DISTRICT_CODE,
+    SA.DISTRICT_DESC,
+    SA.STRNUM,
+    SA.FS_OPEN_DAT,
+    SA.RX_OPEN_DAT,
+    SA.EMERG_MKT_IND,
+    SA.RX_DIVISION_CODE,
+    SA.RX_AREA_CODE,
+    SA.RX_REGION_CODE,
+    SA.RX_DISTRICT_CODE
+  FROM SBT
+  LEFT OUTER JOIN STORE_ATTRIBUTES AS SA
+    ON SBT.PRCTR = SA.PRCTR
+),
+
+-- =====================================================================
+-- CTE 6: RETAIL_CALENDAR
+-- Logic: Project retail calendar week mapping with client filter
+-- Source: SAP_S4.ZTFIGL_RCALWEEK (physical table)
+-- Filters: RCLNT IN (120, 200)
+-- =====================================================================
+RETAIL_CALENDAR AS (
+  SELECT
+    ZZWEEK,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    RCLNT
+  FROM `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+  WHERE RCLNT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 7: Join_2
+-- Logic: Left join enriched SBT data with retail calendar to add
+--        week start and end dates
+-- Source: Join_1, RETAIL_CALENDAR
+-- Join: LEFT OUTER JOIN on ZZWEEK
+-- =====================================================================
+Join_2 AS (
+  SELECT
+    J1.*,
+    RC.ZRWENDDATE,
+    RC.ZRWSTRTDATE
+  FROM Join_1 AS J1
+  LEFT OUTER JOIN RETAIL_CALENDAR AS RC
+    ON J1.ZZWEEK = RC.ZZWEEK
+),
+
+-- =====================================================================
+-- CTE 8: COMP_FLAG
+-- Logic: Add calculated columns for comparison flag and week number
+-- Source: Join_2
+-- Calculation: CAL_COMP_FLAG = CASE when PRCTR = '0000562057' then '1' else '0',
+--              CAL_WEEK_NUMBER = RIGHT(ZZWEEK, 2)
+-- =====================================================================
+COMP_FLAG AS (
+  SELECT
+    *,
+    CASE WHEN PRCTR = '0000562057' THEN '1' ELSE '0' END AS CAL_COMP_FLAG,
+    RIGHT(CAST(ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER
+  FROM Join_2
+),
+
+-- =====================================================================
+-- CTE 9: PROFIT_CENTER_TEXT
+-- Logic: Project profit center text descriptions with client filter
+-- Source: SAP_S4.CEPCT (physical table)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM `PROJECT.DATASET.CEPCT`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 10: Join_3
+-- Logic: Left join fully enriched SBT data with profit center text
+--        to add profit center descriptions
+-- Source: COMP_FLAG, PROFIT_CENTER_TEXT
+-- Join: LEFT OUTER JOIN on PRCTR
+-- =====================================================================
+Join_3 AS (
+  SELECT
+    CF.PRCTR,
+    CF.BUDAT,
+    CF.XREF2_HD,
+    CF.GJAHR,
+    CF.BELNR,
+    CF.BUKRS,
+    CF.MANDT,
+    CF.REP_MKT_CODE,
+    CF.REP_MKT_DESC,
+    CF.CITY,
+    CF.STATE,
+    CF.DIVISION_CODE,
+    CF.DIVISION_DESC,
+    CF.AREA_CODE,
+    CF.AREA_DESC,
+    CF.REGION_CODE,
+    CF.REGION_DESC,
+    CF.DISTRICT_CODE,
+    CF.DISTRICT_DESC,
+    CF.ZZWEEK,
+    CF.STRNUM,
+    CF.CAL_COMP_FLAG,
+    CF.CAL_WEEK_NUMBER,
+    CF.ZRWENDDATE,
+    CF.ZRWSTRTDATE,
+    CF.RWCUR,
+    CF.WSL,
+    PCT.PROFIT_CENTER_TEXT,
+    CF.FS_OPEN_DAT,
+    CF.RX_OPEN_DAT,
+    CF.EMERG_MKT_IND,
+    CF.RX_DIVISION_CODE,
+    CF.RX_AREA_CODE,
+    CF.RX_REGION_CODE,
+    CF.RX_DISTRICT_CODE
+  FROM COMP_FLAG AS CF
+  LEFT OUTER JOIN PROFIT_CENTER_TEXT AS PCT
+    ON CF.PRCTR = PCT.PRCTR
+)
+
+-- =====================================================================
+-- FINAL SELECT
+-- Logic: Aggregate the fully enriched SBT dataset by all dimension
+--        attributes and compute final measures
+-- Aggregation: GROUP BY all dimension columns
+-- Calculation: WSL_NEGATIVE = SUM(WSL), WSL = SUM(WSL) * -1
+-- =====================================================================
+SELECT
+  PRCTR,
+  BUDAT,
+  XREF2_HD,
+  GJAHR,
+  BELNR,
+  BUKRS,
+  MANDT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CITY,
+  STATE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZZWEEK,
+  STRNUM,
+  CAL_COMP_FLAG,
+  CAL_WEEK_NUMBER,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  RWCUR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  EMERG_MKT_IND,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(WSL) AS WSL_NEGATIVE,
+  SUM(WSL) * -1 AS WSL
+FROM Join_3
+GROUP BY
+  PRCTR,
+  BUDAT,
+  XREF2_HD,
+  GJAHR,
+  BELNR,
+  BUKRS,
+  MANDT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CITY,
+  STATE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  AREA_CODE,
+  AREA_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZZWEEK,
+  STRNUM,
+  CAL_COMP_FLAG,
+  CAL_WEEK_NUMBER,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  RWCUR,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  EMERG_MKT_IND,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE;
+
+-- =====================================================================
+-- RUNTIME PARAMETERS DOCUMENTATION
+-- =====================================================================
+-- Parameter: @IP_WEEK_ENDING_FROM
+-- Type: STRING (NVARCHAR(7) in HANA)
+-- Source: CV_COMP_FIN_SBT parameter definition
+-- Usage: ACDOCA_Source CTE WHERE clause (ZZWEEK filter lower bound)
+-- Description: Starting week for the reporting period filter
+-- Derivation: CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK (unresolved)
+-- Required: Yes
+-- 
+-- Parameter: @IP_WEEK_ENDING_TO
+-- Type: STRING (NVARCHAR(7) in HANA)
+-- Source: CV_COMP_FIN_SBT parameter definition
+-- Usage: ACDOCA_Source CTE WHERE clause (ZZWEEK filter upper bound)
+-- Description: Ending week for the reporting period filter
+-- Derivation: CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK (unresolved)
+-- Required: Yes
+-- =====================================================================
+
+-- =====================================================================
+-- TABLE MAPPING PLACEHOLDERS
+-- =====================================================================
+-- The following placeholder table references must be replaced with
+-- actual BigQuery project.dataset.table names:
+--
+-- PROJECT.DATASET.BKPF_VT_S4 → CVS_FRIP.BKPF_VT_S4
+-- PROJECT.DATASET.ACDOCA_VT_S4 → CVS_FRIP.ACDOCA_VT_S4
+-- PROJECT.DATASET.ZTSRP_ATTR_ACT → SAP_S4.ZTSRP_ATTR_ACT
+-- PROJECT.DATASET.ZTFIGL_RCALWEEK → SAP_S4.ZTFIGL_RCALWEEK
+-- PROJECT.DATASET.CEPCT → SAP_S4.CEPCT
+-- =====================================================================

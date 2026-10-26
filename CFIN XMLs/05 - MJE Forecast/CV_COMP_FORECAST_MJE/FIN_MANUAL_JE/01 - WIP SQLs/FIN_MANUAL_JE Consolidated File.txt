@@ -1,0 +1,569 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR FIN_MANUAL_JE
+-- Final Consumer: CV_COMP_FIN_MANUAL_JE
+-- Generated from HANA Calculation View consolidation
+-- All dependencies expanded inline at point of consumption
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: JOURNAL_ENT_ACDOCA
+-- Logic: Filters journal entry data from ACDOCA for the specified week range
+-- Source: ACDOCA_VT_S4 (via CV_BASE_FIN_ACDOCA_S4)
+-- Filters: RCLNT IN (120, 200), ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+-- =====================================================================
+WITH JOURNAL_ENT_ACDOCA AS (
+  SELECT
+    RCLNT,
+    PRCTR,
+    ZZWEEK,
+    KSL,
+    BLART,
+    RBUKRS,
+    GJAHR,
+    BELNR,
+    WWPC_PA,
+    RACCT
+  FROM `PROJECT.DATASET.ACDOCA_VT_S4`
+  WHERE RCLNT IN (120, 200)
+    AND ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+),
+
+-- =====================================================================
+-- CTE 2: BKPF_Filtered
+-- Logic: Filters document header data for specific transaction types
+-- Source: BKPF_VT_S4 (via CV_BASE_FIN_BKPF_S4)
+-- Filters: MANDT IN ('120', '200'), XREF2_HD IN ('MJE','TS','GENCO','MAR','SAPARINVOICES','TP')
+-- =====================================================================
+BKPF_Filtered AS (
+  SELECT
+    MANDT,
+    BUKRS,
+    BELNR,
+    GJAHR,
+    XREF2_HD
+  FROM `PROJECT.DATASET.BKPF_VT_S4`
+  WHERE MANDT IN ('120', '200')
+    AND XREF2_HD IN ('MJE','TS','GENCO','MAR','SAPARINVOICES','TP')
+),
+
+-- =====================================================================
+-- CTE 3: Joined_Journal_BKPF
+-- Logic: Joins journal entries with document headers
+-- Source: JOURNAL_ENT_ACDOCA inner join BKPF_Filtered
+-- Join: INNER JOIN on RBUKRS=BUKRS, BELNR=BELNR, GJAHR=GJAHR
+-- =====================================================================
+Joined_Journal_BKPF AS (
+  SELECT
+    j.RCLNT,
+    j.PRCTR,
+    j.ZZWEEK,
+    j.KSL,
+    b.MANDT,
+    b.XREF2_HD,
+    j.WWPC_PA,
+    j.RACCT
+  FROM JOURNAL_ENT_ACDOCA j
+  INNER JOIN BKPF_Filtered b
+    ON j.RBUKRS = b.BUKRS
+    AND j.BELNR = b.BELNR
+    AND j.GJAHR = b.GJAHR
+),
+
+-- =====================================================================
+-- CTE 4: Filtered_Journal_BKPF
+-- Logic: Excludes specific transaction types from the joined data
+-- Source: Joined_Journal_BKPF
+-- Filters: XREF2_HD NOT IN ('RT', 'RV', 'SK')
+-- =====================================================================
+Filtered_Journal_BKPF AS (
+  SELECT
+    MANDT,
+    KSL,
+    ZZWEEK,
+    PRCTR,
+    RCLNT,
+    XREF2_HD,
+    WWPC_PA,
+    RACCT
+  FROM Joined_Journal_BKPF
+  WHERE XREF2_HD NOT IN ('RT', 'RV', 'SK')
+),
+
+-- =====================================================================
+-- CTE 5: PC_HIER_Filtered
+-- Logic: Filters profit center hierarchy for core retail nodes
+-- Source: HRRP_NODE (via PC_HEIR.CV_BASE_MD_HRRP_NODE_S4)
+-- Filters: MANDT IN (120, 200), PARNODE LIKE '%CORE_RET%', HRYVALTO = '99991231'
+-- =====================================================================
+PC_HIER_Filtered AS (
+  SELECT
+    MANDT,
+    PARNODE,
+    NODEVALUE,
+    HRYVALTO
+  FROM `PROJECT.DATASET.HRRP_NODE`
+  WHERE MANDT IN (120, 200)
+    AND PARNODE LIKE '%CORE_RET%'
+    AND HRYVALTO = '99991231'
+),
+
+-- =====================================================================
+-- CTE 6: Joined_Journal_PC_HIER
+-- Logic: Joins filtered journal entries with profit center hierarchy
+-- Source: Filtered_Journal_BKPF inner join PC_HIER_Filtered
+-- Join: INNER JOIN on PRCTR=NODEVALUE, MANDT=MANDT
+-- =====================================================================
+Joined_Journal_PC_HIER AS (
+  SELECT
+    f.KSL,
+    f.ZZWEEK,
+    f.PRCTR,
+    f.RCLNT,
+    f.WWPC_PA,
+    f.RACCT,
+    f.MANDT,
+    f.XREF2_HD AS SOURCE_CODE
+  FROM Filtered_Journal_BKPF f
+  INNER JOIN PC_HIER_Filtered p
+    ON f.PRCTR = p.NODEVALUE
+    AND f.MANDT = p.MANDT
+),
+
+-- =====================================================================
+-- CTE 7: GL_HIER_Filtered
+-- Logic: Filters GL account hierarchy for account 181
+-- Source: HRRP_NODE (via GL_HEIR.CV_BASE_MD_HRRP_NODE_S4)
+-- Filters: MANDT IN (120, 200), PARNODE LIKE '%181', HRYVALTO = '99991231', HRYID = 'CVS2'
+-- =====================================================================
+GL_HIER_Filtered AS (
+  SELECT
+    PARNODE,
+    HRYVALTO,
+    MANDT,
+    NODEVALUE,
+    HRYID
+  FROM `PROJECT.DATASET.HRRP_NODE`
+  WHERE MANDT IN (120, 200)
+    AND PARNODE LIKE '%181'
+    AND HRYVALTO = '99991231'
+    AND HRYID = 'CVS2'
+),
+
+-- =====================================================================
+-- CTE 8: Joined_GL_HIER
+-- Logic: Joins data with GL account hierarchy
+-- Source: Joined_Journal_PC_HIER inner join GL_HIER_Filtered
+-- Join: INNER JOIN on RACCT=NODEVALUE, MANDT=MANDT
+-- =====================================================================
+Joined_GL_HIER AS (
+  SELECT
+    j.MANDT,
+    j.RCLNT,
+    j.PRCTR,
+    j.ZZWEEK,
+    j.KSL,
+    j.WWPC_PA,
+    j.RACCT,
+    j.SOURCE_CODE
+  FROM Joined_Journal_PC_HIER j
+  INNER JOIN GL_HIER_Filtered g
+    ON j.RACCT = g.NODEVALUE
+    AND j.MANDT = g.MANDT
+),
+
+-- =====================================================================
+-- CTE 9: PROD_CLASS_HIER_Filtered
+-- Logic: Filters product class hierarchy for FS and RX categories
+-- Source: HRRP_NODE (via PROD_CLASS_HEIR.CV_BASE_MD_HRRP_NODE_S4)
+-- Filters: MANDT IN (120, 200), (PARNODE LIKE '%FS' OR PARNODE LIKE '%RX'), HRYVALTO = '99991231', HRYID LIKE '%ZPRODUCTCLASS'
+-- =====================================================================
+PROD_CLASS_HIER_Filtered AS (
+  SELECT
+    PARNODE,
+    HRYVALTO,
+    HRYID,
+    NODEVALUE,
+    MANDT
+  FROM `PROJECT.DATASET.HRRP_NODE`
+  WHERE MANDT IN (120, 200)
+    AND (PARNODE LIKE '%FS' OR PARNODE LIKE '%RX')
+    AND HRYVALTO = '99991231'
+    AND HRYID LIKE '%ZPRODUCTCLASS'
+),
+
+-- =====================================================================
+-- CTE 10: Joined_Prod_Class_Hier
+-- Logic: Joins data with product class hierarchy
+-- Source: Joined_GL_HIER inner join PROD_CLASS_HIER_Filtered
+-- Join: INNER JOIN on WWPC_PA=NODEVALUE, MANDT=MANDT
+-- =====================================================================
+Joined_Prod_Class_Hier AS (
+  SELECT
+    g.MANDT,
+    g.RCLNT,
+    g.PRCTR,
+    g.ZZWEEK,
+    g.KSL,
+    g.RACCT,
+    g.WWPC_PA,
+    p.PARNODE,
+    g.SOURCE_CODE
+  FROM Joined_GL_HIER g
+  INNER JOIN PROD_CLASS_HIER_Filtered p
+    ON g.WWPC_PA = p.NODEVALUE
+    AND g.MANDT = p.MANDT
+),
+
+-- =====================================================================
+-- CTE 11: STORE_ATTR_JOURNAL_ENT
+-- Logic: Retrieves store attributes with aggregation
+-- Source: ZTSRP_ATTR_ACT (via CV_BASE_MD_SRPACT_S4)
+-- Filters: MANDT IN (120, 200)
+-- Aggregation: Groups by all non-measure columns, sums measures (not used in this flow)
+-- =====================================================================
+STORE_ATTR_JOURNAL_ENT AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    EMERG_MKT_IND,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CITY,
+    STATE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE MANDT IN (120, 200)
+  GROUP BY
+    MANDT, STRNUM, PRCTR, REP_MKT_CODE, REP_MKT_DESC, DIVISION_CODE, DIVISION_DESC,
+    AREA_CODE, AREA_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC,
+    EMERG_MKT_IND, FS_OPEN_DAT, RX_OPEN_DAT, CITY, STATE, RX_DIVISION_CODE,
+    RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+),
+
+-- =====================================================================
+-- CTE 12: Joined_Store_Attr
+-- Logic: Left joins store attributes to the main data flow
+-- Source: Joined_Prod_Class_Hier left join STORE_ATTR_JOURNAL_ENT
+-- Join: LEFT JOIN on PRCTR=PRCTR, MANDT=MANDT
+-- =====================================================================
+Joined_Store_Attr AS (
+  SELECT
+    j.MANDT,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.DIVISION_CODE,
+    s.AREA_CODE,
+    s.DIVISION_DESC,
+    s.AREA_DESC,
+    s.REGION_CODE,
+    s.REGION_DESC,
+    s.DISTRICT_CODE,
+    s.DISTRICT_DESC,
+    s.EMERG_MKT_IND,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    j.RCLNT,
+    j.PRCTR,
+    j.ZZWEEK,
+    j.KSL,
+    j.PARNODE,
+    s.CITY,
+    s.STATE,
+    j.WWPC_PA,
+    s.STRNUM,
+    j.SOURCE_CODE,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM Joined_Prod_Class_Hier j
+  LEFT JOIN STORE_ATTR_JOURNAL_ENT s
+    ON j.PRCTR = s.PRCTR
+    AND j.MANDT = s.MANDT
+),
+
+-- =====================================================================
+-- CTE 13: COMP_FLAG_JOURNAL_ENT_Filtered
+-- Logic: Filters comparison flag data for the specified version
+-- Source: ZTSRP_COMPFL (via CV_BASE_MD_COMPFL_S4)
+-- Filters: MANDT IN (110, 200), COMP_VER = @IP_VERSION_COMP_FLAG
+-- =====================================================================
+COMP_FLAG_JOURNAL_ENT_Filtered AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    RX_COMP_WK,
+    FS_COMP_WK
+  FROM `PROJECT.DATASET.ZTSRP_COMPFL`
+  WHERE MANDT IN (110, 200)
+    AND COMP_VER = @IP_VERSION_COMP_FLAG
+),
+
+-- =====================================================================
+-- CTE 14: Joined_Comp_Flag
+-- Logic: Left joins comparison flag data to the main flow
+-- Source: Joined_Store_Attr left join COMP_FLAG_JOURNAL_ENT_Filtered
+-- Join: LEFT JOIN on PRCTR=PRCTR, ZZWEEK=ZWEEK, MANDT=MANDT
+-- =====================================================================
+Joined_Comp_Flag AS (
+  SELECT
+    j.RX_COMP_WK,
+    j.FS_COMP_WK,
+    s.EMERG_MKT_IND,
+    s.DISTRICT_CODE,
+    s.REGION_DESC,
+    s.REGION_CODE,
+    s.RCLNT,
+    s.PRCTR,
+    s.ZZWEEK,
+    s.KSL,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.DIVISION_CODE,
+    s.AREA_CODE,
+    s.DIVISION_DESC,
+    s.AREA_DESC,
+    s.DISTRICT_DESC,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    s.PARNODE,
+    s.CITY,
+    s.STATE,
+    s.WWPC_PA,
+    s.STRNUM,
+    s.MANDT,
+    s.SOURCE_CODE,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM Joined_Store_Attr s
+  LEFT JOIN COMP_FLAG_JOURNAL_ENT_Filtered j
+    ON s.PRCTR = j.PRCTR
+    AND s.ZZWEEK = j.ZWEEK
+    AND s.MANDT = j.MANDT
+),
+
+-- =====================================================================
+-- CTE 15: PROFIT_CENTER_TEXT
+-- Logic: Retrieves profit center text descriptions
+-- Source: CEPCT (via CV_BASE_MD_CEPCT_S4)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM `PROJECT.DATASET.CEPCT`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 16: Joined_Profit_Center_Text
+-- Logic: Left joins profit center text to the main flow
+-- Source: Joined_Comp_Flag left join PROFIT_CENTER_TEXT
+-- Join: LEFT JOIN on PRCTR=PRCTR, MANDT=MANDT
+-- =====================================================================
+Joined_Profit_Center_Text AS (
+  SELECT
+    c.MANDT,
+    c.RX_COMP_WK,
+    c.FS_COMP_WK,
+    c.EMERG_MKT_IND,
+    c.DISTRICT_CODE,
+    c.REGION_DESC,
+    c.REGION_CODE,
+    c.RCLNT,
+    c.PRCTR,
+    c.ZZWEEK,
+    c.DISTRICT_DESC,
+    c.AREA_DESC,
+    c.DIVISION_DESC,
+    c.AREA_CODE,
+    c.DIVISION_CODE,
+    c.REP_MKT_DESC,
+    c.REP_MKT_CODE,
+    c.KSL,
+    p.PROFIT_CENTER_TEXT,
+    c.FS_OPEN_DAT,
+    c.RX_OPEN_DAT,
+    c.PARNODE,
+    c.CITY,
+    c.STATE,
+    c.WWPC_PA,
+    c.STRNUM,
+    c.SOURCE_CODE,
+    c.RX_DIVISION_CODE,
+    c.RX_AREA_CODE,
+    c.RX_REGION_CODE,
+    c.RX_DISTRICT_CODE
+  FROM Joined_Comp_Flag c
+  LEFT JOIN PROFIT_CENTER_TEXT p
+    ON c.PRCTR = p.PRCTR
+    AND c.MANDT = p.MANDT
+),
+
+-- =====================================================================
+-- CTE 17: CAL_WEEK
+-- Logic: Retrieves retail calendar week date ranges
+-- Source: ZTFIGL_RCALWEEK (via CV_BASE_MD_RCALWEEK_S4)
+-- Filters: RCLNT IN (120, 200)
+-- =====================================================================
+CAL_WEEK AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZRWSTRTDATE,
+    ZRWENDDATE
+  FROM `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+  WHERE RCLNT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 18: Joined_Calendar_Week
+-- Logic: Left joins calendar week data and calculates derived fields
+-- Source: Joined_Profit_Center_Text left join CAL_WEEK
+-- Join: LEFT JOIN on ZZWEEK=ZZWEEK, MANDT=RCLNT
+-- Calculation: CAL_WEEK_NUMBER, CAL_FS_RX_FLAG, KSL_NEGATIVE
+-- =====================================================================
+Joined_Calendar_Week AS (
+  SELECT
+    j.MANDT,
+    j.RX_COMP_WK,
+    j.FS_COMP_WK,
+    j.EMERG_MKT_IND,
+    j.DISTRICT_CODE,
+    j.REGION_DESC,
+    j.REGION_CODE,
+    j.RCLNT,
+    j.PRCTR,
+    j.ZZWEEK,
+    j.DISTRICT_DESC,
+    j.AREA_DESC,
+    j.DIVISION_DESC,
+    j.AREA_CODE,
+    j.DIVISION_CODE,
+    j.REP_MKT_DESC,
+    j.REP_MKT_CODE,
+    j.PROFIT_CENTER_TEXT,
+    j.FS_OPEN_DAT,
+    j.RX_OPEN_DAT,
+    j.PARNODE,
+    j.KSL,
+    c.ZRWSTRTDATE,
+    c.ZRWENDDATE,
+    j.CITY,
+    j.STATE,
+    j.WWPC_PA,
+    j.STRNUM,
+    j.SOURCE_CODE,
+    j.RX_DIVISION_CODE,
+    j.RX_AREA_CODE,
+    j.RX_REGION_CODE,
+    j.RX_DISTRICT_CODE,
+    RIGHT(CAST(j.ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    CASE LEFT(CAST(j.WWPC_PA AS STRING), 2)
+      WHEN 'FS' THEN 'FS'
+      WHEN 'RX' THEN 'RX'
+      ELSE ''
+    END AS CAL_FS_RX_FLAG,
+    j.KSL AS KSL_NEGATIVE
+  FROM Joined_Profit_Center_Text j
+  LEFT JOIN CAL_WEEK c
+    ON j.ZZWEEK = c.ZZWEEK
+    AND j.MANDT = c.RCLNT
+)
+
+-- =====================================================================
+-- FINAL SELECT: Aggregated Output
+-- Logic: Final aggregation with calculated measures and COMP_FLAG
+-- Source: Joined_Calendar_Week
+-- Aggregation: Groups by all dimension columns, sums KSL_NEGATIVE, calculates KSL and COMP_FLAG
+-- Calculation: COMP_FLAG based on CAL_FS_RX_FLAG, KSL = KSL_NEGATIVE * -1
+-- =====================================================================
+SELECT
+  MANDT,
+  RX_COMP_WK,
+  FS_COMP_WK,
+  EMERG_MKT_IND,
+  DISTRICT_CODE,
+  REGION_DESC,
+  REGION_CODE,
+  RCLNT,
+  PRCTR,
+  ZZWEEK,
+  DISTRICT_DESC,
+  AREA_DESC,
+  DIVISION_DESC,
+  AREA_CODE,
+  DIVISION_CODE,
+  REP_MKT_DESC,
+  REP_MKT_CODE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  PARNODE,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CITY,
+  STATE,
+  CAL_WEEK_NUMBER,
+  CASE CAL_FS_RX_FLAG
+    WHEN 'FS' THEN MAX(FS_COMP_WK)
+    WHEN 'RX' THEN MAX(RX_COMP_WK)
+    ELSE MAX(FS_COMP_WK)
+  END AS COMP_FLAG,
+  CAL_FS_RX_FLAG,
+  SUM(KSL_NEGATIVE) AS KSL_NEGATIVE,
+  SUM(KSL_NEGATIVE) * -1 AS KSL,
+  STRNUM,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+FROM Joined_Calendar_Week
+GROUP BY
+  MANDT, RX_COMP_WK, FS_COMP_WK, EMERG_MKT_IND, DISTRICT_CODE, REGION_DESC, REGION_CODE,
+  RCLNT, PRCTR, ZZWEEK, DISTRICT_DESC, AREA_DESC, DIVISION_DESC, AREA_CODE, DIVISION_CODE,
+  REP_MKT_DESC, REP_MKT_CODE, PROFIT_CENTER_TEXT, FS_OPEN_DAT, RX_OPEN_DAT, PARNODE,
+  ZRWSTRTDATE, ZRWENDDATE, CITY, STATE, CAL_WEEK_NUMBER, CAL_FS_RX_FLAG, STRNUM, SOURCE_CODE,
+  RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+
+-- =====================================================================
+-- RUNTIME PARAMETERS REQUIRED:
+-- @IP_WEEK_ENDING_FROM - Start week for journal entry filter
+-- @IP_WEEK_ENDING_TO - End week for journal entry filter
+-- @IP_VERSION_COMP_FLAG - Comparison version flag
+-- =====================================================================
+
+-- =====================================================================
+-- BIGQUERY TABLE MAPPINGS REQUIRED:
+-- PROJECT.DATASET.ACDOCA_VT_S4 - Journal entry line items
+-- PROJECT.DATASET.BKPF_VT_S4 - Document headers
+-- PROJECT.DATASET.HRRP_NODE - Hierarchy nodes (used for PC, GL, and Product Class hierarchies)
+-- PROJECT.DATASET.ZTSRP_ATTR_ACT - Store attributes
+-- PROJECT.DATASET.ZTSRP_COMPFL - Comparison flags
+-- PROJECT.DATASET.CEPCT - Profit center texts
+-- PROJECT.DATASET.ZTFIGL_RCALWEEK - Retail calendar weeks
+-- =====================================================================
