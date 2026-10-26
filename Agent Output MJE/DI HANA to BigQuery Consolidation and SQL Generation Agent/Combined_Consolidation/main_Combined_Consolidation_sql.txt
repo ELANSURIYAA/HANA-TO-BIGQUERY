@@ -1,0 +1,1018 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR STP_WSS_FORECAST_MJE
+-- Final Consumer: STP_WSS_FORECAST_MJE (Stored Procedure)
+-- Target: TBL_WSS_FORECAST_MJE
+-- Source: CV_COMP_FORECAST_MJE (Calculation View)
+-- 
+-- This consolidated SQL represents the complete logic for populating
+-- TBL_WSS_FORECAST_MJE by expanding all dependencies from the stored
+-- procedure through all calculation views down to base tables.
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: CV_BASE_FIN_WEEKLY_FORECAST_S4_Filtered
+-- Logic: Base financial weekly forecast data with filters
+-- Source: AZSRP_DS041_VT_S4 (Physical Table)
+-- Filters: FISCVARNT = 'K4', _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO, 
+--          _BIC_ZIO_VER = @IP_FIN_VERSION, _BIC_ZIO_SAUDT IN ('1','10'), MANDT IN (120, 200)
+-- =====================================================================
+WITH CV_BASE_FIN_WEEKLY_FORECAST_S4_Filtered AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    _BIC_ZIO_SWEEK,
+    FISCYEAR,
+    FISCPER3,
+    _B631_S_CHRTACCT,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_PCTR AS _B631_S_PROFTCTR,
+    _BIC_ZIO_CCTR AS _B631_S_COSTCNTR,
+    _B631_S_FUNCAREA,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    MANDT,
+    RECORDMODE,
+    _B631_S_GL_ACCT,
+    _BIC_ZWWPC_PA1,
+    _BIC_ZWWSC_PA1,
+    _B631_S_AMOUNT AS _B631_S_AMOUNT_NEGATIVE,
+    CURRENCY,
+    _BIC_ZIO_AMT
+  FROM `PROJECT.DATASET.AZSRP_DS041_VT_S4`
+  WHERE MANDT IN (120, 200)
+    AND FISCVARNT = 'K4'
+    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND _BIC_ZIO_VER = @IP_FIN_VERSION
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+),
+
+-- =====================================================================
+-- CTE 2: CV_BASE_MD_SRPACT_S4_Filtered
+-- Logic: Store profile attributes (master data)
+-- Source: ZTSRP_ATTR_ACT (Physical Table)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+CV_BASE_MD_SRPACT_S4_Filtered AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    EMERG_MKT_IND,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    AREA_CODE,
+    AREA_DESC,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 3: CV_BASE_MD_COMPFL_S4_Filtered
+-- Logic: Comp flag master data
+-- Source: ZTSRP_COMPFL (Physical Table)
+-- Filters: MANDT IN (110, 200), COMP_VER = @IP_FIN_VERSION
+-- =====================================================================
+CV_BASE_MD_COMPFL_S4_Filtered AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    ZWEEK,
+    ZMONTH,
+    ZYEAR,
+    FS_COMP_PRE,
+    RX_COMP_PRE,
+    FS_COMP_MON,
+    RX_COMP_MON,
+    FS_COMP_WK,
+    RX_COMP_WK
+  FROM `PROJECT.DATASET.ZTSRP_COMPFL`
+  WHERE MANDT IN (110, 200)
+    AND COMP_VER = @IP_FIN_VERSION
+),
+
+-- =====================================================================
+-- CTE 4: CV_BASE_MD_RCALWEEK_S4_Filtered
+-- Logic: Retail calendar week master data
+-- Source: ZTFIGL_RCALWEEK (Physical Table)
+-- Filters: RCLNT IN (120, 200)
+-- =====================================================================
+CV_BASE_MD_RCALWEEK_S4_Filtered AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZCALYRP,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    ZRYRQTR,
+    ZRWSTRTDATE,
+    ZRWENDDATE
+  FROM `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+  WHERE RCLNT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 5: CV_BASE_MD_CEPCT_S4_Filtered
+-- Logic: Profit center text master data
+-- Source: CEPCT (Physical Table)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+CV_BASE_MD_CEPCT_S4_Filtered AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM `PROJECT.DATASET.CEPCT`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 6: FIN_FORECAST_Joined
+-- Logic: Financial forecast with all joins and calculated columns
+-- Source: CV_BASE_FIN_WEEKLY_FORECAST_S4_Filtered + master data joins
+-- Join: LEFT JOIN on PRCTR for store attributes, comp flags, calendar, profit center text
+-- Filters: FS_RX_FLAG IN ('FS', 'RX')
+-- Calculation: CAL_FS_RX_FLAG, CAL_COMP_FLAG, CAL_WEEK_NUMBER, _B631_S_AMOUNT
+-- =====================================================================
+FIN_FORECAST_Joined AS (
+  SELECT
+    f.MANDT,
+    f._BIC_ZIO_SWEEK,
+    f._B631_S_PROFTCTR,
+    CASE
+      WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
+      WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
+      ELSE ''
+    END AS FS_RX_FLAG,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.EMERG_MKT_IND,
+    CASE
+      WHEN (CASE
+              WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
+              WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
+              ELSE ''
+            END) = 'FS' THEN c.FS_COMP_WK
+      WHEN (CASE
+              WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
+              WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
+              ELSE ''
+            END) = 'RX' THEN c.RX_COMP_WK
+      ELSE c.FS_COMP_WK
+    END AS COMP_FLAG,
+    (f._B631_S_AMOUNT_NEGATIVE * -1) AS _B631_S_AMOUNT,
+    s.DIVISION_CODE,
+    s.DIVISION_DESC,
+    s.REGION_CODE,
+    s.REGION_DESC,
+    s.DISTRICT_CODE,
+    s.DISTRICT_DESC,
+    s.AREA_CODE,
+    s.AREA_DESC,
+    s.STRNUM,
+    w.ZRWSTRTDATE,
+    w.ZRWENDDATE,
+    RIGHT(CAST(f._BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    s.CITY,
+    s.STATE,
+    f.CURRENCY AS FORECAST_CURRENCY,
+    p.PROFIT_CENTER_TEXT,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM CV_BASE_FIN_WEEKLY_FORECAST_S4_Filtered f
+  LEFT JOIN CV_BASE_MD_SRPACT_S4_Filtered s
+    ON f._B631_S_PROFTCTR = s.PRCTR
+  LEFT JOIN CV_BASE_MD_COMPFL_S4_Filtered c
+    ON f._B631_S_PROFTCTR = c.PRCTR
+    AND f._BIC_ZIO_SWEEK = c.ZWEEK
+  LEFT JOIN CV_BASE_MD_RCALWEEK_S4_Filtered w
+    ON f._BIC_ZIO_SWEEK = w.ZZWEEK
+  LEFT JOIN CV_BASE_MD_CEPCT_S4_Filtered p
+    ON f._B631_S_PROFTCTR = p.PRCTR
+  WHERE CASE
+          WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'FS' THEN 'FS'
+          WHEN LEFT(CAST(f._BIC_ZWWPC_PA1 AS STRING), 2) = 'RX' THEN 'RX'
+          ELSE ''
+        END IN ('FS', 'RX')
+),
+
+-- =====================================================================
+-- CTE 7: CV_BASE_SKF_WEEKLY_FORECAST_S4_Filtered
+-- Logic: Base SKF weekly forecast data with filters
+-- Source: AZSRP_DS031_VT_S4 (Physical Table)
+-- Filters: FISCVARNT = 'K4', _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO,
+--          _BIC_ZIO_VER = @IP_SKF_VERSION, _BIC_ZIO_SAUDT IN ('1','10'), 
+--          _BIC_ZIO_PSKF IN ('804013','801000'), MANDT IN (120, 200)
+-- =====================================================================
+CV_BASE_SKF_WEEKLY_FORECAST_S4_Filtered AS (
+  SELECT
+    FISCPER,
+    FISCVARNT,
+    FISCYEAR,
+    FISCPER3,
+    MANDT,
+    RECORDMODE,
+    UNIT,
+    _BIC_ZIO_SWEEK,
+    _BIC_ZIO_PSTY,
+    _BIC_ZIO_PSKF,
+    _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD,
+    _BIC_ZIO_PCTR AS _B631_S_PROFTCTR,
+    _BIC_ZIO_CCTR AS _B631_S_COSTCNTR,
+    _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT,
+    _BIC_ZIO_SKFQ
+  FROM `PROJECT.DATASET.AZSRP_DS031_VT_S4`
+  WHERE MANDT IN (120, 200)
+    AND FISCVARNT = 'K4'
+    AND _BIC_ZIO_SWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND _BIC_ZIO_VER = @IP_SKF_VERSION
+    AND _BIC_ZIO_SAUDT IN ('1', '10')
+    AND _BIC_ZIO_PSKF IN ('804013', '801000')
+),
+
+-- =====================================================================
+-- CTE 8: SKF_FORECAST_Joined
+-- Logic: SKF forecast with all joins and calculated columns
+-- Source: CV_BASE_SKF_WEEKLY_FORECAST_S4_Filtered + master data joins
+-- Join: LEFT JOIN on PRCTR for store attributes, comp flags, calendar, profit center text
+-- Calculation: CAL_WEEK_NUMBER, CAL_BIC_ZIO_SKFQ (double quantity for PSKF='804013')
+-- =====================================================================
+SKF_FORECAST_Joined AS (
+  SELECT
+    f.MANDT,
+    f._BIC_ZIO_SWEEK,
+    f._B631_S_PROFTCTR,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.EMERG_MKT_IND,
+    c.RX_COMP_WK,
+    CASE
+      WHEN f._BIC_ZIO_PSKF = '804013' THEN f._BIC_ZIO_SKFQ * 2
+      ELSE f._BIC_ZIO_SKFQ
+    END AS _BIC_ZIO_SKFQ,
+    s.DIVISION_CODE,
+    s.DIVISION_DESC,
+    s.AREA_CODE,
+    s.AREA_DESC,
+    s.REGION_CODE,
+    s.REGION_DESC,
+    s.DISTRICT_CODE,
+    s.DISTRICT_DESC,
+    s.STRNUM,
+    w.ZRWSTRTDATE,
+    w.ZRWENDDATE,
+    RIGHT(CAST(f._BIC_ZIO_SWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    s.CITY,
+    s.STATE,
+    p.PROFIT_CENTER_TEXT,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM CV_BASE_SKF_WEEKLY_FORECAST_S4_Filtered f
+  LEFT JOIN CV_BASE_MD_SRPACT_S4_Filtered s
+    ON f._B631_S_PROFTCTR = s.PRCTR
+  LEFT JOIN CV_BASE_MD_COMPFL_S4_Filtered c
+    ON f._B631_S_PROFTCTR = c.PRCTR
+    AND f._BIC_ZIO_SWEEK = c.ZWEEK
+  LEFT JOIN CV_BASE_MD_RCALWEEK_S4_Filtered w
+    ON f._BIC_ZIO_SWEEK = w.ZZWEEK
+  LEFT JOIN CV_BASE_MD_CEPCT_S4_Filtered p
+    ON f._B631_S_PROFTCTR = p.PRCTR
+),
+
+-- =====================================================================
+-- CTE 9: CV_BASE_FIN_BKPF_S4_Filtered
+-- Logic: Document header data for financial SBT
+-- Source: BKPF_VT_S4 (Physical Table)
+-- Filters: XREF2_HD = 'A1', BLART = 'ZT', MANDT IN ('120', '200')
+-- =====================================================================
+CV_BASE_FIN_BKPF_S4_Filtered AS (
+  SELECT
+    MANDT,
+    BUKRS,
+    BELNR,
+    GJAHR,
+    XREF2_HD,
+    BUDAT,
+    BLART
+  FROM `PROJECT.DATASET.BKPF_VT_S4`
+  WHERE MANDT IN ('120', '200')
+    AND XREF2_HD = 'A1'
+    AND BLART = 'ZT'
+),
+
+-- =====================================================================
+-- CTE 10: CV_BASE_FIN_ACDOCA_S4_Filtered
+-- Logic: Universal journal entry line items for financial SBT
+-- Source: ACDOCA_VT_S4 (Physical Table)
+-- Filters: PRCTR IN ('0000562057', '0000562058'), RACCT = '0004403000',
+--          ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO, RCLNT IN ('120', '200')
+-- =====================================================================
+CV_BASE_FIN_ACDOCA_S4_Filtered AS (
+  SELECT
+    RCLNT,
+    RBUKRS,
+    BELNR,
+    GJAHR,
+    WSL,
+    PRCTR,
+    RACCT,
+    ZZWEEK,
+    RWCUR
+  FROM `PROJECT.DATASET.ACDOCA_VT_S4`
+  WHERE RCLNT IN ('120', '200')
+    AND PRCTR IN ('0000562057', '0000562058')
+    AND RACCT = '0004403000'
+    AND ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+),
+
+-- =====================================================================
+-- CTE 11: FIN_SBT_Joined
+-- Logic: Financial SBT (Store-Based Transactions) with all joins and calculated columns
+-- Source: INNER JOIN of BKPF and ACDOCA + LEFT JOINs to master data
+-- Join: INNER JOIN on BUKRS, BELNR, GJAHR; LEFT JOIN on PRCTR for store attributes, calendar, profit center text
+-- Calculation: CAL_COMP_FLAG (based on PRCTR), CAL_WEEK_NUMBER, WSL (negated)
+-- =====================================================================
+FIN_SBT_Joined AS (
+  SELECT
+    b.MANDT,
+    b.BUKRS,
+    b.BELNR,
+    b.GJAHR,
+    b.XREF2_HD,
+    b.BUDAT,
+    a.PRCTR,
+    (a.WSL * -1) AS WSL,
+    a.ZZWEEK,
+    a.RWCUR,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.CITY,
+    s.STATE,
+    s.DIVISION_CODE,
+    s.DIVISION_DESC,
+    s.AREA_CODE,
+    s.AREA_DESC,
+    s.REGION_CODE,
+    s.REGION_DESC,
+    s.DISTRICT_CODE,
+    s.DISTRICT_DESC,
+    s.STRNUM,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    s.EMERG_MKT_IND,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE,
+    w.ZRWENDDATE,
+    w.ZRWSTRTDATE,
+    CASE WHEN a.PRCTR = '0000562057' THEN '1' ELSE '0' END AS CAL_COMP_FLAG,
+    RIGHT(CAST(a.ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    p.PROFIT_CENTER_TEXT
+  FROM CV_BASE_FIN_BKPF_S4_Filtered b
+  INNER JOIN CV_BASE_FIN_ACDOCA_S4_Filtered a
+    ON b.BUKRS = a.RBUKRS
+    AND b.BELNR = a.BELNR
+    AND b.GJAHR = a.GJAHR
+  LEFT JOIN CV_BASE_MD_SRPACT_S4_Filtered s
+    ON a.PRCTR = s.PRCTR
+  LEFT JOIN CV_BASE_MD_RCALWEEK_S4_Filtered w
+    ON a.ZZWEEK = w.ZZWEEK
+  LEFT JOIN CV_BASE_MD_CEPCT_S4_Filtered p
+    ON a.PRCTR = p.PRCTR
+),
+
+-- =====================================================================
+-- CTE 12: CV_BASE_MD_HRRP_NODE_S4_Filtered
+-- Logic: Hierarchy node master data (used for multiple hierarchies)
+-- Source: HRRP_NODE (Physical Table)
+-- Filters: MANDT IN (120, 200)
+-- =====================================================================
+CV_BASE_MD_HRRP_NODE_S4_Filtered AS (
+  SELECT
+    MANDT,
+    HRYID,
+    HRYVER,
+    NODECLS,
+    HRYNODE,
+    PARNODE,
+    HRYVALTO,
+    HRYVALFROM,
+    BALIND,
+    NODETYPE,
+    NODEVALUE
+  FROM `PROJECT.DATASET.HRRP_NODE`
+  WHERE MANDT IN (120, 200)
+),
+
+-- =====================================================================
+-- CTE 13: CV_BASE_FIN_ACDOCA_S4_For_Manual_JE
+-- Logic: Universal journal entry line items for financial manual journal entries
+-- Source: ACDOCA_VT_S4 (Physical Table)
+-- Filters: ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO, RCLNT IN ('120', '200')
+-- =====================================================================
+CV_BASE_FIN_ACDOCA_S4_For_Manual_JE AS (
+  SELECT
+    RCLNT,
+    PRCTR,
+    ZZWEEK,
+    KSL,
+    BLART,
+    RBUKRS,
+    GJAHR,
+    BELNR,
+    WWPC_PA,
+    RACCT
+  FROM `PROJECT.DATASET.ACDOCA_VT_S4`
+  WHERE RCLNT IN ('120', '200')
+    AND ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+),
+
+-- =====================================================================
+-- CTE 14: CV_BASE_FIN_BKPF_S4_For_Manual_JE
+-- Logic: Document header data for financial manual journal entries
+-- Source: BKPF_VT_S4 (Physical Table)
+-- Filters: XREF2_HD IN ('MJE','TS','GENCO','MAR','SAPARINVOICES','TP'), MANDT IN ('120', '200')
+-- =====================================================================
+CV_BASE_FIN_BKPF_S4_For_Manual_JE AS (
+  SELECT
+    MANDT,
+    BUKRS,
+    BELNR,
+    GJAHR,
+    XREF2_HD
+  FROM `PROJECT.DATASET.BKPF_VT_S4`
+  WHERE MANDT IN ('120', '200')
+    AND XREF2_HD IN ('MJE','TS','GENCO','MAR','SAPARINVOICES','TP')
+),
+
+-- =====================================================================
+-- CTE 15: FIN_MANUAL_JE_Joined
+-- Logic: Financial manual journal entries with hierarchy filters and all joins
+-- Source: INNER JOIN of ACDOCA and BKPF + hierarchy filters + LEFT JOINs to master data
+-- Join: Multiple INNER JOINs for hierarchies (PC, GL, PROD_CLASS), LEFT JOINs for store attributes, comp flags, calendar, profit center text
+-- Filters: XREF2_HD NOT IN ('RT', 'RV', 'SK'), PC_HIER PARNODE LIKE '%CORE_RET%', 
+--          GL_HIER PARNODE LIKE '%181', PROD_CLASS_HIER PARNODE LIKE '%FS' OR '%RX'
+-- Calculation: CAL_WEEK_NUMBER, CAL_FS_RX_FLAG, KSL (negated), CAL_FS_SALES, CAL_RX_SALES
+-- =====================================================================
+FIN_MANUAL_JE_Joined AS (
+  SELECT
+    j.MANDT,
+    c.RX_COMP_WK,
+    c.FS_COMP_WK,
+    s.EMERG_MKT_IND,
+    s.DISTRICT_CODE,
+    s.REGION_DESC,
+    s.REGION_CODE,
+    j.RCLNT,
+    j.PRCTR,
+    j.ZZWEEK,
+    s.DISTRICT_DESC,
+    s.AREA_DESC,
+    s.DIVISION_DESC,
+    s.AREA_CODE,
+    s.DIVISION_CODE,
+    s.REP_MKT_DESC,
+    s.REP_MKT_CODE,
+    (j.KSL * -1) AS KSL,
+    p.PROFIT_CENTER_TEXT,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    h3.PARNODE,
+    w.ZRWSTRTDATE,
+    w.ZRWENDDATE,
+    s.CITY,
+    s.STATE,
+    RIGHT(CAST(j.ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    CASE
+      WHEN LEFT(CAST(j.WWPC_PA AS STRING), 2) = 'FS' THEN 'FS'
+      WHEN LEFT(CAST(j.WWPC_PA AS STRING), 2) = 'RX' THEN 'RX'
+      ELSE ''
+    END AS CAL_FS_RX_FLAG,
+    CASE
+      WHEN (CASE
+              WHEN LEFT(CAST(j.WWPC_PA AS STRING), 2) = 'FS' THEN 'FS'
+              WHEN LEFT(CAST(j.WWPC_PA AS STRING), 2) = 'RX' THEN 'RX'
+              ELSE ''
+            END) = 'FS' THEN c.FS_COMP_WK
+      WHEN (CASE
+              WHEN LEFT(CAST(j.WWPC_PA AS STRING), 2) = 'FS' THEN 'FS'
+              WHEN LEFT(CAST(j.WWPC_PA AS STRING), 2) = 'RX' THEN 'RX'
+              ELSE ''
+            END) = 'RX' THEN c.RX_COMP_WK
+      ELSE c.FS_COMP_WK
+    END AS COMP_FLAG,
+    s.STRNUM,
+    b.XREF2_HD AS SOURCE_CODE,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM CV_BASE_FIN_ACDOCA_S4_For_Manual_JE j
+  INNER JOIN CV_BASE_FIN_BKPF_S4_For_Manual_JE b
+    ON j.RBUKRS = b.BUKRS
+    AND j.BELNR = b.BELNR
+    AND j.GJAHR = b.GJAHR
+  INNER JOIN CV_BASE_MD_HRRP_NODE_S4_Filtered h1
+    ON j.PRCTR = h1.NODEVALUE
+    AND j.RCLNT = h1.MANDT
+    AND h1.PARNODE LIKE '%CORE_RET%'
+    AND h1.HRYVALTO = '99991231'
+  INNER JOIN CV_BASE_MD_HRRP_NODE_S4_Filtered h2
+    ON j.RACCT = h2.NODEVALUE
+    AND j.RCLNT = h2.MANDT
+    AND h2.PARNODE LIKE '%181'
+    AND h2.HRYVALTO = '99991231'
+    AND h2.HRYID = 'CVS2'
+  INNER JOIN CV_BASE_MD_HRRP_NODE_S4_Filtered h3
+    ON j.WWPC_PA = h3.NODEVALUE
+    AND j.RCLNT = h3.MANDT
+    AND (h3.PARNODE LIKE '%FS' OR h3.PARNODE LIKE '%RX')
+    AND h3.HRYVALTO = '99991231'
+    AND h3.HRYID LIKE '%ZPRODUCTCLASS'
+  LEFT JOIN CV_BASE_MD_SRPACT_S4_Filtered s
+    ON j.PRCTR = s.PRCTR
+    AND j.RCLNT = s.MANDT
+  LEFT JOIN CV_BASE_MD_COMPFL_S4_Filtered c
+    ON j.PRCTR = c.PRCTR
+    AND j.ZZWEEK = c.ZWEEK
+    AND j.RCLNT = c.MANDT
+  LEFT JOIN CV_BASE_MD_CEPCT_S4_Filtered p
+    ON j.PRCTR = p.PRCTR
+    AND j.RCLNT = p.MANDT
+  LEFT JOIN CV_BASE_MD_RCALWEEK_S4_Filtered w
+    ON j.ZZWEEK = w.ZZWEEK
+    AND j.RCLNT = w.RCLNT
+  WHERE b.XREF2_HD NOT IN ('RT', 'RV', 'SK')
+),
+
+-- =====================================================================
+-- CTE 16: CV_BASE_SKF_FAGLSKF_PN_S4_Filtered
+-- Logic: Statistical key figures for SKF manual journal entries
+-- Source: FAGLSKF_PN_VT_S4 (Physical Table)
+-- Filters: STAGR IN ('801000', '804013'), ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO,
+--          ZZSCODE != 'SLS', RCLNT IN (120, 200)
+-- =====================================================================
+CV_BASE_SKF_FAGLSKF_PN_S4_Filtered AS (
+  SELECT
+    RCLNT,
+    STAGR,
+    DATE_FROM,
+    MSL,
+    PRCTR,
+    ZZSCODE,
+    ZZWEEK,
+    RCNTR
+  FROM `PROJECT.DATASET.FAGLSKF_PN_VT_S4`
+  WHERE RCLNT IN (120, 200)
+    AND STAGR IN ('801000', '804013')
+    AND ZZWEEK BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+    AND ZZSCODE != 'SLS'
+),
+
+-- =====================================================================
+-- CTE 17: SKF_MANUAL_JE_Joined
+-- Logic: SKF manual journal entries with hierarchy filters and all joins
+-- Source: INNER JOIN of FAGLSKF and hierarchy + LEFT JOINs to master data
+-- Join: INNER JOIN on hierarchy (CORERET), LEFT JOINs for store attributes, comp flags, calendar, profit center text
+-- Filters: HIER PARNODE LIKE '%CORERET%', HRYVALTO = '99991231'
+-- Calculation: CAL_MSL (double for STAGR='804013'), CAL_WEEK_NUMBER, COMP_FLAG
+-- =====================================================================
+SKF_MANUAL_JE_Joined AS (
+  SELECT
+    s.EMERG_MKT_IND,
+    s.DISTRICT_DESC,
+    s.DISTRICT_CODE,
+    s.REGION_DESC,
+    s.REGION_CODE,
+    s.AREA_DESC,
+    s.AREA_CODE,
+    s.DIVISION_DESC,
+    s.DIVISION_CODE,
+    s.STATE,
+    s.CITY,
+    s.REP_MKT_DESC,
+    s.REP_MKT_CODE,
+    f.ZZWEEK,
+    f.PRCTR,
+    f.DATE_FROM,
+    f.STAGR,
+    f.RCLNT,
+    c.FS_COMP_WK,
+    c.RX_COMP_WK,
+    w.ZRWSTRTDATE,
+    w.ZRWENDDATE,
+    CASE WHEN f.STAGR = '801000' THEN f.MSL ELSE f.MSL * 2 END AS MSL,
+    f.RCNTR,
+    p.PROFIT_CENTER_TEXT,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    RIGHT(CAST(f.ZZWEEK AS STRING), 2) AS CAL_WEEK_NUMBER,
+    c.RX_COMP_WK AS COMP_FLAG,
+    s.STRNUM,
+    f.ZZSCODE AS SOURCE_CODE,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM CV_BASE_SKF_FAGLSKF_PN_S4_Filtered f
+  INNER JOIN CV_BASE_MD_HRRP_NODE_S4_Filtered h
+    ON f.RCNTR = h.NODEVALUE
+    AND h.PARNODE LIKE '%CORERET%'
+    AND h.HRYVALTO = '99991231'
+  LEFT JOIN CV_BASE_MD_SRPACT_S4_Filtered s
+    ON f.PRCTR = s.PRCTR
+  LEFT JOIN CV_BASE_MD_COMPFL_S4_Filtered c
+    ON f.PRCTR = c.PRCTR
+    AND f.ZZWEEK = c.ZWEEK
+  LEFT JOIN CV_BASE_MD_RCALWEEK_S4_Filtered w
+    ON f.ZZWEEK = w.ZZWEEK
+  LEFT JOIN CV_BASE_MD_CEPCT_S4_Filtered p
+    ON f.PRCTR = p.PRCTR
+),
+
+-- =====================================================================
+-- CTE 18: COMBINED_UNION
+-- Logic: Union all 5 composite views (FIN_FORECAST, SKF_FORECAST, FIN_SBT, FIN_MANUAL_JE, SKF_MANUAL_JE)
+-- Source: Union of all 5 joined CTEs above
+-- Calculation: Map columns to common output structure with constants for CAL_SOURCE, CAL_DATA_CATEGORY1/2
+-- =====================================================================
+COMBINED_UNION AS (
+  -- Branch 1: FIN_FORECAST
+  SELECT
+    FS_RX_FLAG,
+    _B631_S_AMOUNT AS FIN_FCST_AMOUNT,
+    CAST(NULL AS FLOAT64) AS SKF_FCST_QTY,
+    'Transactional Sales' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    _B631_S_PROFTCTR AS PRCTR,
+    MANDT,
+    FS_RX_FLAG AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_FCST' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CAST(NULL AS FLOAT64) AS WSL,
+    CAST(NULL AS FLOAT64) AS CAL_FS_SALES,
+    CAST(NULL AS FLOAT64) AS CAL_RX_SALES,
+    CAST(NULL AS FLOAT64) AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    CAST(NULL AS STRING) AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_FORECAST_Joined
+
+  UNION ALL
+
+  -- Branch 2: SKF_FORECAST
+  SELECT
+    'RX' AS FS_RX_FLAG,
+    CAST(NULL AS FLOAT64) AS FIN_FCST_AMOUNT,
+    _BIC_ZIO_SKFQ AS SKF_FCST_QTY,
+    'Transactional Sales' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    RX_COMP_WK AS COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    _B631_S_PROFTCTR AS PRCTR,
+    MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    CAST(NULL AS STRING) AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'SKF' AS CAL_DATA_CATEGORY1,
+    'SKF_FCST' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CAST(NULL AS FLOAT64) AS WSL,
+    CAST(NULL AS FLOAT64) AS CAL_FS_SALES,
+    CAST(NULL AS FLOAT64) AS CAL_RX_SALES,
+    CAST(NULL AS FLOAT64) AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    CAST(NULL AS STRING) AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM SKF_FORECAST_Joined
+
+  UNION ALL
+
+  -- Branch 3: FIN_SBT
+  SELECT
+    'FS' AS FS_RX_FLAG,
+    CAST(NULL AS FLOAT64) AS FIN_FCST_AMOUNT,
+    CAST(NULL AS FLOAT64) AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    CAL_COMP_FLAG AS COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    MANDT,
+    'FS' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    CAST(NULL AS STRING) AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_SBT' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    WSL,
+    CAST(NULL AS FLOAT64) AS CAL_FS_SALES,
+    CAST(NULL AS FLOAT64) AS CAL_RX_SALES,
+    CAST(NULL AS FLOAT64) AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    CAST(NULL AS STRING) AS SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_SBT_Joined
+
+  UNION ALL
+
+  -- Branch 4: FIN_MANUAL_JE
+  SELECT
+    CAL_FS_RX_FLAG AS FS_RX_FLAG,
+    CAST(NULL AS FLOAT64) AS FIN_FCST_AMOUNT,
+    CAST(NULL AS FLOAT64) AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    RCLNT AS MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    CAST(NULL AS STRING) AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'FIN' AS CAL_DATA_CATEGORY1,
+    'FIN_MJE' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CAST(NULL AS FLOAT64) AS WSL,
+    CASE WHEN RIGHT(PARNODE, 2) = 'FS' THEN KSL ELSE CAST(NULL AS FLOAT64) END AS CAL_FS_SALES,
+    CASE WHEN RIGHT(PARNODE, 2) = 'RX' THEN KSL ELSE CAST(NULL AS FLOAT64) END AS CAL_RX_SALES,
+    CAST(NULL AS FLOAT64) AS MSL,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM FIN_MANUAL_JE_Joined
+
+  UNION ALL
+
+  -- Branch 5: SKF_MANUAL_JE
+  SELECT
+    'RX' AS FS_RX_FLAG,
+    CAST(NULL AS FLOAT64) AS FIN_FCST_AMOUNT,
+    CAST(NULL AS FLOAT64) AS SKF_FCST_QTY,
+    'Manual Adjustment Journal Entries' AS CAL_SOURCE,
+    STRNUM,
+    DISTRICT_DESC,
+    DISTRICT_CODE,
+    REGION_DESC,
+    REGION_CODE,
+    DIVISION_DESC,
+    DIVISION_CODE,
+    COMP_FLAG,
+    ZZWEEK AS _BIC_ZIO_SWEEK,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    PRCTR,
+    RCLNT AS MANDT,
+    'RX' AS FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    CAST(NULL AS STRING) AS FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    'SKF' AS CAL_DATA_CATEGORY1,
+    'SKF_MJE' AS CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    CAST(NULL AS FLOAT64) AS WSL,
+    CAST(NULL AS FLOAT64) AS CAL_FS_SALES,
+    CAST(NULL AS FLOAT64) AS CAL_RX_SALES,
+    MSL,
+    AREA_CODE,
+    AREA_DESC,
+    SOURCE_CODE,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM SKF_MANUAL_JE_Joined
+)
+
+-- =====================================================================
+-- FINAL SELECT: Aggregated output matching STP_WSS_FORECAST_MJE target
+-- Logic: GROUP BY all non-measure columns, SUM all measures, add calculated attributes
+-- Source: COMBINED_UNION
+-- Aggregation: SUM on FIN_FCST_AMOUNT, SKF_FCST_QTY, WSL (as SBT), MSL (as SKF_MJE_QTY), CAL_FS_SALES, CAL_RX_SALES
+-- Calculation: CAL_COMP_FLAG_DESC (CASE on COMP_FLAG), CAL_EMERG_MKT_IND (CASE on EMERG_MKT_IND)
+-- =====================================================================
+SELECT
+  CASE COMP_FLAG
+    WHEN '1' THEN 'Comp'
+    WHEN '0' THEN 'Non-Comp'
+    ELSE ''
+  END AS CAL_COMP_FLAG_DESC,
+  CASE
+    WHEN EMERG_MKT_IND = 'Y' THEN 'Yes'
+    WHEN EMERG_MKT_IND = 'N' THEN 'No'
+    ELSE ''
+  END AS CAL_EMERG_MKT_IND,
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FORECAST_CURRENCY AS FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  SUM(FIN_FCST_AMOUNT) AS FIN_FCST_AMOUNT,
+  SUM(SKF_FCST_QTY) AS SKF_FCST_QTY,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  SUM(WSL) AS SBT,
+  SUM(MSL) AS SKF_MJE_QTY,
+  SUM(CAL_FS_SALES) AS CAL_FS_SALES_MJE,
+  SUM(CAL_RX_SALES) AS CAL_RX_SALES_MJE,
+  AREA_CODE,
+  AREA_DESC
+FROM COMBINED_UNION
+GROUP BY
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  SOURCE_CODE,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+
+-- =====================================================================
+-- END OF CONSOLIDATED SQL
+-- =====================================================================
+
+-- RUNTIME PARAMETERS REQUIRED:
+-- @IP_FIN_VERSION: Financial forecast version (NVARCHAR)
+-- @IP_SKF_VERSION: SKF forecast version (NVARCHAR)
+-- @IP_WEEK_ENDING_FROM: Week ending from (NVARCHAR(7))
+-- @IP_WEEK_ENDING_TO: Week ending to (NVARCHAR(7))
+
+-- PLACEHOLDER TABLE REFERENCES (Replace with actual BigQuery project.dataset.table):
+-- PROJECT.DATASET.AZSRP_DS041_VT_S4 → Financial weekly forecast base table
+-- PROJECT.DATASET.AZSRP_DS031_VT_S4 → SKF weekly forecast base table
+-- PROJECT.DATASET.ZTSRP_ATTR_ACT → Store profile attributes
+-- PROJECT.DATASET.ZTSRP_COMPFL → Comp flag master data
+-- PROJECT.DATASET.ZTFIGL_RCALWEEK → Retail calendar week
+-- PROJECT.DATASET.CEPCT → Profit center text
+-- PROJECT.DATASET.BKPF_VT_S4 → Document header
+-- PROJECT.DATASET.ACDOCA_VT_S4 → Universal journal entry line items
+-- PROJECT.DATASET.HRRP_NODE → Hierarchy node master data
+-- PROJECT.DATASET.FAGLSKF_PN_VT_S4 → Statistical key figures
