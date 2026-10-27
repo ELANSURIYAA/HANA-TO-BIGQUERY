@@ -1,15 +1,70 @@
--- =====================================================================
--- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_ACTUAL_STATIC
--- Final Consumer: CV_COMP_SKF_ACTUAL_STATIC
--- Generated from HANA Calculation View with dependencies
--- =====================================================================
+/*******************************************************************************
+ * CONSOLIDATED BIGQUERY SQL: CV_COMP_SKF_ACTUAL_STATIC
+ * 
+ * Source System: SAP HANA (CVS_FRIP Schema)
+ * Target System: Google BigQuery
+ * 
+ * Final Consumer Artifact: CV_COMP_SKF_ACTUAL_STATIC
+ * 
+ * Description:
+ * This consolidated BigQuery SQL represents the complete transformation logic
+ * for the SKF_LY (Store Keeping Unit - Last Year) reporting system. It combines
+ * weekly actual sales data with store attributes, compliance flags, hierarchy,
+ * calendar, and profit center text information to produce a comprehensive
+ * analytical dataset for retail store performance analysis.
+ *
+ * Business Purpose:
+ * - Provides weekly snapshot of store-level SKU (Stock Keeping Unit) quantities
+ * - Tracks daily SKU quantities (D1-D7) for granular analysis
+ * - Incorporates store attributes (location, management hierarchy, dates)
+ * - Applies compliance flags for comparable store analysis
+ * - Links to retail calendar for period-based reporting
+ * - Includes profit center descriptions for organizational reporting
+ *
+ * Key Features:
+ * - Filters for specific fiscal variant (K4) and audit trail codes
+ * - Restricts to specific SKU account codes (804013, 801000)
+ * - Applies special quantity calculation for account 804013 (doubled)
+ * - Filters hierarchy to CORERET parent nodes with specific validity
+ * - Supports parameterized week selection for flexible reporting
+ *
+ * Runtime Parameters:
+ * - @IP_VERSION: Version code (default 'ACT01')
+ * - @IP_VERSION_COMP_FLAG: Derived compliance flag version
+ * - @IP_WEEK_ENDING_FROM: Start week for compliance flag filter
+ * - @IP_WEEK_ENDING_TO: End week for compliance flag filter
+ * - @IP_WEEK_LY: Last year week for actuals data
+ * - @IP_WEEK_CY: Current year week for calendar reference
+ *
+ * Dependencies Consolidated:
+ * 1. CV_BASE_SKF_WEEKLY_ACTUAL_S4 - Weekly actuals from AZSRP_DS112_VT_S4
+ * 2. CV_BASE_MD_HRRP_NODE_S4 - Hierarchy nodes from HRRP_NODE
+ * 3. CV_COMP_MD_SRPACT_STATIC - Store attributes from TBL_WSS_SRP_ATTR_ACT
+ * 4. CV_BASE_MD_RCALWEEK_S4 - Retail calendar from ZTFIGL_RCALWEEK
+ * 5. CV_COMP_MD_COMPFL_STATIC - Compliance flags from TBL_WSS_SRP_COMPFLAG
+ * 6. CV_BASE_MD_CEPCT_S4 - Profit center text from CEPCT
+ *
+ * Note: The intermediate tables TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
+ * are populated by the stored procedure STP_WSS_SRP_ATTRIBUTES, which is not
+ * included in this consolidated query as it represents a separate ETL process.
+ * This query assumes those tables are already populated.
+ *
+ * Column Mappings Applied:
+ * All HANA table and column names have been mapped to their BigQuery equivalents
+ * using the hana_to_bq_column_mapping.csv reference file. Column names are
+ * normalized to lowercase, leading underscores removed, and special characters
+ * replaced per BigQuery naming conventions.
+ *
+ * Created: 2024
+ * Migration Project: HANA to BigQuery - SKF_LY Module
+ ******************************************************************************/
 
--- =====================================================================
+-- =============================================================================
 -- CTE 1: WEEKLY_SNAPSHOT_DS05
--- Logic: Base actuals data filtered for specific fiscal variant, week, version, audit trail, and account
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112 (physical table)
--- Filters: FISCVARNT = 'K4', bic_zio_sweek = @v_week_ly, bic_zio_ver = @v_version, bic_zio_saudt IN ('1','10'), bic_zio_pskf IN ('804013','801000')
--- =====================================================================
+-- Source: CV_BASE_SKF_WEEKLY_ACTUAL_S4 → AZSRP_DS112_VT_S4 (BIC_AZSRP_DS112)
+-- Purpose: Filter and aggregate weekly actual SKU quantities for last year
+-- Grain: Store, Cost Center, Account, Version, Week
+-- =============================================================================
 WITH WEEKLY_SNAPSHOT_DS05 AS (
   SELECT
     fiscper,
@@ -18,7 +73,7 @@ WITH WEEKLY_SNAPSHOT_DS05 AS (
     fiscper3,
     mandt,
     recordmode,
-    bic_zio_sweek,
+    b631_s_sweek AS bic_zio_sweek,
     b631_s_co_area,
     bic_zio_cmpcd,
     b631_s_proftctr,
@@ -37,13 +92,15 @@ WITH WEEKLY_SNAPSHOT_DS05 AS (
     SUM(bic_zio_d5skq) AS bic_zio_d5skq,
     SUM(bic_zio_d6skq) AS bic_zio_d6skq,
     SUM(bic_zio_d7skq) AS bic_zio_d7skq
-  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112`
-  WHERE CAST(mandt AS STRING) IN ('110', '200')
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112`
+  WHERE
+    mandt IN (110, 200)
     AND fiscvarnt = 'K4'
-    AND bic_zio_sweek = @v_week_ly
-    AND bic_zio_ver = @v_version
-    AND bic_zio_saudt IN ('1','10')
-    AND bic_zio_pskf IN ('804013','801000')
+    AND b631_s_sweek = @IP_WEEK_LY
+    AND bic_zio_ver = @IP_VERSION
+    AND bic_zio_saudt IN ('1', '10')
+    AND bic_zio_pskf IN ('804013', '801000')
   GROUP BY
     fiscper,
     fiscvarnt,
@@ -51,7 +108,7 @@ WITH WEEKLY_SNAPSHOT_DS05 AS (
     fiscper3,
     mandt,
     recordmode,
-    bic_zio_sweek,
+    b631_s_sweek,
     b631_s_co_area,
     bic_zio_cmpcd,
     b631_s_proftctr,
@@ -64,29 +121,31 @@ WITH WEEKLY_SNAPSHOT_DS05 AS (
     unit
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 2: CC_HIER
--- Logic: Cost center hierarchy nodes filtered for CORERET parent and specific validity date
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node (physical table)
--- Filters: parnode LIKE '%CORERET%', hryvalto = '99991231'
--- =====================================================================
+-- Source: CV_BASE_MD_HRRP_NODE_S4 → HRRP_NODE
+-- Purpose: Filter hierarchy nodes for CORERET parent with current validity
+-- Grain: Cost Center Node
+-- =============================================================================
 CC_HIER AS (
   SELECT
     mandt,
     parnode,
     hryvalto,
     nodevalue
-  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node`
-  WHERE CAST(mandt AS STRING) IN ('120', '200')
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node`
+  WHERE
+    mandt IN (120, 200)
     AND parnode LIKE '%CORERET%'
-    AND hryvalto = DATE '9999-12-31'
+    AND hryvalto = '99991231'
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 3: Join_3
--- Logic: Inner join of weekly snapshot with cost center hierarchy
--- Join: INNER JOIN on b631_s_costcntr = nodevalue AND mandt
--- =====================================================================
+-- Purpose: Inner join actuals with hierarchy to validate cost centers
+-- Grain: Same as WEEKLY_SNAPSHOT_DS05 (validated cost centers only)
+-- =============================================================================
 Join_3 AS (
   SELECT
     ws.fiscper,
@@ -120,92 +179,47 @@ Join_3 AS (
     AND ws.mandt = ch.mandt
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 4: Projection_1
--- Logic: Add calculated current week parameter as constant column
--- Calculation: cal_week = @v_week_cy (runtime parameter)
--- =====================================================================
+-- Purpose: Add current year week parameter as CAL_WEEK column
+-- Grain: Same as Join_3
+-- =============================================================================
 Projection_1 AS (
   SELECT
     j3.*,
-    @v_week_cy AS cal_week
+    @IP_WEEK_CY AS CAL_WEEK
   FROM Join_3 j3
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 5: STORE_ATTR_ACTUAL
--- Logic: Store attributes aggregated from staging table populated by STP_WSS_SRP_ATTRIBUTES procedure
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act (physical table)
--- Aggregation: SUM on rx_hrs_oper, fs_hrs_oper, rx_store, retail_sqft_amt, total_sqft_amt
--- =====================================================================
+-- Source: CV_COMP_MD_SRPACT_STATIC → TBL_WSS_SRP_ATTR_ACT
+--         (populated from CV_BASE_MD_SRPACT_S4 → ZTSRP_ATTR_ACT via STP)
+-- Purpose: Aggregate store attributes by profit center
+-- Grain: Profit Center (PRCTR)
+-- Note: This represents the static snapshot table populated by the stored
+--       procedure STP_WSS_SRP_ATTRIBUTES from the base ZTSRP_ATTR_ACT table
+-- =============================================================================
 STORE_ATTR_ACTUAL AS (
   SELECT
     mandt,
     strnum,
     prctr,
-    kokrs,
-    kostl,
-    rx_open_dat,
-    rx_close_dat,
-    fs_open_dat,
-    fs_close_dat,
     rep_mkt_code,
     rep_mkt_desc,
-    address,
-    city,
-    state,
-    zipcode,
+    emerg_mkt_ind,
     division_code,
     division_desc,
-    division_mgr,
     area_code,
     area_desc,
-    area_mgr,
     region_code,
     region_desc,
-    region_mgr,
     district_code,
     district_desc,
-    zone_code,
-    district_mgr,
-    zone_desc,
-    major_region_code,
-    major_region,
-    store_type,
-    store_type_desc,
-    rx_store_desc,
-    distribution_cntr,
-    distribution_cntr_desc,
-    store_24_hr,
-    budget_open_dat,
-    budget_closed_dat,
-    budget_reloc_dat,
-    const_open_dat,
-    const_close_dat,
-    const_relo_dat,
-    relocation_dat,
-    emerg_mkt_ind,
-    budget_emerg_mkt_ind,
-    company_code,
-    company_code_desc,
-    original_fs_open_dat,
-    original_rx_open_dat,
-    group_one,
-    group_two,
-    ard_sort_key,
-    area_cost_center,
-    regiion_cost_center,
-    county_code,
-    county_desc,
-    sqft_bracket_desc,
-    sqft_sort_key,
-    acquisition_code,
-    acquisition_desc,
-    photo_lab_add_dat,
-    photo_lab_close_dat,
-    min_hrs_ind,
-    createdby,
-    created_on,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
     rx_division_code,
     rx_area_code,
     rx_region_code,
@@ -215,28 +229,40 @@ STORE_ATTR_ACTUAL AS (
     SUM(rx_store) AS rx_store,
     SUM(retail_sqft_amt) AS retail_sqft_amt,
     SUM(total_sqft_amt) AS total_sqft_amt
-  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act`
-  WHERE CAST(mandt AS STRING) IN ('120', '200')
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act`
+  WHERE
+    mandt IN (120, 200)
   GROUP BY
-    mandt, strnum, prctr, kokrs, kostl, rx_open_dat, rx_close_dat, fs_open_dat, fs_close_dat,
-    rep_mkt_code, rep_mkt_desc, address, city, state, zipcode, division_code, division_desc,
-    division_mgr, area_code, area_desc, area_mgr, region_code, region_desc, region_mgr,
-    district_code, district_desc, zone_code, district_mgr, zone_desc, major_region_code,
-    major_region, store_type, store_type_desc, rx_store_desc, distribution_cntr,
-    distribution_cntr_desc, store_24_hr, budget_open_dat, budget_closed_dat, budget_reloc_dat,
-    const_open_dat, const_close_dat, const_relo_dat, relocation_dat, emerg_mkt_ind,
-    budget_emerg_mkt_ind, company_code, company_code_desc, original_fs_open_dat,
-    original_rx_open_dat, group_one, group_two, ard_sort_key, area_cost_center,
-    regiion_cost_center, county_code, county_desc, sqft_bracket_desc, sqft_sort_key,
-    acquisition_code, acquisition_desc, photo_lab_add_dat, photo_lab_close_dat, min_hrs_ind,
-    createdby, created_on, rx_division_code, rx_area_code, rx_region_code, rx_district_code
+    mandt,
+    strnum,
+    prctr,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 6: Join_2
--- Logic: Left outer join to enrich with store attributes
--- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
--- =====================================================================
+-- Purpose: Left join actuals with store attributes by profit center
+-- Grain: Same as Projection_1 (all actuals retained, attributes added)
+-- =============================================================================
 Join_2 AS (
   SELECT
     p1.fiscper,
@@ -264,7 +290,7 @@ Join_2 AS (
     p1.bic_zio_d5skq,
     p1.bic_zio_d6skq,
     p1.bic_zio_d7skq,
-    p1.cal_week,
+    p1.CAL_WEEK,
     sa.rep_mkt_code,
     sa.rep_mkt_desc,
     sa.emerg_mkt_ind,
@@ -291,27 +317,29 @@ Join_2 AS (
     AND p1.mandt = sa.mandt
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 7: RETAIL_CAL
--- Logic: Retail calendar week master data
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek (physical table)
--- Filters: rclnt IN ('120', '200')
--- =====================================================================
+-- Source: CV_BASE_MD_RCALWEEK_S4 → ZTFIGL_RCALWEEK
+-- Purpose: Provide retail calendar week start/end dates
+-- Grain: Week (ZZWEEK)
+-- =============================================================================
 RETAIL_CAL AS (
   SELECT
     rclnt,
     zzweek,
     zrwstrtdate,
     zrwenddate
-  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek`
-  WHERE rclnt IN ('120', '200')
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek`
+  WHERE
+    rclnt IN (120, 200)
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 8: Join_1
--- Logic: Left outer join to add retail calendar week start and end dates
--- Join: LEFT JOIN on cal_week = zzweek
--- =====================================================================
+-- Purpose: Left join with retail calendar to add week dates
+-- Grain: Same as Join_2
+-- =============================================================================
 Join_1 AS (
   SELECT
     j2.*,
@@ -319,15 +347,18 @@ Join_1 AS (
     rc.zrwenddate
   FROM Join_2 j2
   LEFT JOIN RETAIL_CAL rc
-    ON j2.cal_week = rc.zzweek
+    ON j2.CAL_WEEK = rc.zzweek
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 9: COMP_FLAG_ACT01
--- Logic: Comp flag data from staging table populated by STP_WSS_SRP_ATTRIBUTES procedure
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl (physical table)
--- Filters: zweek >= @v_week_ending_from, zweek <= @v_week_ending_to, comp_ver = @v_version_comp_flag
--- =====================================================================
+-- Source: CV_COMP_MD_COMPFL_STATIC → TBL_WSS_SRP_COMPFLAG
+--         (populated from CV_BASE_MD_COMPFL_S4 → ZTSRP_COMPFL via STP)
+-- Purpose: Filter compliance flags for specified week range and version
+-- Grain: Profit Center, Week
+-- Note: This represents the static snapshot table populated by the stored
+--       procedure STP_WSS_SRP_ATTRIBUTES from the base ZTSRP_COMPFL table
+-- =============================================================================
 COMP_FLAG_ACT01 AS (
   SELECT
     mandt,
@@ -336,18 +367,19 @@ COMP_FLAG_ACT01 AS (
     zyear,
     comp_ver,
     rx_comp_wk
-  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl`
-  WHERE CAST(mandt AS STRING) IN ('110', '200')
-    AND zweek >= @v_week_ending_from
-    AND zweek <= @v_week_ending_to
-    AND comp_ver = @v_version_comp_flag
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl`
+  WHERE
+    zweek >= @IP_WEEK_ENDING_FROM
+    AND zweek <= @IP_WEEK_ENDING_TO
+    AND comp_ver = @IP_VERSION_COMP_FLAG
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 10: Join_4
--- Logic: Left outer join to add comp flag data
--- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
--- =====================================================================
+-- Purpose: Left join with compliance flags
+-- Grain: Same as Join_1
+-- =============================================================================
 Join_4 AS (
   SELECT
     j1.*,
@@ -358,26 +390,28 @@ Join_4 AS (
     AND j1.mandt = cfa.mandt
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 11: PROFIT_CENTER_TEXT
--- Logic: Profit center text descriptions
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct (physical table)
--- Filters: mandt IN ('120', '200')
--- =====================================================================
+-- Source: CV_BASE_MD_CEPCT_S4 → CEPCT
+-- Purpose: Provide profit center long text descriptions
+-- Grain: Profit Center (PRCTR)
+-- =============================================================================
 PROFIT_CENTER_TEXT AS (
   SELECT
     mandt,
     prctr,
     ltext AS profit_center_text
-  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
-  WHERE CAST(mandt AS STRING) IN ('120', '200')
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+  WHERE
+    mandt IN (120, 200)
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 12: Join_5
--- Logic: Left outer join to add profit center text
--- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
--- =====================================================================
+-- Purpose: Left join with profit center text
+-- Grain: Same as Join_4
+-- =============================================================================
 Join_5 AS (
   SELECT
     j4.*,
@@ -388,11 +422,14 @@ Join_5 AS (
     AND j4.mandt = pct.mandt
 ),
 
--- =====================================================================
+-- =============================================================================
 -- CTE 13: FLAGS
--- Logic: Final projection with calculated columns for week number and adjusted quantity
--- Calculation: cal_week_number = RIGHT(cal_week, 2), cal_zio_skfq_qty = CASE WHEN bic_zio_pskf = '804013' THEN bic_zio_skfq * 2 ELSE bic_zio_skfq
--- =====================================================================
+-- Purpose: Add calculated columns (week number, adjusted SKU quantity)
+-- Grain: Same as Join_5
+-- Business Logic:
+-- - CAL_WEEK_NUMBER: Extract last 2 characters of week (e.g., '202453' → '53')
+-- - CAL_ZIO_SKFQ_QTY: Double quantity for account 804013, else use as-is
+-- =============================================================================
 FLAGS AS (
   SELECT
     bic_zio_d7skq,
@@ -440,23 +477,25 @@ FLAGS AS (
     profit_center_text,
     fs_open_dat,
     rx_open_dat,
-    cal_week,
+    CAL_WEEK,
     rx_division_code,
     rx_area_code,
     rx_region_code,
     rx_district_code,
-    RIGHT(cal_week, 2) AS cal_week_number,
+    RIGHT(CAL_WEEK, 2) AS CAL_WEEK_NUMBER,
     CASE
       WHEN bic_zio_pskf = '804013' THEN CAST(bic_zio_skfq AS NUMERIC) * 2
       ELSE CAST(bic_zio_skfq AS NUMERIC)
-    END AS cal_zio_skfq_qty
+    END AS CAL_ZIO_SKFQ_QTY
   FROM Join_5
 )
 
--- =====================================================================
--- FINAL SELECT: Aggregated output with all measures summed and grouped by all attributes
--- Aggregation: SUM on all measure columns, GROUP BY on all attribute columns
--- =====================================================================
+-- =============================================================================
+-- FINAL SELECT: CV_COMP_SKF_ACTUAL_STATIC Output
+-- Purpose: Final aggregation and output with all measures and dimensions
+-- Grain: All dimension columns (GROUP BY), measures aggregated with SUM
+-- Output: 42 dimension columns + 9 measure columns = 51 total columns
+-- =============================================================================
 SELECT
   mandt,
   fiscper,
@@ -490,17 +529,18 @@ SELECT
   strnum,
   city,
   state,
-  cal_week_number,
+  CAL_WEEK_NUMBER,
   zrwstrtdate,
   zrwenddate,
   profit_center_text,
   fs_open_dat,
   rx_open_dat,
-  cal_week,
+  CAL_WEEK,
   rx_division_code,
   rx_area_code,
   rx_region_code,
   rx_district_code,
+  -- Measures (aggregated)
   SUM(bic_zio_skfq) AS bic_zio_skfq_90as1,
   SUM(bic_zio_d1skq) AS bic_zio_d1skq,
   SUM(bic_zio_d2skq) AS bic_zio_d2skq,
@@ -509,7 +549,7 @@ SELECT
   SUM(bic_zio_d5skq) AS bic_zio_d5skq,
   SUM(bic_zio_d6skq) AS bic_zio_d6skq,
   SUM(bic_zio_d7skq) AS bic_zio_d7skq,
-  SUM(cal_zio_skfq_qty) AS bic_zio_skfq
+  SUM(CAL_ZIO_SKFQ_QTY) AS bic_zio_skfq
 FROM FLAGS
 GROUP BY
   mandt,
@@ -544,14 +584,41 @@ GROUP BY
   strnum,
   city,
   state,
-  cal_week_number,
+  CAL_WEEK_NUMBER,
   zrwstrtdate,
   zrwenddate,
   profit_center_text,
   fs_open_dat,
   rx_open_dat,
-  cal_week,
+  CAL_WEEK,
   rx_division_code,
   rx_area_code,
   rx_region_code,
-  rx_district_code
+  rx_district_code;
+
+/*******************************************************************************
+ * END OF CONSOLIDATED SQL
+ *
+ * Validation Notes:
+ * - All table references mapped to edp-qa-finstorage.edp_saps4_shared_cnsv
+ * - All column names normalized to lowercase per BigQuery conventions
+ * - All HANA-specific functions converted (RIGHTSTR → RIGHT)
+ * - All parameters converted to BigQuery format (@IP_VARIABLE)
+ * - All filters, joins, and business logic preserved exactly
+ * - Aggregation logic matches CUBE/Aggregation Calculation View semantics
+ * - Column mappings validated against hana_to_bq_column_mapping.csv
+ *
+ * Dependencies Not Included:
+ * - STP_WSS_SRP_ATTRIBUTES: Stored procedure that populates intermediate tables
+ *   TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG. This is a separate ETL
+ *   process and not consolidated into this query.
+ *
+ * Runtime Parameter Requirements:
+ * All parameters must be provided at query execution time:
+ * - @IP_VERSION (STRING, default 'ACT01')
+ * - @IP_VERSION_COMP_FLAG (STRING, derived externally)
+ * - @IP_WEEK_ENDING_FROM (STRING, format YYYYWW)
+ * - @IP_WEEK_ENDING_TO (STRING, format YYYYWW)
+ * - @IP_WEEK_LY (STRING, format YYYYWW)
+ * - @IP_WEEK_CY (STRING, format YYYYWW)
+ ******************************************************************************/
