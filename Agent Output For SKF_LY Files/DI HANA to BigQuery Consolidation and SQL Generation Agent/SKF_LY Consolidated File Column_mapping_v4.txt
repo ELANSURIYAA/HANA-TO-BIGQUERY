@@ -1,0 +1,557 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_ACTUAL_STATIC
+-- Final Consumer: CV_COMP_SKF_ACTUAL_STATIC
+-- Generated from HANA Calculation View with dependencies
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: WEEKLY_SNAPSHOT_DS05
+-- Logic: Base actuals data filtered for specific fiscal variant, week, version, audit trail, and account
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112 (physical table)
+-- Filters: FISCVARNT = 'K4', bic_zio_sweek = @v_week_ly, bic_zio_ver = @v_version, bic_zio_saudt IN ('1','10'), bic_zio_pskf IN ('804013','801000')
+-- =====================================================================
+WITH WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    bic_zio_psty,
+    bic_zio_pskf,
+    unit,
+    SUM(bic_zio_skfq) AS bic_zio_skfq,
+    SUM(bic_zio_d1skq) AS bic_zio_d1skq,
+    SUM(bic_zio_d2skq) AS bic_zio_d2skq,
+    SUM(bic_zio_d3skq) AS bic_zio_d3skq,
+    SUM(bic_zio_d4skq) AS bic_zio_d4skq,
+    SUM(bic_zio_d5skq) AS bic_zio_d5skq,
+    SUM(bic_zio_d6skq) AS bic_zio_d6skq,
+    SUM(bic_zio_d7skq) AS bic_zio_d7skq
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112`
+  WHERE CAST(mandt AS STRING) IN ('110', '200')
+    AND fiscvarnt = 'K4'
+    AND bic_zio_sweek = @v_week_ly
+    AND bic_zio_ver = @v_version
+    AND bic_zio_saudt IN ('1','10')
+    AND bic_zio_pskf IN ('804013','801000')
+  GROUP BY
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    bic_zio_psty,
+    bic_zio_pskf,
+    unit
+),
+
+-- =====================================================================
+-- CTE 2: CC_HIER
+-- Logic: Cost center hierarchy nodes filtered for CORERET parent and specific validity date
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node (physical table)
+-- Filters: parnode LIKE '%CORERET%', hryvalto = '99991231'
+-- =====================================================================
+CC_HIER AS (
+  SELECT
+    mandt,
+    parnode,
+    hryvalto,
+    nodevalue
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node`
+  WHERE CAST(mandt AS STRING) IN ('120', '200')
+    AND parnode LIKE '%CORERET%'
+    AND hryvalto = DATE '9999-12-31'
+),
+
+-- =====================================================================
+-- CTE 3: Join_3
+-- Logic: Inner join of weekly snapshot with cost center hierarchy
+-- Join: INNER JOIN on b631_s_costcntr = nodevalue AND mandt
+-- =====================================================================
+Join_3 AS (
+  SELECT
+    ws.fiscper,
+    ws.fiscvarnt,
+    ws.fiscyear,
+    ws.fiscper3,
+    ws.mandt,
+    ws.recordmode,
+    ws.bic_zio_sweek,
+    ws.b631_s_co_area,
+    ws.bic_zio_cmpcd,
+    ws.b631_s_proftctr,
+    ws.b631_s_costcntr,
+    ws.b631_s_funcarea,
+    ws.bic_zio_ver,
+    ws.bic_zio_saudt,
+    ws.bic_zio_psty,
+    ws.bic_zio_pskf,
+    ws.unit,
+    ws.bic_zio_skfq,
+    ws.bic_zio_d1skq,
+    ws.bic_zio_d2skq,
+    ws.bic_zio_d3skq,
+    ws.bic_zio_d4skq,
+    ws.bic_zio_d5skq,
+    ws.bic_zio_d6skq,
+    ws.bic_zio_d7skq
+  FROM WEEKLY_SNAPSHOT_DS05 ws
+  INNER JOIN CC_HIER ch
+    ON ws.b631_s_costcntr = ch.nodevalue
+    AND ws.mandt = ch.mandt
+),
+
+-- =====================================================================
+-- CTE 4: Projection_1
+-- Logic: Add calculated current week parameter as constant column
+-- Calculation: cal_week = @v_week_cy (runtime parameter)
+-- =====================================================================
+Projection_1 AS (
+  SELECT
+    j3.*,
+    @v_week_cy AS cal_week
+  FROM Join_3 j3
+),
+
+-- =====================================================================
+-- CTE 5: STORE_ATTR_ACTUAL
+-- Logic: Store attributes aggregated from staging table populated by STP_WSS_SRP_ATTRIBUTES procedure
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act (physical table)
+-- Aggregation: SUM on rx_hrs_oper, fs_hrs_oper, rx_store, retail_sqft_amt, total_sqft_amt
+-- =====================================================================
+STORE_ATTR_ACTUAL AS (
+  SELECT
+    mandt,
+    strnum,
+    prctr,
+    kokrs,
+    kostl,
+    rx_open_dat,
+    rx_close_dat,
+    fs_open_dat,
+    fs_close_dat,
+    rep_mkt_code,
+    rep_mkt_desc,
+    address,
+    city,
+    state,
+    zipcode,
+    division_code,
+    division_desc,
+    division_mgr,
+    area_code,
+    area_desc,
+    area_mgr,
+    region_code,
+    region_desc,
+    region_mgr,
+    district_code,
+    district_desc,
+    zone_code,
+    district_mgr,
+    zone_desc,
+    major_region_code,
+    major_region,
+    store_type,
+    store_type_desc,
+    rx_store_desc,
+    distribution_cntr,
+    distribution_cntr_desc,
+    store_24_hr,
+    budget_open_dat,
+    budget_closed_dat,
+    budget_reloc_dat,
+    const_open_dat,
+    const_close_dat,
+    const_relo_dat,
+    relocation_dat,
+    emerg_mkt_ind,
+    budget_emerg_mkt_ind,
+    company_code,
+    company_code_desc,
+    original_fs_open_dat,
+    original_rx_open_dat,
+    group_one,
+    group_two,
+    ard_sort_key,
+    area_cost_center,
+    regiion_cost_center,
+    county_code,
+    county_desc,
+    sqft_bracket_desc,
+    sqft_sort_key,
+    acquisition_code,
+    acquisition_desc,
+    photo_lab_add_dat,
+    photo_lab_close_dat,
+    min_hrs_ind,
+    createdby,
+    created_on,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    SUM(rx_hrs_oper) AS rx_hrs_oper,
+    SUM(fs_hrs_oper) AS fs_hrs_oper,
+    SUM(rx_store) AS rx_store,
+    SUM(retail_sqft_amt) AS retail_sqft_amt,
+    SUM(total_sqft_amt) AS total_sqft_amt
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act`
+  WHERE CAST(mandt AS STRING) IN ('120', '200')
+  GROUP BY
+    mandt, strnum, prctr, kokrs, kostl, rx_open_dat, rx_close_dat, fs_open_dat, fs_close_dat,
+    rep_mkt_code, rep_mkt_desc, address, city, state, zipcode, division_code, division_desc,
+    division_mgr, area_code, area_desc, area_mgr, region_code, region_desc, region_mgr,
+    district_code, district_desc, zone_code, district_mgr, zone_desc, major_region_code,
+    major_region, store_type, store_type_desc, rx_store_desc, distribution_cntr,
+    distribution_cntr_desc, store_24_hr, budget_open_dat, budget_closed_dat, budget_reloc_dat,
+    const_open_dat, const_close_dat, const_relo_dat, relocation_dat, emerg_mkt_ind,
+    budget_emerg_mkt_ind, company_code, company_code_desc, original_fs_open_dat,
+    original_rx_open_dat, group_one, group_two, ard_sort_key, area_cost_center,
+    regiion_cost_center, county_code, county_desc, sqft_bracket_desc, sqft_sort_key,
+    acquisition_code, acquisition_desc, photo_lab_add_dat, photo_lab_close_dat, min_hrs_ind,
+    createdby, created_on, rx_division_code, rx_area_code, rx_region_code, rx_district_code
+),
+
+-- =====================================================================
+-- CTE 6: Join_2
+-- Logic: Left outer join to enrich with store attributes
+-- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
+-- =====================================================================
+Join_2 AS (
+  SELECT
+    p1.fiscper,
+    p1.fiscvarnt,
+    p1.fiscyear,
+    p1.fiscper3,
+    p1.mandt,
+    p1.recordmode,
+    p1.bic_zio_sweek,
+    p1.b631_s_co_area,
+    p1.bic_zio_cmpcd,
+    p1.b631_s_proftctr,
+    p1.b631_s_costcntr,
+    p1.b631_s_funcarea,
+    p1.bic_zio_ver,
+    p1.bic_zio_saudt,
+    p1.bic_zio_psty,
+    p1.bic_zio_pskf,
+    p1.unit,
+    p1.bic_zio_skfq,
+    p1.bic_zio_d1skq,
+    p1.bic_zio_d2skq,
+    p1.bic_zio_d3skq,
+    p1.bic_zio_d4skq,
+    p1.bic_zio_d5skq,
+    p1.bic_zio_d6skq,
+    p1.bic_zio_d7skq,
+    p1.cal_week,
+    sa.rep_mkt_code,
+    sa.rep_mkt_desc,
+    sa.emerg_mkt_ind,
+    sa.division_code,
+    sa.division_desc,
+    sa.area_code,
+    sa.area_desc,
+    sa.region_code,
+    sa.region_desc,
+    sa.district_code,
+    sa.district_desc,
+    sa.strnum,
+    sa.city,
+    sa.state,
+    sa.fs_open_dat,
+    sa.rx_open_dat,
+    sa.rx_division_code,
+    sa.rx_area_code,
+    sa.rx_region_code,
+    sa.rx_district_code
+  FROM Projection_1 p1
+  LEFT JOIN STORE_ATTR_ACTUAL sa
+    ON p1.b631_s_proftctr = sa.prctr
+    AND p1.mandt = sa.mandt
+),
+
+-- =====================================================================
+-- CTE 7: RETAIL_CAL
+-- Logic: Retail calendar week master data
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek (physical table)
+-- Filters: rclnt IN ('120', '200')
+-- =====================================================================
+RETAIL_CAL AS (
+  SELECT
+    rclnt,
+    zzweek,
+    zrwstrtdate,
+    zrwenddate
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek`
+  WHERE rclnt IN ('120', '200')
+),
+
+-- =====================================================================
+-- CTE 8: Join_1
+-- Logic: Left outer join to add retail calendar week start and end dates
+-- Join: LEFT JOIN on cal_week = zzweek
+-- =====================================================================
+Join_1 AS (
+  SELECT
+    j2.*,
+    rc.zrwstrtdate,
+    rc.zrwenddate
+  FROM Join_2 j2
+  LEFT JOIN RETAIL_CAL rc
+    ON j2.cal_week = rc.zzweek
+),
+
+-- =====================================================================
+-- CTE 9: COMP_FLAG_ACT01
+-- Logic: Comp flag data from staging table populated by STP_WSS_SRP_ATTRIBUTES procedure
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl (physical table)
+-- Filters: zweek >= @v_week_ending_from, zweek <= @v_week_ending_to, comp_ver = @v_version_comp_flag
+-- =====================================================================
+COMP_FLAG_ACT01 AS (
+  SELECT
+    mandt,
+    prctr,
+    zweek,
+    zyear,
+    comp_ver,
+    rx_comp_wk
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl`
+  WHERE CAST(mandt AS STRING) IN ('110', '200')
+    AND zweek >= @v_week_ending_from
+    AND zweek <= @v_week_ending_to
+    AND comp_ver = @v_version_comp_flag
+),
+
+-- =====================================================================
+-- CTE 10: Join_4
+-- Logic: Left outer join to add comp flag data
+-- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
+-- =====================================================================
+Join_4 AS (
+  SELECT
+    j1.*,
+    cfa.rx_comp_wk
+  FROM Join_1 j1
+  LEFT JOIN COMP_FLAG_ACT01 cfa
+    ON j1.b631_s_proftctr = cfa.prctr
+    AND j1.mandt = cfa.mandt
+),
+
+-- =====================================================================
+-- CTE 11: PROFIT_CENTER_TEXT
+-- Logic: Profit center text descriptions
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct (physical table)
+-- Filters: mandt IN ('120', '200')
+-- =====================================================================
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    mandt,
+    prctr,
+    ltext AS profit_center_text
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+  WHERE CAST(mandt AS STRING) IN ('120', '200')
+),
+
+-- =====================================================================
+-- CTE 12: Join_5
+-- Logic: Left outer join to add profit center text
+-- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
+-- =====================================================================
+Join_5 AS (
+  SELECT
+    j4.*,
+    pct.profit_center_text
+  FROM Join_4 j4
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON j4.b631_s_proftctr = pct.prctr
+    AND j4.mandt = pct.mandt
+),
+
+-- =====================================================================
+-- CTE 13: FLAGS
+-- Logic: Final projection with calculated columns for week number and adjusted quantity
+-- Calculation: cal_week_number = RIGHT(cal_week, 2), cal_zio_skfq_qty = CASE WHEN bic_zio_pskf = '804013' THEN bic_zio_skfq * 2 ELSE bic_zio_skfq
+-- =====================================================================
+FLAGS AS (
+  SELECT
+    bic_zio_d7skq,
+    bic_zio_d6skq,
+    bic_zio_d5skq,
+    bic_zio_d4skq,
+    bic_zio_d3skq,
+    bic_zio_d2skq,
+    bic_zio_d1skq,
+    bic_zio_skfq,
+    unit,
+    bic_zio_pskf,
+    bic_zio_psty,
+    rx_comp_wk,
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    strnum,
+    city,
+    state,
+    zrwstrtdate,
+    zrwenddate,
+    profit_center_text,
+    fs_open_dat,
+    rx_open_dat,
+    cal_week,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    RIGHT(cal_week, 2) AS cal_week_number,
+    CASE
+      WHEN bic_zio_pskf = '804013' THEN CAST(bic_zio_skfq AS NUMERIC) * 2
+      ELSE CAST(bic_zio_skfq AS NUMERIC)
+    END AS cal_zio_skfq_qty
+  FROM Join_5
+)
+
+-- =====================================================================
+-- FINAL SELECT: Aggregated output with all measures summed and grouped by all attributes
+-- Aggregation: SUM on all measure columns, GROUP BY on all attribute columns
+-- =====================================================================
+SELECT
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  recordmode,
+  bic_zio_sweek,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  b631_s_costcntr,
+  b631_s_funcarea,
+  bic_zio_ver,
+  bic_zio_saudt,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  bic_zio_psty,
+  bic_zio_pskf,
+  unit,
+  rx_comp_wk,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  strnum,
+  city,
+  state,
+  cal_week_number,
+  zrwstrtdate,
+  zrwenddate,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  cal_week,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  SUM(bic_zio_skfq) AS bic_zio_skfq_90as1,
+  SUM(bic_zio_d1skq) AS bic_zio_d1skq,
+  SUM(bic_zio_d2skq) AS bic_zio_d2skq,
+  SUM(bic_zio_d3skq) AS bic_zio_d3skq,
+  SUM(bic_zio_d4skq) AS bic_zio_d4skq,
+  SUM(bic_zio_d5skq) AS bic_zio_d5skq,
+  SUM(bic_zio_d6skq) AS bic_zio_d6skq,
+  SUM(bic_zio_d7skq) AS bic_zio_d7skq,
+  SUM(cal_zio_skfq_qty) AS bic_zio_skfq
+FROM FLAGS
+GROUP BY
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  recordmode,
+  bic_zio_sweek,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  b631_s_costcntr,
+  b631_s_funcarea,
+  bic_zio_ver,
+  bic_zio_saudt,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  bic_zio_psty,
+  bic_zio_pskf,
+  unit,
+  rx_comp_wk,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  strnum,
+  city,
+  state,
+  cal_week_number,
+  zrwstrtdate,
+  zrwenddate,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  cal_week,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code
