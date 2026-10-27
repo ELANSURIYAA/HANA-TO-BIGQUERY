@@ -1,0 +1,173 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL
+-- Final Consumer: STP_WSS_FORECAST_MJE (Stored Procedure)
+-- Dependency: CV_COMP_FORECAST_MJE_STATIC (Calculation View)
+-- Purpose: This query represents the complete SELECT logic that produces
+--          the data to be inserted into TBL_WSS_FORECAST_MJE by the
+--          stored procedure, including aggregation from the calculation
+--          view and addition of audit columns.
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: CV_COMP_FORECAST_MJE_AGGREGATION
+-- Logic: Aggregates data from TBL_WSS_FORECAST_MJE by grouping on all
+--        non-measure columns and summing the 6 measure columns as
+--        defined in the CV_COMP_FORECAST_MJE_STATIC calculation view
+-- Source: TBL_WSS_FORECAST_MJE (terminal physical table)
+-- Aggregation: SUM on FIN_FCST_AMOUNT, SKF_FCST_QTY, SBT, SKF_MJE_QTY,
+--              CAL_FS_SALES_MJE, CAL_RX_SALES_MJE
+--              GROUP BY all 38 non-measure columns
+-- =====================================================================
+WITH CV_COMP_FORECAST_MJE_AGGREGATION AS (
+  SELECT
+    CAL_COMP_FLAG_DESC,
+    CAL_EMERG_MKT_IND,
+    MANDT,
+    CAL_SOURCE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    COMP_FLAG,
+    FS_RX_FLAG,
+    _BIC_ZIO_SWEEK,
+    FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FIN_FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    CAL_DATA_CATEGORY1,
+    CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    AREA_CODE,
+    AREA_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    SUM(FIN_FCST_AMOUNT) AS FIN_FCST_AMOUNT,
+    SUM(SKF_FCST_QTY) AS SKF_FCST_QTY,
+    SUM(SBT) AS SBT,
+    SUM(SKF_MJE_QTY) AS SKF_MJE_QTY,
+    SUM(CAL_FS_SALES_MJE) AS CAL_FS_SALES_MJE,
+    SUM(CAL_RX_SALES_MJE) AS CAL_RX_SALES_MJE
+  FROM
+    `PROJECT.DATASET.TBL_WSS_FORECAST_MJE`
+  GROUP BY
+    CAL_COMP_FLAG_DESC,
+    CAL_EMERG_MKT_IND,
+    MANDT,
+    CAL_SOURCE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    COMP_FLAG,
+    FS_RX_FLAG,
+    _BIC_ZIO_SWEEK,
+    FS_RX_FLAG_EXT,
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FIN_FORECAST_CURRENCY,
+    PROFIT_CENTER_TEXT,
+    CAL_DATA_CATEGORY1,
+    CAL_DATA_CATEGORY2,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    AREA_CODE,
+    AREA_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+)
+
+-- =====================================================================
+-- FINAL SELECT: STP_WSS_FORECAST_MJE_OUTPUT
+-- Logic: Selects all columns from the aggregated calculation view and
+--        adds two audit columns (SNAPSHOT_TIMESTAMP, CREATED_BY) as
+--        defined in the stored procedure STP_WSS_FORECAST_MJE
+-- Source: CV_COMP_FORECAST_MJE_AGGREGATION (CTE above)
+-- Calculation: CURRENT_TIMESTAMP() for SNAPSHOT_TIMESTAMP
+--              SESSION_USER() for CREATED_BY
+-- =====================================================================
+SELECT
+  CAL_COMP_FLAG_DESC,
+  CAL_EMERG_MKT_IND,
+  MANDT,
+  CAL_SOURCE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  STRNUM,
+  PRCTR,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  COMP_FLAG,
+  FS_RX_FLAG,
+  _BIC_ZIO_SWEEK,
+  FS_RX_FLAG_EXT,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FIN_FORECAST_CURRENCY,
+  PROFIT_CENTER_TEXT,
+  FIN_FCST_AMOUNT,
+  SKF_FCST_QTY,
+  CAL_DATA_CATEGORY1,
+  CAL_DATA_CATEGORY2,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  SBT,
+  SKF_MJE_QTY,
+  CAL_FS_SALES_MJE,
+  CAL_RX_SALES_MJE,
+  CURRENT_TIMESTAMP() AS SNAPSHOT_TIMESTAMP,
+  SESSION_USER() AS CREATED_BY,
+  AREA_CODE,
+  AREA_DESC
+FROM
+  CV_COMP_FORECAST_MJE_AGGREGATION;
+
+-- =====================================================================
+-- IMPLEMENTATION NOTES:
+-- 1. Replace `PROJECT.DATASET.TBL_WSS_FORECAST_MJE` with actual BigQuery
+--    project and dataset names
+-- 2. This query represents the SELECT portion of the stored procedure
+--    STP_WSS_FORECAST_MJE that would be used in an INSERT statement
+-- 3. The stored procedure performs DELETE-INSERT pattern; this SQL
+--    provides the data to be inserted
+-- 4. Column order matches the INSERT statement in the stored procedure
+-- 5. All 44 output columns are included (42 from calculation view + 2 audit)
+-- =====================================================================
