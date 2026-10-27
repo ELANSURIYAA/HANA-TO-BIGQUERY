@@ -1,23 +1,16 @@
 -- =====================================================================
 -- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_ACTUAL_STATIC
--- Source: HANA Calculation View with multiple dependencies
--- Target: BigQuery SQL with full logic expansion
+-- Source: HANA Calculation View with dependencies
+-- Target: BigQuery Standard SQL
+-- Generated: Consolidated from SKF_LY artifact dependencies
 -- =====================================================================
-
--- Runtime Parameters (converted from HANA scalar functions and input parameters)
-DECLARE V_WEEK STRING DEFAULT @IP_WEEK_LY;
-DECLARE IP_VERSION STRING DEFAULT @IP_VERSION;
-DECLARE IP_VERSION_COMP_FLAG STRING DEFAULT @IP_VERSION_COMP_FLAG;
-DECLARE IP_WEEK_ENDING_FROM STRING DEFAULT @IP_WEEK_ENDING_FROM;
-DECLARE IP_WEEK_ENDING_TO STRING DEFAULT @IP_WEEK_ENDING_TO;
-DECLARE IP_WEEK_LY STRING DEFAULT @IP_WEEK_LY;
-DECLARE IP_WEEK_CY STRING DEFAULT @IP_WEEK_CY;
 
 -- =====================================================================
 -- CTE 1: WEEKLY_SNAPSHOT_DS05
--- Logic: Filters weekly actuals from base SKF data for specific fiscal variant, week, version, audit trail, and account
--- Source: CV_BASE_SKF_WEEKLY_ACTUAL_S4 → bic_azsrp_ds112
--- Filters: FISCVARNT='K4', _BIC_ZIO_SWEEK=@IP_WEEK_LY, _BIC_ZIO_VER=@IP_VERSION, _BIC_ZIO_SAUDT IN ('1','10'), _BIC_ZIO_PSKF IN ('804013','801000'), MANDT IN ('110','200')
+-- Logic: Filters weekly SKF actuals for specific fiscal variant, week, version, audit trail, and account types
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112
+-- Filters: FISCVARNT = 'K4', bic_zio_sweek = @IP_WEEK_LY, bic_zio_ver = @IP_VERSION, bic_zio_saudt IN ('1','10'), bic_zio_pskf IN ('804013','801000')
+-- Aggregation: SUM on all measure columns, GROUP BY on all non-measure columns
 -- =====================================================================
 WITH WEEKLY_SNAPSHOT_DS05 AS (
   SELECT
@@ -49,10 +42,10 @@ WITH WEEKLY_SNAPSHOT_DS05 AS (
   FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112`
   WHERE mandt IN ('110', '200')
     AND fiscvarnt = 'K4'
-    AND bic_zio_sweek = IP_WEEK_LY
-    AND bic_zio_ver = IP_VERSION
-    AND bic_zio_saudt IN ('1', '10')
-    AND bic_zio_pskf IN ('804013', '801000')
+    AND bic_zio_sweek = @IP_WEEK_LY
+    AND bic_zio_ver = @IP_VERSION
+    AND bic_zio_saudt IN ('1','10')
+    AND bic_zio_pskf IN ('804013','801000')
   GROUP BY
     fiscper, fiscvarnt, fiscyear, fiscper3, mandt, recordmode,
     bic_zio_sweek, b631_s_co_area, bic_zio_cmpcd, b631_s_proftctr,
@@ -62,9 +55,9 @@ WITH WEEKLY_SNAPSHOT_DS05 AS (
 
 -- =====================================================================
 -- CTE 2: CC_HIER
--- Logic: Filters cost center hierarchy nodes with specific parent node pattern and validity
--- Source: CV_BASE_MD_HRRP_NODE_S4 → hrrp_node
--- Filters: PARNODE LIKE '%CORERET%', HRYVALTO='99991231', MANDT IN ('120','200')
+-- Logic: Filters cost center hierarchy nodes for corporate retail with specific validity
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node
+-- Filters: parnode LIKE '%CORERET%', hryvalto = '99991231', mandt IN ('120', '200')
 -- =====================================================================
 CC_HIER AS (
   SELECT
@@ -80,8 +73,8 @@ CC_HIER AS (
 
 -- =====================================================================
 -- CTE 3: Join_3
--- Logic: Inner join of weekly snapshot with cost center hierarchy
--- Join: INNER JOIN on _B631_S_COSTCNTR=NODEVALUE and MANDT
+-- Logic: Inner join weekly snapshot with cost center hierarchy
+-- Join: INNER JOIN on b631_s_costcntr = nodevalue AND mandt
 -- =====================================================================
 Join_3 AS (
   SELECT
@@ -118,65 +111,125 @@ Join_3 AS (
 
 -- =====================================================================
 -- CTE 4: Projection_1
--- Logic: Adds current week constant to the joined data
--- Calculation: CAL_WEEK = @IP_WEEK_CY
+-- Logic: Adds calculated current week parameter as CAL_WEEK
+-- Calculation: CAL_WEEK = @IP_WEEK_CY (runtime parameter)
 -- =====================================================================
 Projection_1 AS (
   SELECT
     j3.*,
-    IP_WEEK_CY AS cal_week
+    @IP_WEEK_CY AS cal_week
   FROM Join_3 j3
 ),
 
 -- =====================================================================
 -- CTE 5: STORE_ATTR_ACTUAL
--- Logic: Aggregates store attributes from the populated staging table
--- Source: TBL_WSS_SRP_ATTR_ACT (populated by STP_WSS_SRP_ATTRIBUTES from CV_BASE_MD_SRPACT_S4 → ztsrp_attr_act)
--- Aggregation: SUM on numeric measures, GROUP BY all other attributes
--- Filters: MANDT IN ('120','200') applied at source
+-- Logic: Aggregates store attributes from staging table populated by procedure
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act
+-- Filters: mandt IN ('120', '200')
+-- Aggregation: SUM on measure columns, GROUP BY on all attributes
 -- =====================================================================
 STORE_ATTR_ACTUAL AS (
   SELECT
     mandt,
     strnum,
     prctr,
+    kokrs,
+    kostl,
+    rx_open_dat,
+    rx_close_dat,
+    fs_open_dat,
+    fs_close_dat,
     rep_mkt_code,
     rep_mkt_desc,
-    emerg_mkt_ind,
-    division_code,
-    division_desc,
-    area_code,
-    area_desc,
-    region_code,
-    region_desc,
-    district_code,
-    district_desc,
+    address,
     city,
     state,
-    fs_open_dat,
-    rx_open_dat,
+    zipcode,
+    division_code,
+    division_desc,
+    division_mgr,
+    area_code,
+    area_desc,
+    area_mgr,
+    region_code,
+    region_desc,
+    region_mgr,
+    district_code,
+    district_desc,
+    zone_code,
+    district_mgr,
+    zone_desc,
+    major_region_code,
+    major_region,
+    store_type,
+    store_type_desc,
+    rx_store_desc,
+    distribution_cntr,
+    distribution_cntr_desc,
+    store_24_hr,
+    budget_open_dat,
+    budget_closed_dat,
+    budget_reloc_dat,
+    const_open_dat,
+    const_close_dat,
+    const_relo_dat,
+    relocation_dat,
+    emerg_mkt_ind,
+    budget_emerg_mkt_ind,
+    company_code,
+    company_code_desc,
+    original_fs_open_dat,
+    original_rx_open_dat,
+    group_one,
+    group_two,
+    ard_sort_key,
+    area_cost_center,
+    regiion_cost_center,
+    county_code,
+    county_desc,
+    sqft_bracket_desc,
+    sqft_sort_key,
+    acquisition_code,
+    acquisition_desc,
+    photo_lab_add_dat,
+    photo_lab_close_dat,
+    min_hrs_ind,
+    createdby,
+    created_on,
     rx_division_code,
     rx_area_code,
     rx_region_code,
     rx_district_code,
     SUM(rx_hrs_oper) AS rx_hrs_oper,
     SUM(fs_hrs_oper) AS fs_hrs_oper,
+    SUM(rx_store) AS rx_store,
     SUM(retail_sqft_amt) AS retail_sqft_amt,
     SUM(total_sqft_amt) AS total_sqft_amt
   FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act`
   WHERE mandt IN ('120', '200')
   GROUP BY
-    mandt, strnum, prctr, rep_mkt_code, rep_mkt_desc, emerg_mkt_ind,
-    division_code, division_desc, area_code, area_desc, region_code,
-    region_desc, district_code, district_desc, city, state,
-    fs_open_dat, rx_open_dat, rx_division_code, rx_area_code,
-    rx_region_code, rx_district_code
+    mandt, strnum, prctr, kokrs, kostl, rx_open_dat, rx_close_dat,
+    fs_open_dat, fs_close_dat, rep_mkt_code, rep_mkt_desc, address,
+    city, state, zipcode, division_code, division_desc, division_mgr,
+    area_code, area_desc, area_mgr, region_code, region_desc, region_mgr,
+    district_code, district_desc, zone_code, district_mgr, zone_desc,
+    major_region_code, major_region, store_type, store_type_desc,
+    rx_store_desc, distribution_cntr, distribution_cntr_desc, store_24_hr,
+    budget_open_dat, budget_closed_dat, budget_reloc_dat, const_open_dat,
+    const_close_dat, const_relo_dat, relocation_dat, emerg_mkt_ind,
+    budget_emerg_mkt_ind, company_code, company_code_desc,
+    original_fs_open_dat, original_rx_open_dat, group_one, group_two,
+    ard_sort_key, area_cost_center, regiion_cost_center, county_code,
+    county_desc, sqft_bracket_desc, sqft_sort_key, acquisition_code,
+    acquisition_desc, photo_lab_add_dat, photo_lab_close_dat, min_hrs_ind,
+    createdby, created_on, rx_division_code, rx_area_code, rx_region_code,
+    rx_district_code
 ),
 
 -- =====================================================================
 -- CTE 6: Join_2
 -- Logic: Left outer join with store attributes on profit center
--- Join: LEFT JOIN on _B631_S_PROFTCTR=PRCTR and MANDT
+-- Join: LEFT OUTER JOIN on b631_s_proftctr = prctr AND mandt
 -- =====================================================================
 Join_2 AS (
   SELECT
@@ -234,9 +287,9 @@ Join_2 AS (
 
 -- =====================================================================
 -- CTE 7: RETAIL_CAL
--- Logic: Projects retail calendar week master data
--- Source: CV_BASE_MD_RCALWEEK_S4 → ztfigl_rcalweek
--- Filters: RCLNT IN ('120','200')
+-- Logic: Filters retail calendar week master data
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek
+-- Filters: rclnt IN ('120', '200')
 -- =====================================================================
 RETAIL_CAL AS (
   SELECT
@@ -251,7 +304,7 @@ RETAIL_CAL AS (
 -- =====================================================================
 -- CTE 8: Join_1
 -- Logic: Left outer join with retail calendar on week
--- Join: LEFT JOIN on CAL_WEEK=ZZWEEK
+-- Join: LEFT OUTER JOIN on cal_week = zzweek
 -- =====================================================================
 Join_1 AS (
   SELECT
@@ -310,9 +363,9 @@ Join_1 AS (
 
 -- =====================================================================
 -- CTE 9: COMP_FLAG_ACT01
--- Logic: Filters comp flag data for the specified week range and version
--- Source: TBL_WSS_SRP_COMPFLAG (populated by STP_WSS_SRP_ATTRIBUTES from CV_BASE_MD_COMPFL_S4 → ztsrp_compfl)
--- Filters: ZWEEK between @IP_WEEK_ENDING_FROM and @IP_WEEK_ENDING_TO, COMP_VER=@IP_VERSION_COMP_FLAG, MANDT IN ('110','200')
+-- Logic: Filters comp flag data from staging table for specific week range and version
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl
+-- Filters: mandt IN ('110', '200'), zweek >= @IP_WEEK_ENDING_FROM, zweek <= @IP_WEEK_ENDING_TO, comp_ver = @IP_VERSION_COMP_FLAG
 -- =====================================================================
 COMP_FLAG_ACT01 AS (
   SELECT
@@ -324,15 +377,15 @@ COMP_FLAG_ACT01 AS (
     rx_comp_wk
   FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl`
   WHERE mandt IN ('110', '200')
-    AND zweek >= IP_WEEK_ENDING_FROM
-    AND zweek <= IP_WEEK_ENDING_TO
-    AND comp_ver = IP_VERSION_COMP_FLAG
+    AND zweek >= @IP_WEEK_ENDING_FROM
+    AND zweek <= @IP_WEEK_ENDING_TO
+    AND comp_ver = @IP_VERSION_COMP_FLAG
 ),
 
 -- =====================================================================
 -- CTE 10: Join_4
--- Logic: Left outer join with comp flag data on profit center
--- Join: LEFT JOIN on _B631_S_PROFTCTR=PRCTR and MANDT
+-- Logic: Left outer join with comp flag on profit center
+-- Join: LEFT OUTER JOIN on b631_s_proftctr = prctr AND mandt
 -- =====================================================================
 Join_4 AS (
   SELECT
@@ -393,9 +446,9 @@ Join_4 AS (
 
 -- =====================================================================
 -- CTE 11: PROFIT_CENTER_TEXT
--- Logic: Projects profit center text descriptions
--- Source: CV_BASE_MD_CEPCT_S4 → v_cepct
--- Filters: MANDT IN ('120','200')
+-- Logic: Filters profit center text descriptions
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct
+-- Filters: mandt IN ('120', '200')
 -- =====================================================================
 PROFIT_CENTER_TEXT AS (
   SELECT
@@ -408,8 +461,8 @@ PROFIT_CENTER_TEXT AS (
 
 -- =====================================================================
 -- CTE 12: Join_5
--- Logic: Left outer join with profit center text on profit center
--- Join: LEFT JOIN on _B631_S_PROFTCTR=PRCTR and MANDT
+-- Logic: Left outer join with profit center text
+-- Join: LEFT OUTER JOIN on b631_s_proftctr = prctr AND mandt
 -- =====================================================================
 Join_5 AS (
   SELECT
@@ -472,8 +525,7 @@ Join_5 AS (
 -- =====================================================================
 -- CTE 13: FLAGS
 -- Logic: Adds calculated columns for week number and adjusted SKF quantity
--- Calculation: CAL_WEEK_NUMBER = RIGHT(CAL_WEEK, 2)
--- Calculation: CAL_ZIO_SKFQ_QTY = CASE WHEN _BIC_ZIO_PSKF='804013' THEN _BIC_ZIO_SKFQ*2 ELSE _BIC_ZIO_SKFQ END
+-- Calculation: cal_week_number = RIGHT(cal_week, 2), cal_zio_skfq_qty = CASE WHEN bic_zio_pskf = '804013' THEN bic_zio_skfq * 2 ELSE bic_zio_skfq
 -- =====================================================================
 FLAGS AS (
   SELECT
@@ -536,9 +588,9 @@ FLAGS AS (
 )
 
 -- =====================================================================
--- FINAL SELECT
--- Logic: Aggregates all measures by grouping on all non-measure attributes
--- Aggregation: SUM on all numeric measures
+-- FINAL SELECT: Aggregated output with all attributes and measures
+-- Logic: Final aggregation cube output with SUM on all measures and GROUP BY on all attributes
+-- Aggregation: SUM on bic_zio_skfq (as bic_zio_skfq_90as1), bic_zio_d1skq through bic_zio_d7skq, and cal_zio_skfq_qty (as bic_zio_skfq)
 -- =====================================================================
 SELECT
   mandt,
