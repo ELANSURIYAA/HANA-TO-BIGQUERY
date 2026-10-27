@@ -1,28 +1,176 @@
 -- =====================================================================
 -- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_ACTUAL_STATIC
--- Final Consumer: CV_COMP_SKF_ACTUAL_STATIC
--- Generated from HANA Calculation Views and Stored Procedure
+-- Source: HANA Calculation View CV_COMP_SKF_ACTUAL_STATIC
+-- Generated: BigQuery Consolidation Agent
+-- Version: Column_mapping_v1
 -- =====================================================================
 
 -- =====================================================================
--- CTE 1: CV_BASE_SKF_WEEKLY_ACTUAL_S4_SOURCE
--- Logic: Base weekly actual data from AZSRP_DS112_VT_S4 with MANDT filter
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112
--- Filters: MANDT IN ('110', '200')
--- Aggregation: SUM on all measure columns, GROUP BY all attributes
+-- RUNTIME PARAMETERS
 -- =====================================================================
-WITH CV_BASE_SKF_WEEKLY_ACTUAL_S4_SOURCE AS (
+-- @IP_VERSION: Version identifier for actuals (default: 'ACT01')
+-- @IP_VERSION_COMP_FLAG: Derived version for comp flag filtering
+-- @IP_WEEK_ENDING_FROM: Start week for comp flag filter
+-- @IP_WEEK_ENDING_TO: End week for comp flag filter
+-- @IP_WEEK_LY: Last year week identifier
+-- @IP_WEEK_CY: Current year week identifier
+-- @V_WEEK: Prior fiscal week (UNRESOLVED: requires implementation of SFN_PRIOR_FISCAL_WEEK logic)
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: CV_BASE_MD_SRPACT_S4_Expanded
+-- Logic: Reads store/retail profit center attribute master data from ZTSRP_ATTR_ACT
+--        Filters MANDT to values 120 or 200
+--        Aggregates measures (RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT) by SUM
+--        Groups by all non-measure attributes
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act
+-- Filters: MANDT IN ('120', '200')
+-- Aggregation: SUM on 4 measure columns, GROUP BY all others
+-- =====================================================================
+WITH CV_BASE_MD_SRPACT_S4_Expanded AS (
   SELECT
-    FISCPER,
-    FISCVARNT,
-    FISCYEAR,
-    FISCPER3,
-    MANDT,
-    RECORDMODE,
-    UNIT,
+    mandt AS MANDT,
+    strnum AS STRNUM,
+    prctr AS PRCTR,
+    kokrs AS KOKRS,
+    kostl AS KOSTL,
+    rx_open_dat AS RX_OPEN_DAT,
+    rx_close_dat AS RX_CLOSE_DAT,
+    fs_open_dat AS FS_OPEN_DAT,
+    fs_close_dat AS FS_CLOSE_DAT,
+    rep_mkt_code AS REP_MKT_CODE,
+    rep_mkt_desc AS REP_MKT_DESC,
+    address AS ADDRESS,
+    city AS CITY,
+    state AS STATE,
+    zipcode AS ZIPCODE,
+    division_code AS DIVISION_CODE,
+    division_desc AS DIVISION_DESC,
+    division_mgr AS DIVISION_MGR,
+    area_code AS AREA_CODE,
+    area_desc AS AREA_DESC,
+    area_mgr AS AREA_MGR,
+    region_code AS REGION_CODE,
+    region_desc AS REGION_DESC,
+    region_mgr AS REGION_MGR,
+    district_code AS DISTRICT_CODE,
+    district_desc AS DISTRICT_DESC,
+    zone_code AS ZONE_CODE,
+    district_mgr AS DISTRICT_MGR,
+    zone_desc AS ZONE_DESC,
+    major_region_code AS MAJOR_REGION_CODE,
+    major_region AS MAJOR_REGION,
+    store_type AS STORE_TYPE,
+    store_type_desc AS STORE_TYPE_DESC,
+    rx_store_desc AS RX_STORE_DESC,
+    distribution_cntr AS DISTRIBUTION_CNTR,
+    distribution_cntr_desc AS DISTRIBUTION_CNTR_DESC,
+    store_24_hr AS STORE_24_HR,
+    budget_open_dat AS BUDGET_OPEN_DAT,
+    budget_closed_dat AS BUDGET_CLOSED_DAT,
+    budget_reloc_dat AS BUDGET_RELOC_DAT,
+    const_open_dat AS CONST_OPEN_DAT,
+    const_close_dat AS CONST_CLOSE_DAT,
+    const_relo_dat AS CONST_RELO_DAT,
+    relocation_dat AS RELOCATION_DAT,
+    emerg_mkt_ind AS EMERG_MKT_IND,
+    budget_emerg_mkt_ind AS BUDGET_EMERG_MKT_IND,
+    company_code AS COMPANY_CODE,
+    company_code_desc AS COMPANY_CODE_DESC,
+    original_fs_open_dat AS ORIGINAL_FS_OPEN_DAT,
+    original_rx_open_dat AS ORIGINAL_RX_OPEN_DAT,
+    group_one AS GROUP_ONE,
+    group_two AS GROUP_TWO,
+    ard_sort_key AS ARD_SORT_KEY,
+    area_cost_center AS AREA_COST_CENTER,
+    regiion_cost_center AS REGIION_COST_CENTER,
+    county_code AS COUNTY_CODE,
+    county_desc AS COUNTY_DESC,
+    sqft_bracket_desc AS SQFT_BRACKET_DESC,
+    sqft_sort_key AS SQFT_SORT_KEY,
+    acquisition_code AS ACQUISITION_CODE,
+    acquisition_desc AS ACQUISITION_DESC,
+    photo_lab_add_dat AS PHOTO_LAB_ADD_DAT,
+    photo_lab_close_dat AS PHOTO_LAB_CLOSE_DAT,
+    min_hrs_ind AS MIN_HRS_IND,
+    createdby AS CREATEDBY,
+    created_on AS CREATED_ON,
+    rx_division_code AS RX_DIVISION_CODE,
+    rx_area_code AS RX_AREA_CODE,
+    rx_region_code AS RX_REGION_CODE,
+    rx_district_code AS RX_DISTRICT_CODE,
+    SUM(rx_hrs_oper) AS RX_HRS_OPER,
+    SUM(fs_hrs_oper) AS FS_HRS_OPER,
+    SUM(rx_store) AS RX_STORE,
+    SUM(retail_sqft_amt) AS RETAIL_SQFT_AMT,
+    SUM(total_sqft_amt) AS TOTAL_SQFT_AMT
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act`
+  WHERE
+    mandt IN ('120', '200')
+  GROUP BY
+    MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT, FS_OPEN_DAT, FS_CLOSE_DAT,
+    REP_MKT_CODE, REP_MKT_DESC, ADDRESS, CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC,
+    DIVISION_MGR, AREA_CODE, AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR,
+    DISTRICT_CODE, DISTRICT_DESC, ZONE_CODE, DISTRICT_MGR, ZONE_DESC, MAJOR_REGION_CODE,
+    MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC, RX_STORE_DESC, DISTRIBUTION_CNTR,
+    DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT,
+    CONST_OPEN_DAT, CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT, EMERG_MKT_IND,
+    BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC, ORIGINAL_FS_OPEN_DAT,
+    ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER,
+    REGIION_COST_CENTER, COUNTY_CODE, COUNTY_DESC, SQFT_BRACKET_DESC, SQFT_SORT_KEY,
+    ACQUISITION_CODE, ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND,
+    CREATEDBY, CREATED_ON, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+),
+
+-- =====================================================================
+-- CTE 2: CV_BASE_MD_COMPFL_S4_Expanded
+-- Logic: Reads comp flag master data from ZTSRP_COMPFL
+--        Filters MANDT to values 110 or 200
+--        Projects all columns without aggregation (DIMENSION view)
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl
+-- Filters: MANDT IN ('110', '200')
+-- =====================================================================
+CV_BASE_MD_COMPFL_S4_Expanded AS (
+  SELECT
+    mandt AS MANDT,
+    prctr AS PRCTR,
+    strnum AS STRNUM,
+    comp_ver AS COMP_VER,
+    zweek AS ZWEEK,
+    zmonth AS ZMONTH,
+    zyear AS ZYEAR,
+    fs_comp_pre AS FS_COMP_PRE,
+    rx_comp_pre AS RX_COMP_PRE,
+    fs_comp_mon AS FS_COMP_MON,
+    rx_comp_mon AS RX_COMP_MON,
+    fs_comp_wk AS FS_COMP_WK,
+    rx_comp_wk AS RX_COMP_WK
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl`
+  WHERE
+    mandt IN ('110', '200')
+),
+
+-- =====================================================================
+-- CTE 3: WEEKLY_SNAPSHOT_DS05
+-- Logic: Filters weekly SKF actuals for specific fiscal variant, week, version, audit trail, and account
+--        Reads from AZSRP_DS112 (weekly actuals cube)
+--        Aggregates measures by SUM, groups by all non-measure attributes
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112
+-- Filters: FISCVARNT = 'K4', _BIC_ZIO_SWEEK = @IP_WEEK_LY, _BIC_ZIO_VER = @IP_VERSION,
+--          _BIC_ZIO_SAUDT IN ('1','10'), _BIC_ZIO_PSKF IN ('804013','801000'), MANDT IN ('110', '200')
+-- Aggregation: SUM on 8 measure columns, GROUP BY all others
+-- =====================================================================
+WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    fiscper AS FISCPER,
+    fiscvarnt AS FISCVARNT,
+    fiscyear AS FISCYEAR,
+    fiscper3 AS FISCPER3,
+    mandt AS MANDT,
+    recordmode AS RECORDMODE,
     bic_zio_sweek AS _BIC_ZIO_SWEEK,
-    bic_zio_psty AS _BIC_ZIO_PSTY,
-    bic_zio_pskf AS _BIC_ZIO_PSKF,
     b631_s_co_area AS _B631_S_CO_AREA,
     bic_zio_cmpcd AS _BIC_ZIO_CMPCD,
     b631_s_proftctr AS _B631_S_PROFTCTR,
@@ -30,6 +178,9 @@ WITH CV_BASE_SKF_WEEKLY_ACTUAL_S4_SOURCE AS (
     b631_s_funcarea AS _B631_S_FUNCAREA,
     bic_zio_ver AS _BIC_ZIO_VER,
     bic_zio_saudt AS _BIC_ZIO_SAUDT,
+    bic_zio_psty AS _BIC_ZIO_PSTY,
+    bic_zio_pskf AS _BIC_ZIO_PSKF,
+    unit AS UNIT,
     SUM(bic_zio_skfq) AS _BIC_ZIO_SKFQ,
     SUM(bic_zio_d1skq) AS _BIC_ZIO_D1SKQ,
     SUM(bic_zio_d2skq) AS _BIC_ZIO_D2SKQ,
@@ -41,280 +192,43 @@ WITH CV_BASE_SKF_WEEKLY_ACTUAL_S4_SOURCE AS (
   FROM
     `edp-qa-finstorage.edp_saps4_shared_cnsv.bic_azsrp_ds112`
   WHERE
-    MANDT IN ('110', '200')
+    fiscvarnt = 'K4'
+    AND bic_zio_sweek = @IP_WEEK_LY
+    AND bic_zio_ver = @IP_VERSION
+    AND bic_zio_saudt IN ('1','10')
+    AND bic_zio_pskf IN ('804013','801000')
+    AND mandt IN ('110', '200')
   GROUP BY
-    FISCPER, FISCVARNT, FISCYEAR, FISCPER3, MANDT, RECORDMODE, UNIT,
-    _BIC_ZIO_SWEEK, _BIC_ZIO_PSTY, _BIC_ZIO_PSKF, _B631_S_CO_AREA,
-    _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _B631_S_FUNCAREA,
-    _BIC_ZIO_VER, _BIC_ZIO_SAUDT
+    FISCPER, FISCVARNT, FISCYEAR, FISCPER3, MANDT, RECORDMODE, _BIC_ZIO_SWEEK, _B631_S_CO_AREA,
+    _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER,
+    _BIC_ZIO_SAUDT, _BIC_ZIO_PSTY, _BIC_ZIO_PSKF, UNIT
 ),
 
 -- =====================================================================
--- CTE 2: CV_BASE_MD_SRPACT_S4_SOURCE
--- Logic: Base store attributes from ZTSRP_ATTR_ACT with MANDT filter
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act
--- Filters: MANDT IN ('120', '200')
--- Aggregation: SUM on measure columns, GROUP BY all attributes
--- =====================================================================
-CV_BASE_MD_SRPACT_S4_SOURCE AS (
-  SELECT
-    MANDT,
-    STRNUM,
-    PRCTR,
-    KOKRS,
-    KOSTL,
-    RX_OPEN_DAT,
-    RX_CLOSE_DAT,
-    FS_OPEN_DAT,
-    FS_CLOSE_DAT,
-    REP_MKT_CODE,
-    REP_MKT_DESC,
-    ADDRESS,
-    CITY,
-    STATE,
-    ZIPCODE,
-    DIVISION_CODE,
-    DIVISION_DESC,
-    DIVISION_MGR,
-    AREA_CODE,
-    AREA_DESC,
-    AREA_MGR,
-    REGION_CODE,
-    REGION_DESC,
-    REGION_MGR,
-    DISTRICT_CODE,
-    DISTRICT_DESC,
-    ZONE_CODE,
-    DISTRICT_MGR,
-    ZONE_DESC,
-    MAJOR_REGION_CODE,
-    MAJOR_REGION,
-    STORE_TYPE,
-    STORE_TYPE_DESC,
-    RX_STORE,
-    RX_STORE_DESC,
-    DISTRIBUTION_CNTR,
-    DISTRIBUTION_CNTR_DESC,
-    STORE_24_HR,
-    BUDGET_OPEN_DAT,
-    BUDGET_CLOSED_DAT,
-    BUDGET_RELOC_DAT,
-    CONST_OPEN_DAT,
-    CONST_CLOSE_DAT,
-    CONST_RELO_DAT,
-    RELOCATION_DAT,
-    EMERG_MKT_IND,
-    BUDGET_EMERG_MKT_IND,
-    COMPANY_CODE,
-    COMPANY_CODE_DESC,
-    ORIGINAL_FS_OPEN_DAT,
-    ORIGINAL_RX_OPEN_DAT,
-    GROUP_ONE,
-    GROUP_TWO,
-    ARD_SORT_KEY,
-    AREA_COST_CENTER,
-    REGIION_COST_CENTER,
-    COUNTY_CODE,
-    COUNTY_DESC,
-    SQFT_BRACKET_DESC,
-    SQFT_SORT_KEY,
-    ACQUISITION_CODE,
-    ACQUISITION_DESC,
-    PHOTO_LAB_ADD_DAT,
-    PHOTO_LAB_CLOSE_DAT,
-    MIN_HRS_IND,
-    CREATEDBY,
-    CREATED_ON,
-    RX_DIVISION_CODE,
-    RX_AREA_CODE,
-    RX_REGION_CODE,
-    RX_DISTRICT_CODE,
-    SUM(RX_HRS_OPER) AS RX_HRS_OPER,
-    SUM(FS_HRS_OPER) AS FS_HRS_OPER,
-    SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
-    SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
-  FROM
-    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_attr_act`
-  WHERE
-    MANDT IN ('120', '200')
-  GROUP BY
-    MANDT, STRNUM, PRCTR, KOKRS, KOSTL, RX_OPEN_DAT, RX_CLOSE_DAT,
-    FS_OPEN_DAT, FS_CLOSE_DAT, REP_MKT_CODE, REP_MKT_DESC, ADDRESS,
-    CITY, STATE, ZIPCODE, DIVISION_CODE, DIVISION_DESC, DIVISION_MGR,
-    AREA_CODE, AREA_DESC, AREA_MGR, REGION_CODE, REGION_DESC, REGION_MGR,
-    DISTRICT_CODE, DISTRICT_DESC, ZONE_CODE, DISTRICT_MGR, ZONE_DESC,
-    MAJOR_REGION_CODE, MAJOR_REGION, STORE_TYPE, STORE_TYPE_DESC,
-    RX_STORE, RX_STORE_DESC, DISTRIBUTION_CNTR, DISTRIBUTION_CNTR_DESC,
-    STORE_24_HR, BUDGET_OPEN_DAT, BUDGET_CLOSED_DAT, BUDGET_RELOC_DAT,
-    CONST_OPEN_DAT, CONST_CLOSE_DAT, CONST_RELO_DAT, RELOCATION_DAT,
-    EMERG_MKT_IND, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC,
-    ORIGINAL_FS_OPEN_DAT, ORIGINAL_RX_OPEN_DAT, GROUP_ONE, GROUP_TWO,
-    ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER, COUNTY_CODE,
-    COUNTY_DESC, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE,
-    ACQUISITION_DESC, PHOTO_LAB_ADD_DAT, PHOTO_LAB_CLOSE_DAT, MIN_HRS_IND,
-    CREATEDBY, CREATED_ON, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE,
-    RX_DISTRICT_CODE
-),
-
--- =====================================================================
--- CTE 3: CV_BASE_MD_COMPFL_S4_SOURCE
--- Logic: Base comp flag data from ZTSRP_COMPFL with MANDT filter
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl
--- Filters: MANDT IN ('110', '200')
--- =====================================================================
-CV_BASE_MD_COMPFL_S4_SOURCE AS (
-  SELECT
-    MANDT,
-    PRCTR,
-    STRNUM,
-    COMP_VER,
-    ZWEEK,
-    ZMONTH,
-    ZYEAR,
-    FS_COMP_PRE,
-    RX_COMP_PRE,
-    FS_COMP_MON,
-    RX_COMP_MON,
-    FS_COMP_WK,
-    RX_COMP_WK
-  FROM
-    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztsrp_compfl`
-  WHERE
-    MANDT IN ('110', '200')
-),
-
--- =====================================================================
--- CTE 4: CV_BASE_MD_HRRP_NODE_S4_SOURCE
--- Logic: Hierarchy node data from HRRP_NODE with MANDT filter
+-- CTE 4: CC_HIER
+-- Logic: Filters cost center hierarchy nodes for CORERET parent and valid-to date 99991231
+--        Projects hierarchy structure for cost center filtering
 -- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node
--- Filters: MANDT IN ('120', '200')
--- =====================================================================
-CV_BASE_MD_HRRP_NODE_S4_SOURCE AS (
-  SELECT
-    MANDT,
-    HRYID,
-    HRYVER,
-    NODECLS,
-    HRYNODE,
-    PARNODE,
-    HRYVALTO,
-    HRYVALFROM,
-    BALIND,
-    NODETYPE,
-    NODEVALUE
-  FROM
-    `edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node`
-  WHERE
-    MANDT IN ('120', '200')
-),
-
--- =====================================================================
--- CTE 5: CV_BASE_MD_RCALWEEK_S4_SOURCE
--- Logic: Retail calendar week data from ZTFIGL_RCALWEEK with RCLNT filter
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek
--- Filters: RCLNT IN ('120', '200')
--- =====================================================================
-CV_BASE_MD_RCALWEEK_S4_SOURCE AS (
-  SELECT
-    RCLNT,
-    ZZWEEK,
-    ZCALYRP,
-    ZRYEAR,
-    ZRPERIOD,
-    ZRYRP,
-    ZRYRQTR,
-    ZRWSTRTDATE,
-    ZRWENDDATE
-  FROM
-    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek`
-  WHERE
-    RCLNT IN ('120', '200')
-),
-
--- =====================================================================
--- CTE 6: CV_BASE_MD_CEPCT_S4_SOURCE
--- Logic: Profit center text from CEPCT with MANDT filter
--- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct
--- Filters: MANDT IN ('120', '200')
--- =====================================================================
-CV_BASE_MD_CEPCT_S4_SOURCE AS (
-  SELECT
-    MANDT,
-    SPRAS,
-    PRCTR,
-    DATBI,
-    KOKRS,
-    KTEXT,
-    LTEXT,
-    MCTXT
-  FROM
-    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
-  WHERE
-    MANDT IN ('120', '200')
-),
-
--- =====================================================================
--- CTE 7: WEEKLY_SNAPSHOT_DS05
--- Logic: Filter weekly actuals for specific fiscal variant, week, version, audit, and account
--- Source: CV_BASE_SKF_WEEKLY_ACTUAL_S4_SOURCE
--- Filters: FISCVARNT = 'K4', _BIC_ZIO_SWEEK = @IP_WEEK_LY, _BIC_ZIO_VER = @IP_VERSION, _BIC_ZIO_SAUDT IN ('1','10'), _BIC_ZIO_PSKF IN ('804013','801000')
--- =====================================================================
-WEEKLY_SNAPSHOT_DS05 AS (
-  SELECT
-    FISCPER,
-    FISCVARNT,
-    FISCYEAR,
-    FISCPER3,
-    MANDT,
-    RECORDMODE,
-    _BIC_ZIO_SWEEK,
-    _B631_S_CO_AREA,
-    _BIC_ZIO_CMPCD,
-    _B631_S_PROFTCTR,
-    _B631_S_COSTCNTR,
-    _B631_S_FUNCAREA,
-    _BIC_ZIO_VER,
-    _BIC_ZIO_SAUDT,
-    _BIC_ZIO_PSTY,
-    _BIC_ZIO_PSKF,
-    UNIT,
-    _BIC_ZIO_SKFQ,
-    _BIC_ZIO_D1SKQ,
-    _BIC_ZIO_D2SKQ,
-    _BIC_ZIO_D3SKQ,
-    _BIC_ZIO_D4SKQ,
-    _BIC_ZIO_D5SKQ,
-    _BIC_ZIO_D6SKQ,
-    _BIC_ZIO_D7SKQ
-  FROM CV_BASE_SKF_WEEKLY_ACTUAL_S4_SOURCE
-  WHERE FISCVARNT = 'K4'
-    AND _BIC_ZIO_SWEEK = @IP_WEEK_LY
-    AND _BIC_ZIO_VER = @IP_VERSION
-    AND _BIC_ZIO_SAUDT IN ('1','10')
-    AND _BIC_ZIO_PSKF IN ('804013','801000')
-),
-
--- =====================================================================
--- CTE 8: CC_HIER
--- Logic: Filter hierarchy nodes for CORERET parent and valid-to date
--- Source: CV_BASE_MD_HRRP_NODE_S4_SOURCE
--- Filters: PARNODE LIKE '%CORERET%', HRYVALTO = '99991231'
+-- Filters: PARNODE LIKE '%CORERET%', HRYVALTO = '99991231', MANDT IN ('120', '200')
 -- =====================================================================
 CC_HIER AS (
   SELECT
-    MANDT,
-    PARNODE,
-    HRYVALTO,
-    NODEVALUE
-  FROM CV_BASE_MD_HRRP_NODE_S4_SOURCE
-  WHERE PARNODE LIKE '%CORERET%'
-    AND HRYVALTO = '99991231'
+    mandt AS MANDT,
+    parnode AS PARNODE,
+    hryvalto AS HRYVALTO,
+    nodevalue AS NODEVALUE
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.hrrp_node`
+  WHERE
+    parnode LIKE '%CORERET%'
+    AND hryvalto = '99991231'
+    AND mandt IN ('120', '200')
 ),
 
 -- =====================================================================
--- CTE 9: Join_3
--- Logic: INNER JOIN weekly snapshot with cost center hierarchy
--- Source: WEEKLY_SNAPSHOT_DS05, CC_HIER
+-- CTE 5: Join_3
+-- Logic: INNER JOIN of weekly snapshot with cost center hierarchy
+--        Restricts actuals to cost centers under CORERET hierarchy
 -- Join: INNER JOIN on _B631_S_COSTCNTR = NODEVALUE AND MANDT
 -- =====================================================================
 Join_3 AS (
@@ -351,9 +265,9 @@ Join_3 AS (
 ),
 
 -- =====================================================================
--- CTE 10: Projection_1
--- Logic: Add CAL_WEEK constant parameter
--- Source: Join_3
+-- CTE 6: Projection_1
+-- Logic: Adds CAL_WEEK as constant parameter value @IP_WEEK_CY
+--        Passes through all columns from Join_3
 -- Calculation: CAL_WEEK = @IP_WEEK_CY
 -- =====================================================================
 Projection_1 AS (
@@ -364,78 +278,15 @@ Projection_1 AS (
 ),
 
 -- =====================================================================
--- CTE 11: STORE_ATTR_ACTUAL
--- Logic: Store attributes aggregated from CV_BASE_MD_SRPACT_S4_SOURCE
--- Source: CV_BASE_MD_SRPACT_S4_SOURCE
--- Aggregation: SUM on measures, GROUP BY attributes
--- =====================================================================
-STORE_ATTR_ACTUAL AS (
-  SELECT
-    MANDT,
-    STRNUM,
-    PRCTR,
-    REP_MKT_CODE,
-    REP_MKT_DESC,
-    EMERG_MKT_IND,
-    DIVISION_CODE,
-    DIVISION_DESC,
-    AREA_CODE,
-    AREA_DESC,
-    REGION_CODE,
-    REGION_DESC,
-    DISTRICT_CODE,
-    DISTRICT_DESC,
-    CITY,
-    STATE,
-    FS_OPEN_DAT,
-    RX_OPEN_DAT,
-    RX_DIVISION_CODE,
-    RX_AREA_CODE,
-    RX_REGION_CODE,
-    RX_DISTRICT_CODE
-  FROM CV_BASE_MD_SRPACT_S4_SOURCE
-  GROUP BY
-    MANDT, STRNUM, PRCTR, REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND,
-    DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE,
-    REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, CITY, STATE,
-    FS_OPEN_DAT, RX_OPEN_DAT, RX_DIVISION_CODE, RX_AREA_CODE,
-    RX_REGION_CODE, RX_DISTRICT_CODE
-),
-
--- =====================================================================
--- CTE 12: Join_2
--- Logic: LEFT OUTER JOIN Projection_1 with store attributes
--- Source: Projection_1, STORE_ATTR_ACTUAL
+-- CTE 7: Join_2
+-- Logic: LEFT OUTER JOIN with store attribute master (from procedure-populated table)
+--        Enriches actuals with store/market/division/region attributes
+-- Source: CV_BASE_MD_SRPACT_S4_Expanded (inlined from procedure logic)
 -- Join: LEFT JOIN on _B631_S_PROFTCTR = PRCTR AND MANDT
 -- =====================================================================
 Join_2 AS (
   SELECT
-    p1.FISCPER,
-    p1.FISCVARNT,
-    p1.FISCYEAR,
-    p1.FISCPER3,
-    p1.MANDT,
-    p1.RECORDMODE,
-    p1._BIC_ZIO_SWEEK,
-    p1._B631_S_CO_AREA,
-    p1._BIC_ZIO_CMPCD,
-    p1._B631_S_PROFTCTR,
-    p1._B631_S_COSTCNTR,
-    p1._B631_S_FUNCAREA,
-    p1._BIC_ZIO_VER,
-    p1._BIC_ZIO_SAUDT,
-    p1._BIC_ZIO_PSTY,
-    p1._BIC_ZIO_PSKF,
-    p1.UNIT,
-    p1._BIC_ZIO_SKFQ,
-    p1._BIC_ZIO_D1SKQ,
-    p1._BIC_ZIO_D2SKQ,
-    p1._BIC_ZIO_D3SKQ,
-    p1._BIC_ZIO_D4SKQ,
-    p1._BIC_ZIO_D5SKQ,
-    p1._BIC_ZIO_D6SKQ,
-    p1._BIC_ZIO_D7SKQ,
-    p1.CAL_WEEK,
+    p1.*,
     sa.REP_MKT_CODE,
     sa.REP_MKT_DESC,
     sa.EMERG_MKT_IND,
@@ -457,29 +308,33 @@ Join_2 AS (
     sa.RX_REGION_CODE,
     sa.RX_DISTRICT_CODE
   FROM Projection_1 p1
-  LEFT JOIN STORE_ATTR_ACTUAL sa
+  LEFT JOIN CV_BASE_MD_SRPACT_S4_Expanded sa
     ON p1._B631_S_PROFTCTR = sa.PRCTR
     AND p1.MANDT = sa.MANDT
 ),
 
 -- =====================================================================
--- CTE 13: RETAIL_CAL
--- Logic: Retail calendar week data
--- Source: CV_BASE_MD_RCALWEEK_S4_SOURCE
+-- CTE 8: RETAIL_CAL
+-- Logic: Projects retail calendar week master data
+--        Maps week number to start/end dates
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek
+-- Filters: RCLNT IN ('120', '200')
 -- =====================================================================
 RETAIL_CAL AS (
   SELECT
-    RCLNT,
-    ZZWEEK,
-    ZRWSTRTDATE,
-    ZRWENDDATE
-  FROM CV_BASE_MD_RCALWEEK_S4_SOURCE
+    rclnt AS RCLNT,
+    zzweek AS ZZWEEK,
+    zrwstrtdate AS ZRWSTRTDATE,
+    zrwenddate AS ZRWENDDATE
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.ztfigl_rcalweek`
+  WHERE
+    rclnt IN ('120', '200')
 ),
 
 -- =====================================================================
--- CTE 14: Join_1
--- Logic: LEFT OUTER JOIN Join_2 with retail calendar
--- Source: Join_2, RETAIL_CAL
+-- CTE 9: Join_1
+-- Logic: LEFT OUTER JOIN with retail calendar to add week start/end dates
 -- Join: LEFT JOIN on CAL_WEEK = ZZWEEK
 -- =====================================================================
 Join_1 AS (
@@ -493,10 +348,13 @@ Join_1 AS (
 ),
 
 -- =====================================================================
--- CTE 15: COMP_FLAG_ACT01
--- Logic: Comp flag data filtered by week range and version
--- Source: CV_BASE_MD_COMPFL_S4_SOURCE
+-- CTE 10: COMP_FLAG_ACT01
+-- Logic: Filters comp flag data for specific week range and version
+--        Reads from procedure-populated table (inlined from CV_BASE_MD_COMPFL_S4_Expanded)
+--        Filters by @V_WEEK parameter (UNRESOLVED: requires SFN_PRIOR_FISCAL_WEEK implementation)
+-- Source: CV_BASE_MD_COMPFL_S4_Expanded (inlined from procedure logic)
 -- Filters: ZWEEK >= @IP_WEEK_ENDING_FROM, ZWEEK <= @IP_WEEK_ENDING_TO, COMP_VER = @IP_VERSION_COMP_FLAG
+-- Note: Original procedure filters by V_WEEK; consolidated query uses parameter range
 -- =====================================================================
 COMP_FLAG_ACT01 AS (
   SELECT
@@ -506,16 +364,16 @@ COMP_FLAG_ACT01 AS (
     ZYEAR,
     COMP_VER,
     RX_COMP_WK
-  FROM CV_BASE_MD_COMPFL_S4_SOURCE
-  WHERE ZWEEK >= @IP_WEEK_ENDING_FROM
+  FROM CV_BASE_MD_COMPFL_S4_Expanded
+  WHERE
+    ZWEEK >= @IP_WEEK_ENDING_FROM
     AND ZWEEK <= @IP_WEEK_ENDING_TO
     AND COMP_VER = @IP_VERSION_COMP_FLAG
 ),
 
 -- =====================================================================
--- CTE 16: Join_4
--- Logic: LEFT OUTER JOIN Join_1 with comp flag
--- Source: Join_1, COMP_FLAG_ACT01
+-- CTE 11: Join_4
+-- Logic: LEFT OUTER JOIN with comp flag to add RX_COMP_WK indicator
 -- Join: LEFT JOIN on _B631_S_PROFTCTR = PRCTR AND MANDT
 -- =====================================================================
 Join_4 AS (
@@ -529,22 +387,26 @@ Join_4 AS (
 ),
 
 -- =====================================================================
--- CTE 17: PROFIT_CENTER_TEXT
--- Logic: Profit center text from CEPCT
--- Source: CV_BASE_MD_CEPCT_S4_SOURCE
+-- CTE 12: PROFIT_CENTER_TEXT
+-- Logic: Projects profit center text descriptions
+--        Filters for specific clients and language
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct
+-- Filters: MANDT IN ('120', '200')
 -- =====================================================================
 PROFIT_CENTER_TEXT AS (
   SELECT
-    MANDT,
-    PRCTR,
-    LTEXT AS PROFIT_CENTER_TEXT
-  FROM CV_BASE_MD_CEPCT_S4_SOURCE
+    mandt AS MANDT,
+    prctr AS PRCTR,
+    ltext AS PROFIT_CENTER_TEXT
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+  WHERE
+    mandt IN ('120', '200')
 ),
 
 -- =====================================================================
--- CTE 18: Join_5
--- Logic: LEFT OUTER JOIN Join_4 with profit center text
--- Source: Join_4, PROFIT_CENTER_TEXT
+-- CTE 13: Join_5
+-- Logic: LEFT OUTER JOIN with profit center text to add descriptions
 -- Join: LEFT JOIN on _B631_S_PROFTCTR = PRCTR AND MANDT
 -- =====================================================================
 Join_5 AS (
@@ -558,10 +420,11 @@ Join_5 AS (
 ),
 
 -- =====================================================================
--- CTE 19: FLAGS
--- Logic: Final projection with calculated columns CAL_WEEK_NUMBER and CAL_ZIO_SKFQ_QTY
--- Source: Join_5
--- Calculation: CAL_WEEK_NUMBER = RIGHT(CAL_WEEK, 2), CAL_ZIO_SKFQ_QTY = CASE WHEN _BIC_ZIO_PSKF = '804013' THEN _BIC_ZIO_SKFQ * 2 ELSE _BIC_ZIO_SKFQ END
+-- CTE 14: FLAGS
+-- Logic: Adds calculated columns CAL_WEEK_NUMBER and CAL_ZIO_SKFQ_QTY
+--        Projects all columns for final aggregation
+-- Calculation: CAL_WEEK_NUMBER = RIGHT(CAL_WEEK, 2)
+--              CAL_ZIO_SKFQ_QTY = CASE WHEN _BIC_ZIO_PSKF = '804013' THEN _BIC_ZIO_SKFQ * 2 ELSE _BIC_ZIO_SKFQ END
 -- =====================================================================
 FLAGS AS (
   SELECT
@@ -624,10 +487,12 @@ FLAGS AS (
 )
 
 -- =====================================================================
--- FINAL SELECT: Aggregated output with all attributes and measures
--- Logic: GROUP BY all non-measure columns, SUM all measures
--- Source: FLAGS
--- Aggregation: SUM(_BIC_ZIO_SKFQ) AS _BIC_ZIO_SKFQ_90as1, SUM(_BIC_ZIO_D1SKQ) through SUM(_BIC_ZIO_D7SKQ), SUM(CAL_ZIO_SKFQ_QTY) AS _BIC_ZIO_SKFQ
+-- FINAL SELECT: Aggregation and Output
+-- Logic: Final aggregation per CUBE requirements
+--        Groups by all non-measure attributes
+--        Aggregates measures using SUM
+-- Aggregation: SUM on 9 measures (_BIC_ZIO_SKFQ_90as1, _BIC_ZIO_D1SKQ through D7SKQ, _BIC_ZIO_SKFQ)
+-- Output: 43 attributes + 9 measures = 52 total columns
 -- =====================================================================
 SELECT
   MANDT,
@@ -684,12 +549,10 @@ SELECT
   SUM(CAL_ZIO_SKFQ_QTY) AS _BIC_ZIO_SKFQ
 FROM FLAGS
 GROUP BY
-  MANDT, FISCPER, FISCVARNT, FISCYEAR, FISCPER3, RECORDMODE,
-  _BIC_ZIO_SWEEK, _B631_S_CO_AREA, _BIC_ZIO_CMPCD, _B631_S_PROFTCTR,
-  _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER, _BIC_ZIO_SAUDT,
-  REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, _BIC_ZIO_PSTY, _BIC_ZIO_PSKF,
-  UNIT, RX_COMP_WK, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC,
-  REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, STRNUM, CITY,
-  STATE, CAL_WEEK_NUMBER, ZRWSTRTDATE, ZRWENDDATE, PROFIT_CENTER_TEXT,
-  FS_OPEN_DAT, RX_OPEN_DAT, CAL_WEEK, RX_DIVISION_CODE, RX_AREA_CODE,
-  RX_REGION_CODE, RX_DISTRICT_CODE
+  MANDT, FISCPER, FISCVARNT, FISCYEAR, FISCPER3, RECORDMODE, _BIC_ZIO_SWEEK, _B631_S_CO_AREA,
+  _BIC_ZIO_CMPCD, _B631_S_PROFTCTR, _B631_S_COSTCNTR, _B631_S_FUNCAREA, _BIC_ZIO_VER,
+  _BIC_ZIO_SAUDT, REP_MKT_CODE, REP_MKT_DESC, EMERG_MKT_IND, _BIC_ZIO_PSTY, _BIC_ZIO_PSKF,
+  UNIT, RX_COMP_WK, DIVISION_CODE, DIVISION_DESC, AREA_CODE, AREA_DESC, REGION_CODE,
+  REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, STRNUM, CITY, STATE, CAL_WEEK_NUMBER,
+  ZRWSTRTDATE, ZRWENDDATE, PROFIT_CENTER_TEXT, FS_OPEN_DAT, RX_OPEN_DAT, CAL_WEEK,
+  RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
