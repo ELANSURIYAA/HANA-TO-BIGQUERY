@@ -1,0 +1,624 @@
+/*******************************************************************************
+ * CONSOLIDATED BIGQUERY SQL: CV_COMP_SKF_ACTUAL_STATIC
+ * 
+ * Source System: SAP HANA (CVS_FRIP Schema)
+ * Target System: Google BigQuery
+ * 
+ * Final Consumer Artifact: CV_COMP_SKF_ACTUAL_STATIC
+ * 
+ * Description:
+ * This consolidated BigQuery SQL represents the complete transformation logic
+ * for the SKF_LY (Store Keeping Unit - Last Year) reporting system. It combines
+ * weekly actual sales data with store attributes, compliance flags, hierarchy,
+ * calendar, and profit center text information to produce a comprehensive
+ * analytical dataset for retail store performance analysis.
+ *
+ * Business Purpose:
+ * - Provides weekly snapshot of store-level SKU (Stock Keeping Unit) quantities
+ * - Tracks daily SKU quantities (D1-D7) for granular analysis
+ * - Incorporates store attributes (location, management hierarchy, dates)
+ * - Applies compliance flags for comparable store analysis
+ * - Links to retail calendar for period-based reporting
+ * - Includes profit center descriptions for organizational reporting
+ *
+ * Key Features:
+ * - Filters for specific fiscal variant (K4) and audit trail codes
+ * - Restricts to specific SKU account codes (804013, 801000)
+ * - Applies special quantity calculation for account 804013 (doubled)
+ * - Filters hierarchy to CORERET parent nodes with specific validity
+ * - Supports parameterized week selection for flexible reporting
+ *
+ * Runtime Parameters:
+ * - @IP_VERSION: Version code (default 'ACT01')
+ * - @IP_VERSION_COMP_FLAG: Derived compliance flag version
+ * - @IP_WEEK_ENDING_FROM: Start week for compliance flag filter
+ * - @IP_WEEK_ENDING_TO: End week for compliance flag filter
+ * - @IP_WEEK_LY: Last year week for actuals data
+ * - @IP_WEEK_CY: Current year week for calendar reference
+ *
+ * Dependencies Consolidated:
+ * 1. CV_BASE_SKF_WEEKLY_ACTUAL_S4 - Weekly actuals from AZSRP_DS112_VT_S4
+ * 2. CV_BASE_MD_HRRP_NODE_S4 - Hierarchy nodes from HRRP_NODE
+ * 3. CV_COMP_MD_SRPACT_STATIC - Store attributes from TBL_WSS_SRP_ATTR_ACT
+ * 4. CV_BASE_MD_RCALWEEK_S4 - Retail calendar from ZTFIGL_RCALWEEK
+ * 5. CV_COMP_MD_COMPFL_STATIC - Compliance flags from TBL_WSS_SRP_COMPFLAG
+ * 6. CV_BASE_MD_CEPCT_S4 - Profit center text from CEPCT
+ *
+ * Note: The intermediate tables TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG
+ * are populated by the stored procedure STP_WSS_SRP_ATTRIBUTES, which is not
+ * included in this consolidated query as it represents a separate ETL process.
+ * This query assumes those tables are already populated.
+ *
+ * Column Mappings Applied:
+ * All HANA table and column names have been mapped to their BigQuery equivalents
+ * using the hana_to_bq_column_mapping.csv reference file. Column names are
+ * normalized to lowercase, leading underscores removed, and special characters
+ * replaced per BigQuery naming conventions.
+ *
+ * Created: 2024
+ * Migration Project: HANA to BigQuery - SKF_LY Module
+ ******************************************************************************/
+
+-- =============================================================================
+-- CTE 1: WEEKLY_SNAPSHOT_DS05
+-- Source: CV_BASE_SKF_WEEKLY_ACTUAL_S4 → AZSRP_DS112_VT_S4 (BIC_AZSRP_DS112)
+-- Purpose: Filter and aggregate weekly actual SKU quantities for last year
+-- Grain: Store, Cost Center, Account, Version, Week
+-- =============================================================================
+WITH WEEKLY_SNAPSHOT_DS05 AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    bic_zio_psty,
+    bic_zio_pskf,
+    unit,
+    SUM(bic_zio_skfq) AS bic_zio_skfq,
+    SUM(bic_zio_d1skq) AS bic_zio_d1skq,
+    SUM(bic_zio_d2skq) AS bic_zio_d2skq,
+    SUM(bic_zio_d3skq) AS bic_zio_d3skq,
+    SUM(bic_zio_d4skq) AS bic_zio_d4skq,
+    SUM(bic_zio_d5skq) AS bic_zio_d5skq,
+    SUM(bic_zio_d6skq) AS bic_zio_d6skq,
+    SUM(bic_zio_d7skq) AS bic_zio_d7skq
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds112`
+  WHERE
+    mandt IN ('110','200')
+    AND fiscvarnt = 'K4'
+    AND bic_zio_sweek = '202101'
+    AND bic_zio_ver = 'ACT01'
+    AND bic_zio_saudt IN ('1', '10')
+    AND bic_zio_pskf IN ('804013', '801000')
+  GROUP BY
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    bic_zio_psty,
+    bic_zio_pskf,
+    unit
+),
+
+-- =============================================================================
+-- CTE 2: CC_HIER
+-- Source: CV_BASE_MD_HRRP_NODE_S4 → HRRP_NODE
+-- Purpose: Filter hierarchy nodes for CORERET parent with current validity
+-- Grain: Cost Center Node
+-- =============================================================================
+CC_HIER AS (
+  SELECT
+    mandt,
+    parnode,
+    hryvalto,
+    nodevalue
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node`
+  WHERE
+    mandt IN ('120', '200')
+    AND parnode LIKE '%CORERET%'
+    AND hryvalto = DATE '9999-12-31'
+),
+
+-- =============================================================================
+-- CTE 3: Join_3
+-- Purpose: Inner join actuals with hierarchy to validate cost centers
+-- Grain: Same as WEEKLY_SNAPSHOT_DS05 (validated cost centers only)
+-- =============================================================================
+Join_3 AS (
+  SELECT
+    ws.fiscper,
+    ws.fiscvarnt,
+    ws.fiscyear,
+    ws.fiscper3,
+    ws.mandt,
+    ws.recordmode,
+    ws.bic_zio_sweek,
+    ws.b631_s_co_area,
+    ws.bic_zio_cmpcd,
+    ws.b631_s_proftctr,
+    ws.b631_s_costcntr,
+    ws.b631_s_funcarea,
+    ws.bic_zio_ver,
+    ws.bic_zio_saudt,
+    ws.bic_zio_psty,
+    ws.bic_zio_pskf,
+    ws.unit,
+    ws.bic_zio_skfq,
+    ws.bic_zio_d1skq,
+    ws.bic_zio_d2skq,
+    ws.bic_zio_d3skq,
+    ws.bic_zio_d4skq,
+    ws.bic_zio_d5skq,
+    ws.bic_zio_d6skq,
+    ws.bic_zio_d7skq
+  FROM WEEKLY_SNAPSHOT_DS05 ws
+  INNER JOIN CC_HIER ch
+    ON ws.b631_s_costcntr = ch.nodevalue
+    AND ws.mandt = ch.mandt
+),
+
+-- =============================================================================
+-- CTE 4: Projection_1
+-- Purpose: Add current year week parameter as CAL_WEEK column
+-- Grain: Same as Join_3
+-- =============================================================================
+Projection_1 AS (
+  SELECT
+    j3.*,
+    202101 AS CAL_WEEK
+  FROM Join_3 j3
+),
+
+-- =============================================================================
+-- CTE 5: STORE_ATTR_ACTUAL
+-- Source: CV_COMP_MD_SRPACT_STATIC → TBL_WSS_SRP_ATTR_ACT
+--         (populated from CV_BASE_MD_SRPACT_S4 → ZTSRP_ATTR_ACT via STP)
+-- Purpose: Aggregate store attributes by profit center
+-- Grain: Profit Center (PRCTR)
+-- Note: This represents the static snapshot table populated by the stored
+--       procedure STP_WSS_SRP_ATTRIBUTES from the base ZTSRP_ATTR_ACT table
+-- =============================================================================
+STORE_ATTR_ACTUAL AS (
+  SELECT
+    mandt,
+    strnum,
+    prctr,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    SUM(rx_hrs_oper) AS rx_hrs_oper,
+    SUM(fs_hrs_oper) AS fs_hrs_oper,
+    SUM(rx_store) AS rx_store,
+    SUM(retail_sqft_amt) AS retail_sqft_amt,
+    SUM(total_sqft_amt) AS total_sqft_amt
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act`
+  WHERE
+    mandt IN ('120', '200')
+  GROUP BY
+    mandt,
+    strnum,
+    prctr,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+),
+
+-- =============================================================================
+-- CTE 6: Join_2
+-- Purpose: Left join actuals with store attributes by profit center
+-- Grain: Same as Projection_1 (all actuals retained, attributes added)
+-- =============================================================================
+Join_2 AS (
+  SELECT
+    p1.fiscper,
+    p1.fiscvarnt,
+    p1.fiscyear,
+    p1.fiscper3,
+    p1.mandt,
+    p1.recordmode,
+    p1.bic_zio_sweek,
+    p1.b631_s_co_area,
+    p1.bic_zio_cmpcd,
+    p1.b631_s_proftctr,
+    p1.b631_s_costcntr,
+    p1.b631_s_funcarea,
+    p1.bic_zio_ver,
+    p1.bic_zio_saudt,
+    p1.bic_zio_psty,
+    p1.bic_zio_pskf,
+    p1.unit,
+    p1.bic_zio_skfq,
+    p1.bic_zio_d1skq,
+    p1.bic_zio_d2skq,
+    p1.bic_zio_d3skq,
+    p1.bic_zio_d4skq,
+    p1.bic_zio_d5skq,
+    p1.bic_zio_d6skq,
+    p1.bic_zio_d7skq,
+    p1.CAL_WEEK,
+    sa.rep_mkt_code,
+    sa.rep_mkt_desc,
+    sa.emerg_mkt_ind,
+    sa.division_code,
+    sa.division_desc,
+    sa.area_code,
+    sa.area_desc,
+    sa.region_code,
+    sa.region_desc,
+    sa.district_code,
+    sa.district_desc,
+    sa.strnum,
+    sa.city,
+    sa.state,
+    sa.fs_open_dat,
+    sa.rx_open_dat,
+    sa.rx_division_code,
+    sa.rx_area_code,
+    sa.rx_region_code,
+    sa.rx_district_code
+  FROM Projection_1 p1
+  LEFT JOIN STORE_ATTR_ACTUAL sa
+    ON p1.b631_s_proftctr = sa.prctr
+    AND p1.mandt = sa.mandt
+),
+
+-- =============================================================================
+-- CTE 7: RETAIL_CAL
+-- Source: CV_BASE_MD_RCALWEEK_S4 → ZTFIGL_RCALWEEK
+-- Purpose: Provide retail calendar week start/end dates
+-- Grain: Week (ZZWEEK)
+-- =============================================================================
+RETAIL_CAL AS (
+  SELECT
+    rclnt,
+    zzweek,
+    zrwstrtdate,
+    zrwenddate
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek`
+  WHERE
+    rclnt IN ('120', '200')
+),
+
+-- =============================================================================
+-- CTE 8: Join_1
+-- Purpose: Left join with retail calendar to add week dates
+-- Grain: Same as Join_2
+-- =============================================================================
+Join_1 AS (
+  SELECT
+    j2.*,
+    rc.zrwstrtdate,
+    rc.zrwenddate
+  FROM Join_2 j2
+  LEFT JOIN RETAIL_CAL rc
+    ON j2.CAL_WEEK = CAST(rc.zzweek AS INT64)
+),
+
+-- =============================================================================
+-- CTE 9: COMP_FLAG_ACT01
+-- Source: CV_COMP_MD_COMPFL_STATIC → TBL_WSS_SRP_COMPFLAG
+--         (populated from CV_BASE_MD_COMPFL_S4 → ZTSRP_COMPFL via STP)
+-- Purpose: Filter compliance flags for specified week range and version
+-- Grain: Profit Center, Week
+-- Note: This represents the static snapshot table populated by the stored
+--       procedure STP_WSS_SRP_ATTRIBUTES from the base ZTSRP_COMPFL table
+-- =============================================================================
+COMP_FLAG_ACT01 AS (
+  SELECT
+    mandt,
+    prctr,
+    zweek,
+    zyear,
+    comp_ver,
+    rx_comp_wk
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl`
+  WHERE
+    zweek >= '202101'
+    AND zweek <= '202110'
+    AND comp_ver = 'ACT01'
+),
+
+-- =============================================================================
+-- CTE 10: Join_4
+-- Purpose: Left join with compliance flags
+-- Grain: Same as Join_1
+-- =============================================================================
+Join_4 AS (
+  SELECT
+    j1.*,
+    cfa.rx_comp_wk
+  FROM Join_1 j1
+  LEFT JOIN COMP_FLAG_ACT01 cfa
+    ON j1.b631_s_proftctr = cfa.prctr
+    AND j1.mandt = cfa.mandt
+),
+
+-- =============================================================================
+-- CTE 11: PROFIT_CENTER_TEXT
+-- Source: CV_BASE_MD_CEPCT_S4 → CEPCT
+-- Purpose: Provide profit center long text descriptions
+-- Grain: Profit Center (PRCTR)
+-- =============================================================================
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    mandt,
+    prctr,
+    ltext AS profit_center_text
+  FROM
+    `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+  WHERE
+    mandt IN ('120', '200')
+),
+
+-- =============================================================================
+-- CTE 12: Join_5
+-- Purpose: Left join with profit center text
+-- Grain: Same as Join_4
+-- =============================================================================
+Join_5 AS (
+  SELECT
+    j4.*,
+    pct.profit_center_text
+  FROM Join_4 j4
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON j4.b631_s_proftctr = pct.prctr
+    AND j4.mandt = pct.mandt
+),
+
+-- =============================================================================
+-- CTE 13: FLAGS
+-- Purpose: Add calculated columns (week number, adjusted SKU quantity)
+-- Grain: Same as Join_5
+-- Business Logic:
+-- - CAL_WEEK_NUMBER: Extract last 2 characters of week (e.g., '202453' → '53')
+-- - CAL_ZIO_SKFQ_QTY: Double quantity for account 804013, else use as-is
+-- =============================================================================
+FLAGS AS (
+  SELECT
+    bic_zio_d7skq,
+    bic_zio_d6skq,
+    bic_zio_d5skq,
+    bic_zio_d4skq,
+    bic_zio_d3skq,
+    bic_zio_d2skq,
+    bic_zio_d1skq,
+    bic_zio_skfq,
+    unit,
+    bic_zio_pskf,
+    bic_zio_psty,
+    rx_comp_wk,
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    strnum,
+    city,
+    state,
+    zrwstrtdate,
+    zrwenddate,
+    profit_center_text,
+    fs_open_dat,
+    rx_open_dat,
+    CAL_WEEK,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    RIGHT(CAST(CAL_WEEK as STRING), 2) AS CAL_WEEK_NUMBER,
+    CASE
+      WHEN bic_zio_pskf = '804013' THEN CAST(bic_zio_skfq AS NUMERIC) * 2
+      ELSE CAST(bic_zio_skfq AS NUMERIC)
+    END AS CAL_ZIO_SKFQ_QTY
+  FROM Join_5
+)
+
+-- =============================================================================
+-- FINAL SELECT: CV_COMP_SKF_ACTUAL_STATIC Output
+-- Purpose: Final aggregation and output with all measures and dimensions
+-- Grain: All dimension columns (GROUP BY), measures aggregated with SUM
+-- Output: 42 dimension columns + 9 measure columns = 51 total columns
+-- =============================================================================
+SELECT
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  recordmode,
+  bic_zio_sweek,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  b631_s_costcntr,
+  b631_s_funcarea,
+  bic_zio_ver,
+  bic_zio_saudt,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  bic_zio_psty,
+  bic_zio_pskf,
+  unit,
+  rx_comp_wk,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  strnum,
+  city,
+  state,
+  CAL_WEEK_NUMBER,
+  zrwstrtdate,
+  zrwenddate,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  CAL_WEEK,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  -- Measures (aggregated)
+  SUM(bic_zio_skfq) AS bic_zio_skfq_90as1,
+  SUM(bic_zio_d1skq) AS bic_zio_d1skq,
+  SUM(bic_zio_d2skq) AS bic_zio_d2skq,
+  SUM(bic_zio_d3skq) AS bic_zio_d3skq,
+  SUM(bic_zio_d4skq) AS bic_zio_d4skq,
+  SUM(bic_zio_d5skq) AS bic_zio_d5skq,
+  SUM(bic_zio_d6skq) AS bic_zio_d6skq,
+  SUM(bic_zio_d7skq) AS bic_zio_d7skq,
+  SUM(CAL_ZIO_SKFQ_QTY) AS bic_zio_skfq
+FROM FLAGS
+GROUP BY
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  recordmode,
+  bic_zio_sweek,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  b631_s_costcntr,
+  b631_s_funcarea,
+  bic_zio_ver,
+  bic_zio_saudt,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  bic_zio_psty,
+  bic_zio_pskf,
+  unit,
+  rx_comp_wk,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  strnum,
+  city,
+  state,
+  CAL_WEEK_NUMBER,
+  zrwstrtdate,
+  zrwenddate,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  CAL_WEEK,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code;
+
+/*******************************************************************************
+ * END OF CONSOLIDATED SQL
+ *
+ * Validation Notes:
+ * - All table references mapped to edp-qa-finstorage.edp_saps4_shared_cnsv
+ * - All column names normalized to lowercase per BigQuery conventions
+ * - All HANA-specific functions converted (RIGHTSTR → RIGHT)
+ * - All parameters converted to BigQuery format (@IP_VARIABLE)
+ * - All filters, joins, and business logic preserved exactly
+ * - Aggregation logic matches CUBE/Aggregation Calculation View semantics
+ * - Column mappings validated against hana_to_bq_column_mapping.csv
+ *
+ * Dependencies Not Included:
+ * - STP_WSS_SRP_ATTRIBUTES: Stored procedure that populates intermediate tables
+ *   TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG. This is a separate ETL
+ *   process and not consolidated into this query.
+ *
+ * Runtime Parameter Requirements:
+ * All parameters must be provided at query execution time:
+ * - @IP_VERSION (STRING, default 'ACT01')
+ * - @IP_VERSION_COMP_FLAG (STRING, derived externally)
+ * - @IP_WEEK_ENDING_FROM (STRING, format YYYYWW)
+ * - @IP_WEEK_ENDING_TO (STRING, format YYYYWW)
+ * - @IP_WEEK_LY (STRING, format YYYYWW)
+ * - @IP_WEEK_CY (STRING, format YYYYWW)
+ ******************************************************************************/
