@@ -1,0 +1,490 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_FIN_ACTUAL_STATIC
+-- Final Consumer: CV_COMP_FIN_ACTUAL_STATIC
+-- Source: SAP HANA Calculation View
+-- Target: BigQuery Standard SQL
+-- Generated: 2024
+-- =====================================================================
+
+-- Runtime Parameters (must be supplied at query execution):
+-- @ip_version: STRING - Version filter for weekly actuals
+-- @ip_week_ly: STRING - Last year week filter
+-- @ip_week_cy: STRING - Current year week filter
+-- @ip_version_comp_flag: STRING - Comparison flag version filter
+
+-- =====================================================================
+-- CTE 1: Weekly_Actuals_Base
+-- Logic: Source weekly financial actuals from AZSRP_DS072, filtered by
+--        fiscal variant, version, week, and audit trail
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds212
+-- Filters: FISCVARNT = 'K4', bic_zio_ver = @ip_version, 
+--          bic_zio_sweek = @ip_week_ly, bic_zio_saudt IN ('1', '10'),
+--          mandt IN ('120', '200')
+-- =====================================================================
+WITH Weekly_Actuals_Base AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    bic_zio_sweek,
+    b631_s_chrtacct,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    b631_s_gl_acct,
+    bic_zwwpc_pa1,
+    bic_zwwsc_pa1,
+    b631_s_amount,
+    currency,
+    bic_zio_d1amt,
+    bic_zio_d2amt,
+    bic_zio_d3amt,
+    bic_zio_d4amt,
+    bic_zio_d5amt,
+    bic_zio_d6amt,
+    bic_zio_d7amt,
+    b631_s_ledger
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds212`
+  WHERE mandt IN ('120', '200')
+    AND fiscvarnt = 'K4'
+    AND bic_zio_ver = @ip_version
+    AND bic_zio_sweek = @ip_week_ly
+    AND bic_zio_saudt IN ('1', '10')
+),
+
+-- =====================================================================
+-- CTE 2: PC_Hierarchy
+-- Logic: Profit center hierarchy nodes filtered for CORE_RET parent
+--        and active validity date
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node
+-- Filters: parnode LIKE '%CORE_RET%', hryvalto = DATE '9999-12-31',
+--          mandt IN ('120', '200')
+-- =====================================================================
+PC_Hierarchy AS (
+  SELECT
+    mandt,
+    parnode,
+    hryvalto,
+    nodevalue
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node`
+  WHERE mandt IN ('120', '200')
+    AND parnode LIKE '%CORE_RET%'
+    AND hryvalto = DATE '9999-12-31'
+),
+
+-- =====================================================================
+-- CTE 3: Weekly_Actuals_With_PC_Hierarchy
+-- Logic: Join weekly actuals with profit center hierarchy
+-- Join: INNER JOIN on b631_s_proftctr = nodevalue AND mandt
+-- =====================================================================
+Weekly_Actuals_With_PC_Hierarchy AS (
+  SELECT
+    wa.fiscper,
+    wa.fiscvarnt,
+    wa.fiscyear,
+    wa.fiscper3,
+    wa.mandt,
+    wa.bic_zio_sweek,
+    wa.b631_s_chrtacct,
+    wa.b631_s_co_area,
+    wa.bic_zio_cmpcd,
+    wa.b631_s_proftctr,
+    wa.b631_s_costcntr,
+    wa.b631_s_funcarea,
+    wa.bic_zio_ver,
+    wa.bic_zio_saudt,
+    wa.b631_s_gl_acct,
+    wa.bic_zwwpc_pa1,
+    wa.bic_zwwsc_pa1,
+    wa.b631_s_amount,
+    wa.currency,
+    wa.bic_zio_d1amt,
+    wa.bic_zio_d2amt,
+    wa.bic_zio_d3amt,
+    wa.bic_zio_d4amt,
+    wa.bic_zio_d5amt,
+    wa.bic_zio_d6amt,
+    wa.bic_zio_d7amt,
+    wa.b631_s_ledger,
+    pch.nodevalue AS pc_nodevalue
+  FROM Weekly_Actuals_Base wa
+  INNER JOIN PC_Hierarchy pch
+    ON wa.b631_s_proftctr = pch.nodevalue
+    AND wa.mandt = pch.mandt
+),
+
+-- =====================================================================
+-- CTE 4: GL_Hierarchy
+-- Logic: G/L account hierarchy nodes filtered for parent node 181
+--        and active validity date, with leading zeros trimmed from nodevalue
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node
+-- Filters: parnode LIKE '%181', hryvalto = DATE '9999-12-31',
+--          hryid = 'CVS2', mandt IN ('120', '200')
+-- Calculation: cal_node_value = LTRIM(nodevalue, '0')
+-- =====================================================================
+GL_Hierarchy AS (
+  SELECT
+    mandt,
+    parnode,
+    hryvalto,
+    nodevalue,
+    hryid,
+    LTRIM(nodevalue, '0') AS cal_node_value
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node`
+  WHERE mandt IN ('120', '200')
+    AND parnode LIKE '%181'
+    AND hryvalto = DATE '9999-12-31'
+    AND hryid = 'CVS2'
+),
+
+-- =====================================================================
+-- CTE 5: Weekly_Actuals_With_GL_Hierarchy
+-- Logic: Join weekly actuals with G/L account hierarchy
+-- Join: INNER JOIN on b631_s_gl_acct = nodevalue AND mandt
+-- Calculation: Add cal_week = @ip_week_cy
+-- =====================================================================
+Weekly_Actuals_With_GL_Hierarchy AS (
+  SELECT
+    wa.*,
+    glh.nodevalue AS gl_nodevalue,
+    @ip_week_cy AS cal_week
+  FROM Weekly_Actuals_With_PC_Hierarchy wa
+  INNER JOIN GL_Hierarchy glh
+    ON wa.b631_s_gl_acct = glh.nodevalue
+    AND wa.mandt = glh.mandt
+),
+
+-- =====================================================================
+-- CTE 6: Store_Attributes
+-- Logic: Store profile attributes from staging table populated by
+--        STP_WSS_SRP_ATTRIBUTES procedure
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act
+-- Filters: mandt IN ('120', '200')
+-- Note: This table is populated by the stored procedure which reads
+--       from CV_BASE_MD_SRPACT_S4 with no additional filters
+-- =====================================================================
+Store_Attributes AS (
+  SELECT
+    mandt,
+    strnum,
+    prctr,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act`
+  WHERE mandt IN ('120', '200')
+),
+
+-- =====================================================================
+-- CTE 7: Weekly_Actuals_With_Store_Attributes
+-- Logic: Join weekly actuals with store attributes
+-- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
+-- =====================================================================
+Weekly_Actuals_With_Store_Attributes AS (
+  SELECT
+    wa.fiscper,
+    wa.fiscvarnt,
+    wa.fiscyear,
+    wa.fiscper3,
+    wa.mandt,
+    wa.bic_zio_sweek,
+    wa.b631_s_chrtacct,
+    wa.b631_s_co_area,
+    wa.bic_zio_cmpcd,
+    wa.b631_s_proftctr,
+    wa.b631_s_costcntr,
+    wa.b631_s_funcarea,
+    wa.bic_zio_ver,
+    wa.bic_zio_saudt,
+    wa.b631_s_gl_acct,
+    wa.bic_zwwpc_pa1,
+    wa.bic_zwwsc_pa1,
+    wa.b631_s_amount,
+    wa.currency,
+    wa.bic_zio_d1amt,
+    wa.bic_zio_d2amt,
+    wa.bic_zio_d3amt,
+    wa.bic_zio_d4amt,
+    wa.bic_zio_d5amt,
+    wa.bic_zio_d6amt,
+    wa.bic_zio_d7amt,
+    wa.b631_s_ledger,
+    wa.cal_week,
+    sa.rep_mkt_code,
+    sa.rep_mkt_desc,
+    sa.emerg_mkt_ind,
+    sa.division_code,
+    sa.division_desc,
+    sa.area_code,
+    sa.area_desc,
+    sa.region_code,
+    sa.region_desc,
+    sa.district_code,
+    sa.district_desc,
+    sa.city,
+    sa.state,
+    sa.fs_open_dat,
+    sa.rx_open_dat,
+    sa.strnum,
+    sa.rx_division_code,
+    sa.rx_area_code,
+    sa.rx_region_code,
+    sa.rx_district_code
+  FROM Weekly_Actuals_With_GL_Hierarchy wa
+  LEFT JOIN Store_Attributes sa
+    ON wa.b631_s_proftctr = sa.prctr
+    AND wa.mandt = sa.mandt
+),
+
+-- =====================================================================
+-- CTE 8: Retail_Calendar
+-- Logic: Retail calendar week mapping for week start/end dates
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek
+-- Filters: rclnt IN ('120', '200')
+-- =====================================================================
+Retail_Calendar AS (
+  SELECT
+    zrwstrtdate,
+    zrwenddate,
+    zzweek,
+    rclnt
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek`
+  WHERE rclnt IN ('120', '200')
+),
+
+-- =====================================================================
+-- CTE 9: Weekly_Actuals_With_Retail_Calendar
+-- Logic: Join weekly actuals with retail calendar for week dates
+-- Join: LEFT JOIN on cal_week = zzweek AND mandt = rclnt
+-- =====================================================================
+Weekly_Actuals_With_Retail_Calendar AS (
+  SELECT
+    wa.*,
+    rc.zrwstrtdate,
+    rc.zrwenddate
+  FROM Weekly_Actuals_With_Store_Attributes wa
+  LEFT JOIN Retail_Calendar rc
+    ON wa.cal_week = rc.zzweek
+    AND wa.mandt = rc.rclnt
+),
+
+-- =====================================================================
+-- CTE 10: Comparison_Flags
+-- Logic: Comparison flags for FS/RX from staging table populated by
+--        STP_WSS_SRP_ATTRIBUTES procedure, filtered by week and version
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl
+-- Filters: zweek = @ip_week_cy, comp_ver = @ip_version_comp_flag,
+--          mandt IN ('120', '200')
+-- Note: This table is populated by the stored procedure which reads
+--       from CV_BASE_MD_COMPFL_S4 with filter zweek = @v_week
+-- =====================================================================
+Comparison_Flags AS (
+  SELECT
+    mandt,
+    prctr,
+    strnum,
+    fs_comp_wk,
+    rx_comp_wk,
+    zweek,
+    zmonth,
+    zyear,
+    comp_ver
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl`
+  WHERE mandt IN ('120', '200')
+    AND zweek = @ip_week_cy
+    AND comp_ver = @ip_version_comp_flag
+),
+
+-- =====================================================================
+-- CTE 11: Weekly_Actuals_With_Comparison_Flags
+-- Logic: Join weekly actuals with comparison flags
+-- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
+-- =====================================================================
+Weekly_Actuals_With_Comparison_Flags AS (
+  SELECT
+    wa.*,
+    cf.fs_comp_wk,
+    cf.rx_comp_wk
+  FROM Weekly_Actuals_With_Retail_Calendar wa
+  LEFT JOIN Comparison_Flags cf
+    ON wa.b631_s_proftctr = cf.prctr
+    AND wa.mandt = cf.mandt
+),
+
+-- =====================================================================
+-- CTE 12: Profit_Center_Text
+-- Logic: Profit center text descriptions
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct
+-- Filters: mandt IN ('120', '200')
+-- =====================================================================
+Profit_Center_Text AS (
+  SELECT
+    mandt,
+    prctr,
+    ltext AS profit_center_text
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+  WHERE mandt IN ('120', '200')
+),
+
+-- =====================================================================
+-- CTE 13: Weekly_Actuals_With_Profit_Center_Text
+-- Logic: Join weekly actuals with profit center text
+-- Join: LEFT JOIN on b631_s_proftctr = prctr AND mandt
+-- Calculation: Add calculated columns for FS/RX flag, comp flag, and week number
+-- =====================================================================
+Weekly_Actuals_With_Profit_Center_Text AS (
+  SELECT
+    wa.*,
+    pct.profit_center_text,
+    CASE
+      WHEN LEFT(wa.bic_zwwpc_pa1, 2) = 'FS' THEN 'FS'
+      WHEN LEFT(wa.bic_zwwpc_pa1, 2) = 'RX' THEN 'RX'
+      ELSE ''
+    END AS cal_fs_rx_flag,
+    CASE
+      WHEN LEFT(wa.bic_zwwpc_pa1, 2) = 'FS' THEN wa.fs_comp_wk
+      WHEN LEFT(wa.bic_zwwpc_pa1, 2) = 'RX' THEN wa.rx_comp_wk
+      ELSE wa.fs_comp_wk
+    END AS cal_comp_flag,
+    RIGHT(@ip_week_cy, 2) AS cal_week_number
+  FROM Weekly_Actuals_With_Comparison_Flags wa
+  LEFT JOIN Profit_Center_Text pct
+    ON wa.b631_s_proftctr = pct.prctr
+    AND wa.mandt = pct.mandt
+)
+
+-- =====================================================================
+-- FINAL SELECT: Aggregated Output
+-- Logic: Final aggregated output with all dimensions and measures
+-- Aggregation: SUM all amount measures, negate b631_s_amount
+-- GROUP BY: All non-measure columns
+-- =====================================================================
+SELECT
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  bic_zio_sweek,
+  b631_s_chrtacct,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  cal_fs_rx_flag AS fs_rx_flag,
+  b631_s_costcntr,
+  b631_s_funcarea,
+  bic_zio_ver,
+  bic_zio_saudt,
+  b631_s_gl_acct,
+  bic_zwwpc_pa1,
+  bic_zwwsc_pa1,
+  currency,
+  b631_s_ledger,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  fs_comp_wk,
+  rx_comp_wk,
+  cal_comp_flag AS comp_flag,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  city,
+  state,
+  zrwstrtdate,
+  zrwenddate,
+  cal_week_number,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  cal_week,
+  strnum,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  SUM(b631_s_amount) * -1 AS b631_s_amount,
+  SUM(bic_zio_d1amt) AS bic_zio_d1amt,
+  SUM(bic_zio_d2amt) AS bic_zio_d2amt,
+  SUM(bic_zio_d3amt) AS bic_zio_d3amt,
+  SUM(bic_zio_d4amt) AS bic_zio_d4amt,
+  SUM(bic_zio_d5amt) AS bic_zio_d5amt,
+  SUM(bic_zio_d6amt) AS bic_zio_d6amt,
+  SUM(bic_zio_d7amt) AS bic_zio_d7amt
+FROM Weekly_Actuals_With_Profit_Center_Text
+GROUP BY
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  bic_zio_sweek,
+  b631_s_chrtacct,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  cal_fs_rx_flag,
+  b631_s_costcntr,
+  b631_s_funcarea,
+  bic_zio_ver,
+  bic_zio_saudt,
+  b631_s_gl_acct,
+  bic_zwwpc_pa1,
+  bic_zwwsc_pa1,
+  currency,
+  b631_s_ledger,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  fs_comp_wk,
+  rx_comp_wk,
+  cal_comp_flag,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  city,
+  state,
+  zrwstrtdate,
+  zrwenddate,
+  cal_week_number,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  cal_week,
+  strnum,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code
