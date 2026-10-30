@@ -1,15 +1,14 @@
-RX_BUDGET
 -- =====================================================================
 -- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_FIN_BUDGET_STATIC
 -- Source: SAP HANA Calculation View and Dependencies
 -- Target: BigQuery Standard SQL
 --
--- Runtime Parameters:
+-- Parameters:
 -- @ip_version: STRING (default 'LEDGER_BUD')
--- @ip_week_ending_from: STRING (week number)
--- @ip_week_ending_to: STRING (week number)
--- @ip_fc_count: STRING (frozen cube flag, precomputed externally)
--- @v_week: STRING (prior fiscal week, precomputed externally)
+-- @ip_week_ending_from: STRING (previous week number)
+-- @ip_week_ending_to: STRING ( week number)
+-- @ip_fc_count: STRING (frozen or live cube flag)
+-- @v_week: STRING (prior fiscal week)
 -- =====================================================================
 with WEEKDATES AS (
     SELECT
@@ -33,11 +32,23 @@ with WEEKDATES AS (
         ORDER BY CAST(CURR.ZRWSTRTDATE AS DATE) DESC,
                  CAST(CURR.ZZWEEK AS STRING) DESC
     ) = 1),
-
-    IP_FC_COUNT as (
-      SELECT COUNT(*) FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds041` WHERE bic_zio_sweek  = (Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
-																		   AND bic_zio_ver = 'LEDGER_BUD'
-    ),
+    
+    --IP Count calculation
+FC_CONTROL AS (
+SELECT
+COUNT(*) AS IP_FC_COUNT
+FROM
+`edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds202` f
+INNER JOIN (
+SELECT DISTINCT
+PREV_WEEK_NBR
+FROM WEEKDATES
+WHERE PREV_WEEK_NBR IS NOT NULL
+) w
+ON CAST(f.bic_zio_sweek AS STRING) = w.PREV_WEEK_NBR
+WHERE
+f.bic_zio_ver = 'LEDGER_BUD'
+),
 -- =====================================================================
 -- CTE 1: Base_AZSRP_DS052_VT_S4
 -- Logic: Source data from frozen cube (DS052) filtered by client and frozen cube flag
@@ -72,7 +83,7 @@ FROM
 `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds202`
 WHERE
 mandt IN ('120', '200')
-AND (select * from IP_FC_COUNT) != 0
+AND  (SELECT FC_CONTROL.IP_FC_COUNT FROM FC_CONTROL) != 0
 ),
 -- =====================================================================
 -- CTE 2: Base_AZSRP_DS041_VT_S4
@@ -109,7 +120,7 @@ FROM
 `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds041`
 WHERE
 mandt IN ('120', '200')
-AND (select * from IP_FC_COUNT) = 0
+AND  (SELECT FC_CONTROL.IP_FC_COUNT FROM FC_CONTROL) = 0
 ),
 -- =====================================================================
 -- CTE 3: Combined_Frozen_Live_Cube
@@ -502,7 +513,7 @@ FROM
 `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl`
 WHERE
 mandt IN ('110', '200')
-AND zweek = (Select WEEKDATES.CURR_WEEK_NBR from WEEKDATES)
+AND zweek = (Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
 ),
 -- =====================================================================
 -- CTE 13: COMP_FLAG_BUDGET
