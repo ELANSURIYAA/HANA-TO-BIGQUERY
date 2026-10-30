@@ -1,0 +1,582 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL FOR CV_COMP_SKF_BUDGET_STATIC
+-- Final Consumer: CV_COMP_SKF_BUDGET_STATIC
+-- Generated from HANA Calculation View with full dependency expansion
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: base_weekly_budget_frozen
+-- Logic: Frozen cube data from AZSRP_DS092_VT_S4, filtered by client and freeze count parameter
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds092
+-- Filters: mandt IN ('120', '200') AND @ip_fc_count != '0'
+-- =====================================================================
+WITH 
+WEEKDATES AS (
+    SELECT
+        CAST(CURR.RCLNT AS STRING)      AS MANDT,
+        CAST(CURR.ZZWEEK AS STRING)     AS CURR_WEEK_NBR,
+        CAST(CURR.ZRWSTRTDATE AS DATE)  AS CURR_WEEK_START,
+        CAST(CURR.ZRWENDDATE AS DATE)   AS CURR_WEEK_END,
+        CAST(PREV.ZZWEEK AS STRING)     AS PREV_WEEK_NBR,
+        CAST(PREV.ZRWSTRTDATE AS DATE)  AS PREV_WEEK_START,
+        CAST(PREV.ZRWENDDATE AS DATE)   AS PREV_WEEK_END
+    FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek` AS CURR
+    LEFT JOIN `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek` AS PREV
+        ON CAST(PREV.RCLNT AS STRING) = CAST(CURR.RCLNT AS STRING)
+       AND CAST(PREV.ZRWENDDATE AS DATE) =
+           DATE_SUB(CAST(CURR.ZRWSTRTDATE AS DATE), INTERVAL 1 DAY)
+    WHERE CURRENT_DATE('America/New_York')
+          BETWEEN CAST(CURR.ZRWSTRTDATE AS DATE)
+              AND CAST(CURR.ZRWENDDATE AS DATE)
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY CAST(CURR.RCLNT AS STRING)
+        ORDER BY CAST(CURR.ZRWSTRTDATE AS DATE) DESC,
+                 CAST(CURR.ZZWEEK AS STRING) DESC
+    ) = 1),
+
+base_weekly_budget_frozen AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    bic_zio_sweek,
+    fiscyear,
+    fiscper3,
+    b631_s_chrtacct,
+    bic_zio_psty,
+    bic_zio_pskf,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    mandt,
+    recordmode,
+    unit,
+    bic_zio_skfq
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds092`
+  WHERE
+    mandt IN (Select MANDT from WEEKDATES)
+    AND recordmode = 'F'
+),
+
+-- =====================================================================
+-- CTE 2: base_weekly_budget_live
+-- Logic: Live cube data from AZSRP_DS031_VT_S4, filtered by client and freeze count parameter
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds031
+-- Filters: mandt IN ('120', '200') AND @ip_fc_count = '0'
+-- =====================================================================
+base_weekly_budget_live AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    bic_zio_sweek,
+    fiscyear,
+    fiscper3,
+    b631_s_compcode,
+    bic_zio_cctr,
+    bic_zio_pctr,
+    bic_zio_psty,
+    bic_zio_pskf,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    bic_zio_ver,
+    bic_zio_saudt,
+    mandt,
+    recordmode,
+    unit,
+    bic_zio_skfq
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_bic_azsrp_ds031`
+  WHERE
+    mandt IN (Select MANDT from WEEKDATES)
+    AND recordmode in ('','F')
+),
+
+-- =====================================================================
+-- CTE 3: combined_weekly_budget
+-- Logic: Union of frozen and live budget data with flag indicator and column alignment
+-- Source: base_weekly_budget_frozen UNION ALL base_weekly_budget_live
+-- Calculation: Maps live cube columns to frozen cube structure; adds FLAG column
+-- =====================================================================
+combined_weekly_budget AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    bic_zio_sweek,
+    fiscyear,
+    fiscper3,
+    b631_s_chrtacct,
+    bic_zio_psty,
+    bic_zio_pskf,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    mandt,
+    recordmode,
+    unit,
+    bic_zio_skfq,
+    'FC' AS flag
+  FROM base_weekly_budget_frozen
+  
+  UNION ALL
+  
+  SELECT
+    fiscper,
+    fiscvarnt,
+    bic_zio_sweek,
+    fiscyear,
+    fiscper3,
+    CAST('' AS STRING) AS b631_s_chrtacct,
+    bic_zio_psty,
+    bic_zio_pskf,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    bic_zio_pctr AS b631_s_proftctr,
+    bic_zio_cctr AS b631_s_costcntr,
+    CAST('' AS STRING) AS b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    mandt,
+    recordmode,
+    unit,
+    bic_zio_skfq,
+    'LC' AS flag
+  FROM base_weekly_budget_live
+),
+
+-- =====================================================================
+-- CTE 4: weekly_snapshot_filtered
+-- Logic: Aggregated weekly budget with frozen/live logic, filtered by version and week range
+-- Source: combined_weekly_budget
+-- Filters: fiscvarnt='K4', bic_zio_sweek BETWEEN @ip_week_ending_from AND @ip_week_ending_to, bic_zio_ver=@ip_version, bic_zio_saudt IN ('1','10'), bic_zio_pskf IN ('804013','801000')
+-- Aggregation: GROUP BY all non-measure columns; measure = IF(SUM(FC) IS NULL, SUM(LC), SUM(FC))
+-- =====================================================================
+weekly_snapshot_filtered AS (
+  SELECT
+    fiscper,
+    fiscvarnt,
+    bic_zio_sweek,
+    fiscyear,
+    fiscper3,
+    b631_s_chrtacct,
+    bic_zio_psty,
+    bic_zio_pskf,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    mandt,
+    recordmode,
+    unit,
+    IF(
+      SUM(CASE WHEN flag = 'FC' THEN bic_zio_skfq ELSE NULL END) IS NULL,
+      SUM(CASE WHEN flag = 'LC' THEN bic_zio_skfq ELSE NULL END),
+      SUM(CASE WHEN flag = 'FC' THEN bic_zio_skfq ELSE NULL END)
+    ) AS bic_zio_skfq
+  FROM combined_weekly_budget
+  WHERE
+    fiscvarnt = 'K4'
+    AND bic_zio_sweek in (Select WEEKDATES.CURR_WEEK_NBR from WEEKDATES)
+    AND bic_zio_ver = 'ACT01'
+    AND bic_zio_saudt IN ('1', '10')
+    AND bic_zio_pskf IN ('804013', '801000')
+  GROUP BY
+    fiscper,
+    fiscvarnt,
+    bic_zio_sweek,
+    fiscyear,
+    fiscper3,
+    b631_s_chrtacct,
+    bic_zio_psty,
+    bic_zio_pskf,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    b631_s_funcarea,
+    bic_zio_ver,
+    bic_zio_saudt,
+    mandt,
+    recordmode,
+    unit
+),
+
+-- =====================================================================
+-- CTE 5: hierarchy_nodes_filtered
+-- Logic: Hierarchy nodes filtered for CORERET parent and valid-to date
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node
+-- Filters: REGEXP_CONTAINS(parnode, r'CORERET$') AND hryvalto='99991231'
+-- =====================================================================
+hierarchy_nodes_filtered AS (
+  SELECT
+    mandt,
+    parnode,
+    hryvalto,
+    nodevalue
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node`
+  WHERE
+    mandt IN (Select MANDT from WEEKDATES)
+    AND REGEXP_CONTAINS(parnode, r'CORERET$')
+    AND hryvalto = DATE '9999-12-31'
+),
+
+-- =====================================================================
+-- CTE 6: weekly_with_hierarchy
+-- Logic: Inner join weekly snapshot with hierarchy nodes on cost center
+-- Source: weekly_snapshot_filtered INNER JOIN hierarchy_nodes_filtered
+-- Join: wsd.b631_s_costcntr = hn.nodevalue
+-- =====================================================================
+weekly_with_hierarchy AS (
+  SELECT
+    wsd.fiscper,
+    wsd.fiscvarnt,
+    wsd.fiscyear,
+    wsd.fiscper3,
+    wsd.mandt,
+    wsd.recordmode,
+    wsd.bic_zio_sweek,
+    wsd.b631_s_co_area,
+    wsd.bic_zio_cmpcd,
+    wsd.b631_s_proftctr,
+    hn.nodevalue AS b631_s_costcntr,
+    wsd.bic_zio_ver,
+    wsd.bic_zio_saudt,
+    wsd.bic_zio_psty,
+    wsd.bic_zio_pskf,
+    wsd.unit,
+    wsd.bic_zio_skfq
+  FROM weekly_snapshot_filtered wsd
+  INNER JOIN hierarchy_nodes_filtered hn
+    ON wsd.b631_s_costcntr = hn.nodevalue
+),
+
+-- =====================================================================
+-- CTE 7: store_attributes_actual
+-- Logic: Store/profit center attributes from populated staging table
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act (populated by STP_WSS_SRP_ATTRIBUTES)
+-- Note: This table is populated by procedure from CV_BASE_MD_SRPACT_S4 source
+-- =====================================================================
+store_attributes_actual AS (
+  SELECT
+    mandt,
+    strnum,
+    prctr,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    district_code,
+    district_desc,
+    region_code,
+    region_desc,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act`
+),
+
+-- =====================================================================
+-- CTE 8: weekly_with_store_attrs
+-- Logic: Left join weekly data with store attributes on profit center
+-- Source: weekly_with_hierarchy LEFT JOIN store_attributes_actual
+-- Join: j.b631_s_proftctr = s.prctr
+-- =====================================================================
+weekly_with_store_attrs AS (
+  SELECT
+    j.*,
+    s.rep_mkt_code,
+    s.rep_mkt_desc,
+    s.emerg_mkt_ind,
+    s.strnum,
+    s.division_code,
+    s.division_desc,
+    s.area_code,
+    s.area_desc,
+    s.district_code,
+    s.district_desc,
+    s.region_code,
+    s.region_desc,
+    s.city,
+    s.state,
+    s.fs_open_dat,
+    s.rx_open_dat,
+    s.rx_division_code,
+    s.rx_area_code,
+    s.rx_region_code,
+    s.rx_district_code
+  FROM weekly_with_hierarchy j
+  LEFT JOIN store_attributes_actual s
+    ON j.b631_s_proftctr = s.prctr
+),
+
+-- =====================================================================
+-- CTE 9: comp_flags_budget
+-- Logic: Comp flag data filtered by version parameter
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl (populated by STP_WSS_SRP_ATTRIBUTES with zweek=@v_week filter)
+-- Filters: comp_ver=@ip_version
+-- Note: This table is populated by procedure from CV_BASE_MD_COMPFL_S4 source with zweek=@v_week filter
+-- =====================================================================
+comp_flags_budget AS (
+  SELECT
+    mandt,
+    prctr,
+    strnum,
+    rx_comp_wk,
+    zweek,
+    zmonth,
+    zyear,
+    comp_ver
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl`
+  WHERE mandt IN (Select MANDT from WEEKDATES)
+    AND zweek = (Select WEEKDATES.CURR_WEEK_NBR from WEEKDATES) and comp_ver = 'ACT01'
+),
+
+-- =====================================================================
+-- CTE 10: weekly_with_comp_flags
+-- Logic: Left join weekly data with comp flags on profit center and week
+-- Source: weekly_with_store_attrs LEFT JOIN comp_flags_budget
+-- Join: jw.b631_s_proftctr=c.prctr AND jw.bic_zio_sweek=c.zweek
+-- =====================================================================
+weekly_with_comp_flags AS (
+  SELECT
+    jw.*,
+    c.rx_comp_wk
+  FROM weekly_with_store_attrs jw
+  LEFT JOIN comp_flags_budget c
+    ON jw.b631_s_proftctr = c.prctr
+    AND jw.bic_zio_sweek = c.zweek
+),
+
+-- =====================================================================
+-- CTE 11: calendar_week
+-- Logic: Calendar week attributes
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek
+-- Filters: rclnt IN ('120','200')
+-- =====================================================================
+calendar_week AS (
+  SELECT
+    zrwstrtdate,
+    zrwenddate,
+    zzweek,
+    rclnt
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek`
+  WHERE rclnt IN (Select MANDT from WEEKDATES)
+),
+
+-- =====================================================================
+-- CTE 12: weekly_with_calendar
+-- Logic: Left join weekly data with calendar week on week number
+-- Source: weekly_with_comp_flags LEFT JOIN calendar_week
+-- Join: j.bic_zio_sweek=cw.zzweek
+-- =====================================================================
+weekly_with_calendar AS (
+  SELECT
+    j.*,
+    cw.zrwenddate,
+    cw.zrwstrtdate
+  FROM weekly_with_comp_flags j
+  LEFT JOIN calendar_week cw
+    ON j.bic_zio_sweek = cw.zzweek
+),
+
+-- =====================================================================
+-- CTE 13: profit_center_text
+-- Logic: Profit center text descriptions
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct
+-- Filters: mandt IN ('120','200')
+-- =====================================================================
+profit_center_text AS (
+  SELECT
+    mandt,
+    prctr,
+    ltext AS profit_center_text
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+  WHERE mandt IN (Select MANDT from WEEKDATES)
+),
+
+-- =====================================================================
+-- CTE 14: weekly_with_profit_center_text
+-- Logic: Left join weekly data with profit center text on profit center
+-- Source: weekly_with_calendar LEFT JOIN profit_center_text
+-- Join: jw.b631_s_proftctr=pct.prctr
+-- =====================================================================
+weekly_with_profit_center_text AS (
+  SELECT
+    jw.*,
+    pct.profit_center_text
+  FROM weekly_with_calendar jw
+  LEFT JOIN profit_center_text pct
+    ON jw.b631_s_proftctr = pct.prctr
+),
+
+-- =====================================================================
+-- CTE 15: flags_with_calculations
+-- Logic: Final projection with calculated columns
+-- Source: weekly_with_profit_center_text
+-- Calculation: CAL_WEEK_NUMBER = RIGHT(bic_zio_sweek, 2); CAL_BIC_ZIO_SKFQ = CASE WHEN bic_zio_pskf='804013' THEN bic_zio_skfq*2 ELSE bic_zio_skfq END; CAL_RX_COMP_WK = IFNULL(rx_comp_wk, '0')
+-- =====================================================================
+flags_with_calculations AS (
+  SELECT
+    bic_zio_skfq,
+    unit,
+    bic_zio_pskf,
+    bic_zio_psty,
+    rx_comp_wk,
+    fiscper,
+    fiscvarnt,
+    fiscyear,
+    fiscper3,
+    mandt,
+    recordmode,
+    bic_zio_sweek,
+    b631_s_co_area,
+    bic_zio_cmpcd,
+    b631_s_proftctr,
+    b631_s_costcntr,
+    bic_zio_ver,
+    bic_zio_saudt,
+    rep_mkt_code,
+    rep_mkt_desc,
+    emerg_mkt_ind,
+    division_code,
+    division_desc,
+    area_code,
+    area_desc,
+    district_code,
+    district_desc,
+    region_code,
+    region_desc,
+    strnum,
+    zrwenddate,
+    zrwstrtdate,
+    city,
+    state,
+    profit_center_text,
+    fs_open_dat,
+    rx_open_dat,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    RIGHT(CAST(bic_zio_sweek AS STRING), 2) AS cal_week_number,
+    CASE WHEN bic_zio_pskf = '804013' THEN CAST(bic_zio_skfq AS NUMERIC) * 2 ELSE CAST(bic_zio_skfq AS NUMERIC) END AS cal_bic_zio_skfq,
+    CASE WHEN rx_comp_wk IS NULL THEN '0' ELSE rx_comp_wk END AS cal_rx_comp_wk
+  FROM weekly_with_profit_center_text
+)
+
+-- =====================================================================
+-- FINAL SELECT: Aggregated output with all attributes and measures
+-- Logic: GROUP BY all non-measure columns; SUM(bic_zio_skfq) AS bic_zio_skfq_negative; SUM(cal_bic_zio_skfq) AS bic_zio_skfq
+-- Aggregation: Required by CUBE outputViewType="Aggregation"
+-- =====================================================================
+SELECT
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  recordmode,
+  bic_zio_sweek,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  b631_s_costcntr,
+  bic_zio_ver,
+  bic_zio_saudt,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  bic_zio_psty,
+  bic_zio_pskf,
+  unit,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  district_code,
+  district_desc,
+  region_code,
+  region_desc,
+  cal_week_number,
+  strnum,
+  zrwenddate,
+  zrwstrtdate,
+  city,
+  state,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  cal_rx_comp_wk AS rx_comp_wk,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  SUM(bic_zio_skfq) AS bic_zio_skfq_negative,
+  SUM(cal_bic_zio_skfq) AS bic_zio_skfq
+FROM flags_with_calculations
+GROUP BY
+  mandt,
+  fiscper,
+  fiscvarnt,
+  fiscyear,
+  fiscper3,
+  recordmode,
+  bic_zio_sweek,
+  b631_s_co_area,
+  bic_zio_cmpcd,
+  b631_s_proftctr,
+  b631_s_costcntr,
+  bic_zio_ver,
+  bic_zio_saudt,
+  rep_mkt_code,
+  rep_mkt_desc,
+  emerg_mkt_ind,
+  bic_zio_psty,
+  bic_zio_pskf,
+  unit,
+  division_code,
+  division_desc,
+  area_code,
+  area_desc,
+  district_code,
+  district_desc,
+  region_code,
+  region_desc,
+  cal_week_number,
+  strnum,
+  zrwenddate,
+  zrwstrtdate,
+  city,
+  state,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  cal_rx_comp_wk,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code;
+
+-- =====================================================================
+-- RUNTIME PARAMETERS (required at execution):
+-- @ip_version: STRING - Budget version (e.g., 'LEDGER_BUD')
+-- @ip_week_ending_from: STRING - Start week for budget data
+-- @ip_week_ending_to: STRING - End week for budget data
+-- @ip_fc_count: STRING - Freeze count flag (derived from SFN_SKF_FC_FLAG function)
+-- =====================================================================
