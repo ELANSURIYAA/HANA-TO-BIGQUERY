@@ -1,6 +1,7 @@
 # BigQuery Comparative Review Report
-## Group: SKF LY
-**Consolidated File:** SKF_LY Consolidated File_v2.txt  
+**Group:** SKF LY  
+**Consolidated File:** SKF_LY Consolidated File_v2  
+**Mapping File:** Columns_Mapping.csv  
 **Review Date:** 2025
 
 ---
@@ -9,129 +10,107 @@
 
 | Group | Files Missed | Tables Missed | CTEs Missed | Columns Missed | Filters Missed | Status |
 |-------|-------------|---------------|-------------|----------------|----------------|--------|
-| SKF LY | 0 of 10 | 3 of 10 | 0 of 13 | 14 of 97 | 3 of 18 | **Items Missed** |
+| SKF LY | 1 of 10 | 0 of 10 | 0 of 13 | 53 of 153 | 2 of 18 | **Items Missed** |
 
 ---
 
 ## Missed Items
 
-| Group | Type | Item | Source (file and line) | Consolidated (line, or "not present") | Notes |
+| Group | Type | Item | Source (File and Line) | Consolidated (Line, or "not present") | Notes |
 |-------|------|------|------------------------|---------------------------------------|-------|
-| SKF LY | Column | `SPRAS` | CV_BASE_MD_CEPCT_S4_DI — line: SPRAS (source: CEPCT.SPRAS → output: SPRAS) | not present | SPRAS is selected in the individual file's CEPCT projection but the PROFIT_CENTER_TEXT CTE in the consolidated file only selects `mandt`, `prctr`, and `ltext`. SPRAS is absent. |
-| SKF LY | Column | `DATBI` | CV_BASE_MD_CEPCT_S4_DI — line: DATBI (source: CEPCT.DATBI → output: DATBI) | not present | DATBI is selected in the individual file's CEPCT projection but is absent from the PROFIT_CENTER_TEXT CTE in the consolidated file. |
-| SKF LY | Column | `KOKRS` | CV_BASE_MD_CEPCT_S4_DI — line: KOKRS (source: CEPCT.KOKRS → output: KOKRS) | not present | KOKRS is selected in the individual file's CEPCT projection but is absent from the PROFIT_CENTER_TEXT CTE in the consolidated file. |
-| SKF LY | Column | `KTEXT` | CV_BASE_MD_CEPCT_S4_DI — line: KTEXT (source: CEPCT.KTEXT → output: KTEXT) | not present | KTEXT is selected in the individual file's CEPCT projection but is absent from the PROFIT_CENTER_TEXT CTE in the consolidated file. |
-| SKF LY | Column | `MCTXT` | CV_BASE_MD_CEPCT_S4_DI — line: MCTXT (source: CEPCT.MCTXT → output: MCTXT) | not present | MCTXT is selected in the individual file's CEPCT projection but is absent from the PROFIT_CENTER_TEXT CTE in the consolidated file. |
-| SKF LY | Column | `HRYID` | CV_BASE_MD_HRRP_NODE_S4_DI — line: HRYID (source: HRRP_NODE.HRYID → output: HRYID) | not present | HRYID is projected in the individual file but the CC_HIER CTE in the consolidated file only selects `mandt`, `parnode`, `hryvalto`, `nodevalue`. HRYID is absent. |
-| SKF LY | Column | `HRYVER` | CV_BASE_MD_HRRP_NODE_S4_DI — line: HRYVER (source: HRRP_NODE.HRYVER → output: HRYVER) | not present | HRYVER is projected in the individual file but is absent from the CC_HIER CTE in the consolidated file. |
-| SKF LY | Column | `NODECLS` | CV_BASE_MD_HRRP_NODE_S4_DI — line: NODECLS (source: HRRP_NODE.NODECLS → output: NODECLS) | not present | NODECLS is projected in the individual file but is absent from the CC_HIER CTE in the consolidated file. |
-| SKF LY | Column | `HRYNODE` | CV_BASE_MD_HRRP_NODE_S4_DI — line: HRYNODE (source: HRRP_NODE.HRYNODE → output: HRYNODE) | not present | HRYNODE is projected in the individual file but is absent from the CC_HIER CTE in the consolidated file. |
-| SKF LY | Column | `HRYVALFROM` | CV_BASE_MD_HRRP_NODE_S4_DI — line: HRYVALFROM (source: HRRP_NODE.HRYVALFROM → output: HRYVALFROM) | not present | HRYVALFROM is projected in the individual file but is absent from the CC_HIER CTE in the consolidated file. |
-| SKF LY | Column | `BALIND` | CV_BASE_MD_HRRP_NODE_S4_DI — line: BALIND (source: HRRP_NODE.BALIND → output: BALIND) | not present | BALIND is projected in the individual file but is absent from the CC_HIER CTE in the consolidated file. |
-| SKF LY | Column | `NODETYPE` | CV_BASE_MD_HRRP_NODE_S4_DI — line: NODETYPE (source: HRRP_NODE.NODETYPE → output: NODETYPE) | not present | NODETYPE is projected in the individual file but is absent from the CC_HIER CTE in the consolidated file. |
-| SKF LY | Column | `MANDT filter IN (120, 200)` in CV_BASE_MD_COMPFL_S4 | CV_BASE_MD_COMPFL_S4_DI — filter: MANDT IN (110, 200) | not present | The individual file CV_BASE_MD_COMPFL_S4 applies a MANDT filter of IN (110, 200) on ZTSRP_COMPFL. The consolidated file's COMP_FLAG_ACT01 CTE queries `v_ztsrp_compfl` with no MANDT filter at all. |
-| SKF LY | Column | `ZCALYRP` | CV_BASE_MD_RCALWEEK_S4_DI — line: ZCALYRP (source: ZTFIGL_RCALWEEK.ZCALYRP → output: ZCALYRP) | not present | ZCALYRP is projected in the individual file but is absent from the RETAIL_CAL CTE in the consolidated file (which only selects `rclnt`, `zzweek`, `zrwstrtdate`, `zrwenddate`). |
-| SKF LY | Column | `ZRYEAR` | CV_BASE_MD_RCALWEEK_S4_DI — line: ZRYEAR (source: ZTFIGL_RCALWEEK.ZRYEAR → output: ZRYEAR) | not present | ZRYEAR is projected in the individual file but is absent from the RETAIL_CAL CTE in the consolidated file. |
-| SKF LY | Column | `ZRPERIOD` | CV_BASE_MD_RCALWEEK_S4_DI — line: ZRPERIOD (source: ZTFIGL_RCALWEEK.ZRPERIOD → output: ZRPERIOD) | not present | ZRPERIOD is projected in the individual file but is absent from the RETAIL_CAL CTE in the consolidated file. |
-| SKF LY | Column | `ZRYRP` | CV_BASE_MD_RCALWEEK_S4_DI — line: ZRYRP (source: ZTFIGL_RCALWEEK.ZRYRP → output: ZRYRP) | not present | ZRYRP is projected in the individual file but is absent from the RETAIL_CAL CTE in the consolidated file. |
-| SKF LY | Column | `ZRYRQTR` | CV_BASE_MD_RCALWEEK_S4_DI — line: ZRYRQTR (source: ZTFIGL_RCALWEEK.ZRYRQTR → output: ZRYRQTR) | not present | ZRYRQTR is projected in the individual file but is absent from the RETAIL_CAL CTE in the consolidated file. |
-| SKF LY | Table | `CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT` (via CV_COMP_MD_SRPACT_STATIC) | CV_COMP_MD_SRPACT_STATIC_DI — SOURCE_OBJECTS: Table: CVS_FRIP.Table::TBL_WSS_SRP_ATTR_ACT | Consolidated references `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act` directly (not via TBL_WSS_SRP_ATTR_ACT) | The individual file CV_COMP_MD_SRPACT_STATIC reads from the static snapshot table TBL_WSS_SRP_ATTR_ACT. The consolidated file bypasses this intermediate table and reads directly from v_ztsrp_attr_act. The intermediate static table is not referenced anywhere in the consolidated file. Not in mapping. |
-| SKF LY | Table | `CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG` (via CV_COMP_MD_COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC_DI — SOURCE_OBJECTS: Table: CVS_FRIP.Table::TBL_WSS_SRP_COMPFLAG | Consolidated references `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl` directly (not via TBL_WSS_SRP_COMPFLAG) | The individual file CV_COMP_MD_COMPFL_STATIC reads from the static snapshot table TBL_WSS_SRP_COMPFLAG. The consolidated file bypasses this intermediate table and reads directly from v_ztsrp_compfl. The intermediate static table is not referenced anywhere in the consolidated file. Not in mapping. |
-| SKF LY | Table | `CVS_FRIP.CVS_FRIP.Procedure.FI::STP_WSS_SRP_ATTRIBUTES` (procedure target tables) | STP_WSS_SRP_ATTRIBUTES_DI — SOURCE_OBJECTS: TBL_WSS_SRP_ATTR_ACT (target), TBL_WSS_SRP_COMPFLAG (target) | not present | The stored procedure STP_WSS_SRP_ATTRIBUTES populates TBL_WSS_SRP_ATTR_ACT and TBL_WSS_SRP_COMPFLAG. The consolidated file explicitly notes these are excluded ("STP_WSS_SRP_ATTRIBUTES: Stored procedure that populates intermediate tables … not consolidated into this query"). The procedure's DML logic (DELETE + INSERT) is entirely absent from the consolidated file. Not in mapping. |
-| SKF LY | Filter | `MANDT IN (110, 200)` on ZTSRP_COMPFL | CV_BASE_MD_COMPFL_S4_DI — filter: MANDT IN (110, 200) on SAP_S4.ZTSRP_COMPFL | not present | The individual file CV_BASE_MD_COMPFL_S4 applies MANDT IN (110, 200) to ZTSRP_COMPFL. The consolidated COMP_FLAG_ACT01 CTE queries v_ztsrp_compfl with no MANDT filter. |
-| SKF LY | Filter | `MANDT IN (110, 200)` on TBL_WSS_SRP_COMPFLAG | CV_COMP_MD_COMPFL_STATIC_DI — no filter defined (projection only, no filter) | Consolidated COMP_FLAG_ACT01 CTE has no MANDT filter on v_ztsrp_compfl | The individual file CV_COMP_MD_COMPFL_STATIC has no filter (pure projection). The consolidated file also has no MANDT filter in COMP_FLAG_ACT01. This is consistent — not a miss. However, the base source CV_BASE_MD_COMPFL_S4 had MANDT IN (110,200) which is missing (reported above). |
-| SKF LY | Filter | `ZWEEK = V_WEEK` (prior fiscal week filter in STP) | STP_WSS_SRP_ATTRIBUTES_DI — WHERE ZWEEK = V_WEEK (filter on TBL_WSS_SRP_COMPFLAG insert from CV_BASE_MD_COMPFL_S4) | not present | The stored procedure STP_WSS_SRP_ATTRIBUTES filters ZWEEK = V_WEEK (prior fiscal week computed by SFN_PRIOR_FISCAL_WEEK) when loading TBL_WSS_SRP_COMPFLAG. This filter logic is entirely absent from the consolidated file. |
-| SKF LY | Filter | `mandt IN ('120', '200')` missing from COMP_FLAG_ACT01 CTE | CV_BASE_MD_HRRP_NODE_S4_DI — filter: MANDT IN (120, 200); CV_BASE_MD_CEPCT_S4_DI — filter: MANDT IN (120, 200) | Consolidated COMP_FLAG_ACT01 CTE (line ~line 270): no MANDT filter on v_ztsrp_compfl | The COMP_FLAG_ACT01 CTE in the consolidated file queries v_ztsrp_compfl without any MANDT restriction, whereas all other CTEs in the consolidated file and all individual source files apply MANDT IN ('120','200') or ('110','200'). This is a missing filter relative to the individual source files. |
+| SKF LY | File | STP_WSS_SRP_ATTRIBUTES_DI | STP_WSS_SRP_ATTRIBUTES_DI HANA to BigQuery SQL Conversion Agent.txt — entire file | not present | The consolidated file explicitly excludes this stored procedure, stating it is a "separate ETL process." None of the procedural DELETE/INSERT logic from this file appears in the consolidated SQL. |
+| SKF LY | Column | SPRAS | CV_BASE_MD_CEPCT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | SPRAS is selected in the individual file's Projected_Profit_Center_Texts CTE but is absent from the consolidated PROFIT_CENTER_TEXT CTE (which selects only mandt, prctr, ltext). Not in mapping for v_cepct output columns used in consolidated. |
+| SKF LY | Column | DATBI | CV_BASE_MD_CEPCT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | DATBI is selected in the individual file but absent from the consolidated PROFIT_CENTER_TEXT CTE. Mapping: CEPCT.DATBI → v_cepct.datbi (DATE). |
+| SKF LY | Column | KOKRS (CEPCT) | CV_BASE_MD_CEPCT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | KOKRS is selected in the individual file but absent from the consolidated PROFIT_CENTER_TEXT CTE. Mapping: CEPCT.KOKRS → v_cepct.kokrs (STRING). |
+| SKF LY | Column | KTEXT | CV_BASE_MD_CEPCT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | KTEXT is selected in the individual file but absent from the consolidated PROFIT_CENTER_TEXT CTE. Mapping: CEPCT.KTEXT → v_cepct.ktext (STRING). |
+| SKF LY | Column | MCTXT | CV_BASE_MD_CEPCT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | MCTXT is selected in the individual file but absent from the consolidated PROFIT_CENTER_TEXT CTE. Mapping: CEPCT.MCTXT → v_cepct.mctxt (STRING). |
+| SKF LY | Column | STRNUM (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | STRNUM is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE (which selects mandt, prctr, zweek, zyear, comp_ver, rx_comp_wk only). Mapping: ZTSRP_COMPFL.STRNUM → v_ztsrp_compfl.strnum (STRING). |
+| SKF LY | Column | ZMONTH (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZMONTH is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.ZMONTH → v_ztsrp_compfl.zmonth (STRING). |
+| SKF LY | Column | FS_COMP_PRE (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_COMP_PRE is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.FS_COMP_PRE → v_ztsrp_compfl.fs_comp_pre (STRING). |
+| SKF LY | Column | RX_COMP_PRE (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RX_COMP_PRE is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.RX_COMP_PRE → v_ztsrp_compfl.rx_comp_pre (STRING). |
+| SKF LY | Column | FS_COMP_MON (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_COMP_MON is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.FS_COMP_MON → v_ztsrp_compfl.fs_comp_mon (STRING). |
+| SKF LY | Column | RX_COMP_MON (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RX_COMP_MON is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.RX_COMP_MON → v_ztsrp_compfl.rx_comp_mon (STRING). |
+| SKF LY | Column | FS_COMP_WK (COMPFL) | CV_BASE_MD_COMPFL_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_COMP_WK is selected in the individual file from ZTSRP_COMPFL but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.FS_COMP_WK → v_ztsrp_compfl.fs_comp_wk (STRING). |
+| SKF LY | Filter | MANDT IN (110, 200) on ZTSRP_COMPFL | CV_BASE_MD_COMPFL_S4 — SOURCE_COLUMNS_AND_MAPPINGS filter (line not determinable) | not present | The individual file filters MANDT IN (110, 200) on ZTSRP_COMPFL. The consolidated COMP_FLAG_ACT01 CTE queries v_ztsrp_compfl with only zweek/comp_ver filters; no MANDT filter is applied. |
+| SKF LY | Column | HRYID | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | HRYID is selected in the individual file's Projected_HRRP_Node CTE but is absent from the consolidated CC_HIER CTE (which selects only mandt, parnode, hryvalto, nodevalue). Mapping: HRRP_NODE.HRYID → v_hrrp_node.hryid (STRING). |
+| SKF LY | Column | HRYVER | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | HRYVER is selected in the individual file but absent from the consolidated CC_HIER CTE. Mapping: HRRP_NODE.HRYVER → v_hrrp_node.hryver (STRING). |
+| SKF LY | Column | NODECLS | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | NODECLS is selected in the individual file but absent from the consolidated CC_HIER CTE. Mapping: HRRP_NODE.NODECLS → v_hrrp_node.nodecls (STRING). |
+| SKF LY | Column | HRYNODE | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | HRYNODE is selected in the individual file but absent from the consolidated CC_HIER CTE. Mapping: HRRP_NODE.HRYNODE → v_hrrp_node.hrynode (STRING). |
+| SKF LY | Column | HRYVALFROM | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | HRYVALFROM is selected in the individual file but absent from the consolidated CC_HIER CTE. Mapping: HRRP_NODE.HRYVALFROM → v_hrrp_node.hryvalfrom (DATE). |
+| SKF LY | Column | BALIND | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | BALIND is selected in the individual file but absent from the consolidated CC_HIER CTE. Mapping: HRRP_NODE.BALIND → v_hrrp_node.balind (STRING). |
+| SKF LY | Column | NODETYPE | CV_BASE_MD_HRRP_NODE_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | NODETYPE is selected in the individual file but absent from the consolidated CC_HIER CTE. Mapping: HRRP_NODE.NODETYPE → v_hrrp_node.nodetype (STRING). |
+| SKF LY | Column | ZCALYRP | CV_BASE_MD_RCALWEEK_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZCALYRP is selected in the individual file's Projected_Retail_Calendar_Week_Master CTE but is absent from the consolidated RETAIL_CAL CTE (which selects only rclnt, zzweek, zrwstrtdate, zrwenddate). Mapping: ZTFIGL_RCALWEEK.ZCALYRP → v_ztfigl_rcalweek.zcalyrp (STRING). |
+| SKF LY | Column | ZRYEAR | CV_BASE_MD_RCALWEEK_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZRYEAR is selected in the individual file but absent from the consolidated RETAIL_CAL CTE. Mapping: ZTFIGL_RCALWEEK.ZRYEAR → v_ztfigl_rcalweek.zryear (STRING). |
+| SKF LY | Column | ZRPERIOD | CV_BASE_MD_RCALWEEK_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZRPERIOD is selected in the individual file but absent from the consolidated RETAIL_CAL CTE. Mapping: ZTFIGL_RCALWEEK.ZRPERIOD → v_ztfigl_rcalweek.zrperiod (STRING). |
+| SKF LY | Column | ZRYRP | CV_BASE_MD_RCALWEEK_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZRYRP is selected in the individual file but absent from the consolidated RETAIL_CAL CTE. Mapping: ZTFIGL_RCALWEEK.ZRYRP → v_ztfigl_rcalweek.zryrp (STRING). |
+| SKF LY | Column | ZRYRQTR | CV_BASE_MD_RCALWEEK_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZRYRQTR is selected in the individual file but absent from the consolidated RETAIL_CAL CTE. Mapping: ZTFIGL_RCALWEEK.ZRYRQTR → v_ztfigl_rcalweek.zryrqtr (STRING). |
+| SKF LY | Column | KOKRS (SRPACT) | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | KOKRS is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.KOKRS → v_ztsrp_attr_act.kokrs (STRING). |
+| SKF LY | Column | KOSTL | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | KOSTL is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.KOSTL → v_ztsrp_attr_act.kostl (STRING). |
+| SKF LY | Column | RX_CLOSE_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RX_CLOSE_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.RX_CLOSE_DAT → v_ztsrp_attr_act.rx_close_dat (DATE). |
+| SKF LY | Column | FS_CLOSE_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_CLOSE_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.FS_CLOSE_DAT → v_ztsrp_attr_act.fs_close_dat (DATE). |
+| SKF LY | Column | ADDRESS | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ADDRESS is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ADDRESS → v_ztsrp_attr_act.address (STRING). |
+| SKF LY | Column | ZIPCODE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZIPCODE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ZIPCODE → v_ztsrp_attr_act.zipcode (STRING). |
+| SKF LY | Column | DIVISION_MGR | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | DIVISION_MGR is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.DIVISION_MGR → v_ztsrp_attr_act.division_mgr (STRING). |
+| SKF LY | Column | AREA_MGR | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | AREA_MGR is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.AREA_MGR → v_ztsrp_attr_act.area_mgr (STRING). |
+| SKF LY | Column | REGION_MGR | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | REGION_MGR is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.REGION_MGR → v_ztsrp_attr_act.region_mgr (STRING). |
+| SKF LY | Column | ZONE_CODE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZONE_CODE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ZONE_CODE → v_ztsrp_attr_act.zone_code (STRING). |
+| SKF LY | Column | DISTRICT_MGR | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | DISTRICT_MGR is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.DISTRICT_MGR → v_ztsrp_attr_act.district_mgr (STRING). |
+| SKF LY | Column | ZONE_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZONE_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ZONE_DESC → v_ztsrp_attr_act.zone_desc (STRING). |
+| SKF LY | Column | MAJOR_REGION_CODE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | MAJOR_REGION_CODE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.MAJOR_REGION_CODE → v_ztsrp_attr_act.major_region_code (STRING). |
+| SKF LY | Column | MAJOR_REGION | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | MAJOR_REGION is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.MAJOR_REGION → v_ztsrp_attr_act.major_region (STRING). |
+| SKF LY | Column | STORE_TYPE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | STORE_TYPE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.STORE_TYPE → v_ztsrp_attr_act.store_type (STRING). |
+| SKF LY | Column | STORE_TYPE_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | STORE_TYPE_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.STORE_TYPE_DESC → v_ztsrp_attr_act.store_type_desc (STRING). |
+| SKF LY | Column | RX_STORE_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RX_STORE_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.RX_STORE_DESC → v_ztsrp_attr_act.rx_store_desc (STRING). |
+| SKF LY | Column | DISTRIBUTION_CNTR | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | DISTRIBUTION_CNTR is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.DISTRIBUTION_CNTR → v_ztsrp_attr_act.distribution_cntr (STRING). |
+| SKF LY | Column | DISTRIBUTION_CNTR_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | DISTRIBUTION_CNTR_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.DISTRIBUTION_CNTR_DESC → v_ztsrp_attr_act.distribution_cntr_desc (STRING). |
+| SKF LY | Column | STORE_24_HR | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | STORE_24_HR is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.STORE_24_HR → v_ztsrp_attr_act.store_24_hr (STRING). |
+| SKF LY | Column | BUDGET_OPEN_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | BUDGET_OPEN_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.BUDGET_OPEN_DAT → v_ztsrp_attr_act.budget_open_dat (DATE). |
+| SKF LY | Column | BUDGET_CLOSED_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | BUDGET_CLOSED_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.BUDGET_CLOSED_DAT → v_ztsrp_attr_act.budget_closed_dat (DATE). |
+| SKF LY | Column | BUDGET_RELOC_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | BUDGET_RELOC_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.BUDGET_RELOC_DAT → v_ztsrp_attr_act.budget_reloc_dat (DATE). |
+| SKF LY | Column | CONST_OPEN_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | CONST_OPEN_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.CONST_OPEN_DAT → v_ztsrp_attr_act.const_open_dat (DATE). |
+| SKF LY | Column | CONST_CLOSE_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | CONST_CLOSE_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.CONST_CLOSE_DAT → v_ztsrp_attr_act.const_close_dat (DATE). |
+| SKF LY | Column | CONST_RELO_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | CONST_RELO_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.CONST_RELO_DAT → v_ztsrp_attr_act.const_relo_dat (DATE). |
+| SKF LY | Column | RELOCATION_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RELOCATION_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.RELOCATION_DAT → v_ztsrp_attr_act.relocation_dat (DATE). |
+| SKF LY | Column | BUDGET_EMERG_MKT_IND | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | BUDGET_EMERG_MKT_IND is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.BUDGET_EMERG_MKT_IND → v_ztsrp_attr_act.budget_emerg_mkt_ind (STRING). |
+| SKF LY | Column | COMPANY_CODE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | COMPANY_CODE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.COMPANY_CODE → v_ztsrp_attr_act.company_code (STRING). |
+| SKF LY | Column | COMPANY_CODE_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | COMPANY_CODE_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.COMPANY_CODE_DESC → v_ztsrp_attr_act.company_code_desc (STRING). |
+| SKF LY | Column | ORIGINAL_FS_OPEN_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ORIGINAL_FS_OPEN_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ORIGINAL_FS_OPEN_DAT → v_ztsrp_attr_act.original_fs_open_dat (DATE). |
+| SKF LY | Column | ORIGINAL_RX_OPEN_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ORIGINAL_RX_OPEN_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ORIGINAL_RX_OPEN_DAT → v_ztsrp_attr_act.original_rx_open_dat (DATE). |
+| SKF LY | Column | GROUP_ONE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | GROUP_ONE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.GROUP_ONE → v_ztsrp_attr_act.group_one (STRING). |
+| SKF LY | Column | GROUP_TWO | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | GROUP_TWO is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.GROUP_TWO → v_ztsrp_attr_act.group_two (STRING). |
+| SKF LY | Column | ARD_SORT_KEY | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ARD_SORT_KEY is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ARD_SORT_KEY → v_ztsrp_attr_act.ard_sort_key (STRING). |
+| SKF LY | Column | AREA_COST_CENTER | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | AREA_COST_CENTER is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.AREA_COST_CENTER → v_ztsrp_attr_act.area_cost_center (STRING). |
+| SKF LY | Column | REGIION_COST_CENTER | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | REGIION_COST_CENTER is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.REGIION_COST_CENTER → v_ztsrp_attr_act.regiion_cost_center (STRING). |
+| SKF LY | Column | COUNTY_CODE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | COUNTY_CODE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.COUNTY_CODE → v_ztsrp_attr_act.county_code (STRING). |
+| SKF LY | Column | COUNTY_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | COUNTY_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.COUNTY_DESC → v_ztsrp_attr_act.county_desc (STRING). |
+| SKF LY | Column | SQFT_BRACKET_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | SQFT_BRACKET_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.SQFT_BRACKET_DESC → v_ztsrp_attr_act.sqft_bracket_desc (STRING). |
+| SKF LY | Column | SQFT_SORT_KEY | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | SQFT_SORT_KEY is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.SQFT_SORT_KEY → v_ztsrp_attr_act.sqft_sort_key (STRING). |
+| SKF LY | Column | ACQUISITION_CODE | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ACQUISITION_CODE is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ACQUISITION_CODE → v_ztsrp_attr_act.acquisition_code (STRING). |
+| SKF LY | Column | ACQUISITION_DESC | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ACQUISITION_DESC is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.ACQUISITION_DESC → v_ztsrp_attr_act.acquisition_desc (STRING). |
+| SKF LY | Column | PHOTO_LAB_ADD_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | PHOTO_LAB_ADD_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.PHOTO_LAB_ADD_DAT → v_ztsrp_attr_act.photo_lab_add_dat (DATE). |
+| SKF LY | Column | PHOTO_LAB_CLOSE_DAT | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | PHOTO_LAB_CLOSE_DAT is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.PHOTO_LAB_CLOSE_DAT → v_ztsrp_attr_act.photo_lab_close_dat (DATE). |
+| SKF LY | Column | MIN_HRS_IND | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | MIN_HRS_IND is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.MIN_HRS_IND → v_ztsrp_attr_act.min_hrs_ind (STRING). |
+| SKF LY | Column | CREATEDBY | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | CREATEDBY is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.CREATEDBY → v_ztsrp_attr_act.createdby (STRING). |
+| SKF LY | Column | CREATED_ON | CV_BASE_MD_SRPACT_S4 — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | CREATED_ON is selected in the individual file from ZTSRP_ATTR_ACT but is absent from the consolidated STORE_ATTR_ACTUAL CTE. Mapping: ZTSRP_ATTR_ACT.CREATED_ON → v_ztsrp_attr_act.created_on (DATE). |
+| SKF LY | Column | STRNUM (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | STRNUM is selected in the individual file from TBL_WSS_SRP_COMPFLAG (maps to v_ztsrp_compfl) but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.STRNUM → v_ztsrp_compfl.strnum (STRING). Same as CV_BASE_MD_COMPFL_S4 finding; both individual files confirm this column is missing. |
+| SKF LY | Column | ZMONTH (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | ZMONTH is selected in the individual file from TBL_WSS_SRP_COMPFLAG (maps to v_ztsrp_compfl) but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.ZMONTH → v_ztsrp_compfl.zmonth (STRING). Same as CV_BASE_MD_COMPFL_S4 finding. |
+| SKF LY | Column | FS_COMP_PRE (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_COMP_PRE is selected in the individual file from TBL_WSS_SRP_COMPFLAG but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.FS_COMP_PRE → v_ztsrp_compfl.fs_comp_pre (STRING). |
+| SKF LY | Column | RX_COMP_PRE (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RX_COMP_PRE is selected in the individual file from TBL_WSS_SRP_COMPFLAG but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.RX_COMP_PRE → v_ztsrp_compfl.rx_comp_pre (STRING). |
+| SKF LY | Column | FS_COMP_MON (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_COMP_MON is selected in the individual file from TBL_WSS_SRP_COMPFLAG but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.FS_COMP_MON → v_ztsrp_compfl.fs_comp_mon (STRING). |
+| SKF LY | Column | RX_COMP_MON (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | RX_COMP_MON is selected in the individual file from TBL_WSS_SRP_COMPFLAG but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.RX_COMP_MON → v_ztsrp_compfl.rx_comp_mon (STRING). |
+| SKF LY | Column | FS_COMP_WK (COMPFL_STATIC) | CV_COMP_MD_COMPFL_STATIC — CONVERTED_BIGQUERY_SQL SELECT list (line not determinable) | not present | FS_COMP_WK is selected in the individual file from TBL_WSS_SRP_COMPFLAG but is absent from the consolidated COMP_FLAG_ACT01 CTE. Mapping: ZTSRP_COMPFL.FS_COMP_WK → v_ztsrp_compfl.fs_comp_wk (STRING). |
+| SKF LY | Filter | ZWEEK = V_WEEK (on TBL_WSS_SRP_COMPFLAG) | STP_WSS_SRP_ATTRIBUTES_DI — CONVERTED_BIGQUERY_SQL WHERE clause on INSERT into TBL_WSS_SRP_COMPFLAG (line not determinable) | not present | The stored procedure filters ZWEEK = V_WEEK (prior fiscal week) when loading TBL_WSS_SRP_COMPFLAG. The consolidated file does not replicate this exact single-week equality filter; instead it uses a range filter (zweek >= '202101' AND zweek <= '202110'). The single-value equality filter is not present. |
 
 ---
 
-## Detailed Findings by Individual File
-
-### File 1: CV_BASE_MD_CEPCT_S4_DI
-- **Status:** Found (logic present in PROFIT_CENTER_TEXT CTE)
-- **Table:** `CEPCT` → mapped to `v_cepct` ✅ Found
-- **CTE:** `Projected_Profit_Center_Texts` → logic present as `PROFIT_CENTER_TEXT` CTE ✅ Found
-- **Columns missed:** `SPRAS`, `DATBI`, `KOKRS`, `KTEXT`, `MCTXT` — all absent from PROFIT_CENTER_TEXT CTE (only `mandt`, `prctr`, `ltext` selected)
-- **Filter:** `MANDT IN (120, 200)` → present in consolidated as `mandt IN ('120', '200')` ✅ Found
+## Overall Status: **Items Missed**
 
 ---
 
-### File 2: CV_BASE_MD_COMPFL_S4_DI
-- **Status:** Found (logic present in COMP_FLAG_ACT01 CTE)
-- **Table:** `ZTSRP_COMPFL` → mapped to `v_ztsrp_compfl` ✅ Found
-- **CTE:** Logic present in COMP_FLAG_ACT01 ✅ Found
-- **Columns:** All columns used in consolidated (mandt, prctr, zweek, zyear, comp_ver, rx_comp_wk) ✅ Found
-- **Filter missed:** `MANDT IN (110, 200)` — present in individual file but absent from COMP_FLAG_ACT01 CTE in consolidated
+## Notes
 
----
-
-### File 3: CV_BASE_MD_HRRP_NODE_S4_DI
-- **Status:** Found (logic present in CC_HIER CTE)
-- **Table:** `HRRP_NODE` → mapped to `v_hrrp_node` ✅ Found
-- **CTE:** `Projected_HRRP_Node` → logic present as `CC_HIER` CTE ✅ Found
-- **Columns missed:** `HRYID`, `HRYVER`, `NODECLS`, `HRYNODE`, `HRYVALFROM`, `BALIND`, `NODETYPE` — all absent from CC_HIER CTE (only `mandt`, `parnode`, `hryvalto`, `nodevalue` selected)
-- **Filter:** `MANDT IN (120, 200)` → present in consolidated as `mandt IN ('120', '200')` ✅ Found
-
----
-
-### File 4: CV_BASE_MD_RCALWEEK_S4_DI
-- **Status:** Found (logic present in RETAIL_CAL CTE)
-- **Table:** `ZTFIGL_RCALWEEK` → mapped to `v_ztfigl_rcalweek` ✅ Found
-- **CTE:** `Projected_Retail_Calendar_Week_Master` → logic present as `RETAIL_CAL` CTE ✅ Found
-- **Columns missed:** `ZCALYRP`, `ZRYEAR`, `ZRPERIOD`, `ZRYRP`, `ZRYRQTR` — all absent from RETAIL_CAL CTE (only `rclnt`, `zzweek`, `zrwstrtdate`, `zrwenddate` selected)
-- **Filter:** `RCLNT IN (120, 200)` → present in consolidated as `rclnt IN ('120', '200')` ✅ Found
-
----
-
-### File 5: CV_BASE_MD_SRPACT_S4_DI
-- **Status:** Found (logic present in STORE_ATTR_ACTUAL CTE)
-- **Table:** `ZTSRP_ATTR_ACT` → mapped to `v_ztsrp_attr_act` ✅ Found
-- **CTE:** Logic present as `STORE_ATTR_ACTUAL` CTE ✅ Found
-- **Columns:** All columns used in consolidated output are present ✅ Found (note: many columns from the individual file such as KOKRS, KOSTL, ADDRESS, ZIPCODE, DIVISION_MGR, AREA_MGR, REGION_MGR, DISTRICT_MGR, ZONE_CODE, ZONE_DESC, STORE_TYPE, STORE_TYPE_DESC, RX_STORE_DESC, DISTRIBUTION_CNTR, DISTRIBUTION_CNTR_DESC, STORE_24_HR, BUDGET_*, CONST_*, RELOCATION_DAT, BUDGET_EMERG_MKT_IND, COMPANY_CODE, COMPANY_CODE_DESC, ORIGINAL_*, GROUP_ONE, GROUP_TWO, ARD_SORT_KEY, AREA_COST_CENTER, REGIION_COST_CENTER, COUNTY_CODE, COUNTY_DESC, SQFT_BRACKET_DESC, SQFT_SORT_KEY, ACQUISITION_CODE, ACQUISITION_DESC, PHOTO_LAB_*, MIN_HRS_IND, CREATEDBY, CREATED_ON are not in the consolidated output, but these are dimension columns not carried forward — the consolidated file is a narrower projection for its specific purpose, not a full pass-through. The columns that ARE used in the final output are all present.)
-- **Filter:** `MANDT IN (120, 200)` → present in consolidated as `mandt IN ('120', '200')` ✅ Found
-
----
-
-### File 6: CV_BASE_SKF_WEEKLY_ACTUAL_S4_DI
-- **Status:** Found (logic present in WEEKLY_SNAPSHOT_DS05 CTE)
-- **Table:** `AZSRP_DS112_VT_S4` → mapped to `v_bic_azsrp_ds112` ✅ Found
-- **CTE:** Logic present as `WEEKLY_SNAPSHOT_DS05` CTE ✅ Found
-- **Columns:** All 17 attributes and 8 measures present ✅ Found
-- **Filters:** `MANDT IN (110, 200)` → present as `mandt IN ('110','200')` ✅ Found; `FISCVARNT = 'K4'` ✅ Found; `_BIC_ZIO_SWEEK = @IP_WEEK_LY` → present as `bic_zio_sweek = '202101'` ✅ Found; `_BIC_ZIO_VER = @IP_VERSION` → present as `bic_zio_ver = 'ACT01'` ✅ Found; `_BIC_ZIO_SAUDT IN ('1','10')` ✅ Found; `_BIC_ZIO_PSKF IN ('804013','801000')` ✅ Found
-
----
-
-### File 7: CV_COMP_MD_COMPFL_STATIC_DI
-- **Status:** Found (logic present in COMP_FLAG_ACT01 CTE — consolidated reads directly from v_ztsrp_compfl)
-- **Table (intermediate):** `TBL_WSS_SRP_COMPFLAG` → **Missed** — consolidated bypasses this static table and reads directly from `v_ztsrp_compfl`
-- **CTE:** Logic present in COMP_FLAG_ACT01 ✅ Found (logic equivalent)
-- **Columns:** All 13 columns defined in individual file are present in consolidated ✅ Found
-- **Filter:** No filter in individual file (pure projection) — consistent with consolidated ✅ Found
-
----
-
-### File 8: CV_COMP_MD_SRPACT_STATIC_DI
-- **Status:** Found (logic present in STORE_ATTR_ACTUAL CTE — consolidated reads directly from v_ztsrp_attr_act)
-- **Table (intermediate):** `TBL_WSS_SRP_ATTR_ACT` → **Missed** — consolidated bypasses this static table and reads directly from `v_ztsrp_attr_act`
-- **CTE:** Logic present as STORE_ATTR_ACTUAL ✅ Found
-- **Columns:** All columns used in consolidated output are present ✅ Found
-- **Filter:** No filter in individual file — consistent with consolidated ✅ Found
-
----
-
-### File 9: CV_COMP_SKF_ACTUAL_STATIC_DI
-- **Status:** Found (this is the top-level view; its full logic is the consolidated file itself)
-- **All CTEs:** WEEKLY_SNAPSHOT_DS05, CC_HIER, Join_3, Projection_1, STORE_ATTR_ACTUAL, Join_2, RETAIL_CAL, Join_1, COMP_FLAG_ACT01, Join_4, PROFIT_CENTER_TEXT, Join_5, FLAGS — all present ✅ Found
-- **All filters, columns, and calculated columns:** Present ✅ Found
-
----
-
-### File 10: STP_WSS_SRP_ATTRIBUTES_DI
-- **Status:** Found (procedure logic acknowledged in consolidated file comments, but DML excluded by design)
-- **Table (procedure target):** `TBL_WSS_SRP_ATTR_ACT` and `TBL_WSS_SRP_COMPFLAG` → **Missed** — the consolidated file explicitly excludes the stored procedure's DML (DELETE + INSERT) logic
-- **Filter missed:** `ZWEEK = V_WEEK` (prior fiscal week filter applied when loading TBL_WSS_SRP_COMPFLAG) — absent from consolidated file
-- **Filter missed:** `MANDT IN (110, 200)` on ZTSRP_COMPFL (applied via CV_BASE_MD_COMPFL_S4 within the procedure) — absent from COMP_FLAG_ACT01 CTE in consolidated
-
----
-
-*Overall Status: **Items Missed***
+1. **Columns reported once per unique source file**: Where the same column is missing from both a base file (e.g., CV_BASE_MD_COMPFL_S4) and its corresponding composite/static file (e.g., CV_COMP_MD_COMPFL_STATIC), both are reported separately as they are distinct individual files.
+2. **Mapping applied**: All HANA column names were resolved to their BigQuery equivalents using Columns_Mapping.csv before comparison. Literal type changes (numeric to string for MANDT, RCLNT) confirmed by mapping are not reported as missed.
+3. **STP_WSS_SRP_ATTRIBUTES_DI**: This file is a HANA SQLScript stored procedure (DML). The consolidated file explicitly states this procedure is excluded as a "separate ETL process." The file is reported as missed because none of its procedural DELETE/INSERT logic appears in the consolidated SQL.
+4. **CV_COMP_MD_SRPACT_STATIC columns**: The same large set of missing columns from ZTSRP_ATTR_ACT applies to both CV_BASE_MD_SRPACT_S4 and CV_COMP_MD_SRPACT_STATIC. To avoid duplication in the Missed Items table, only CV_BASE_MD_SRPACT_S4 is listed as the source for those columns, as it is the base-level individual file. CV_COMP_MD_SRPACT_STATIC confirms the same findings.
+5. **hryvalto filter value**: The individual file CV_BASE_MD_HRRP_NODE_S4 filters `HRYVALTO = '99991231'` (string). The consolidated uses `hryvalto = DATE '9999-12-31'`. Per mapping, HRRP_NODE.HRYVALTO → v_hrrp_node.hryvalto (DATE). This is a confirmed literal-type change per the mapping file and is **not** reported as missed.
