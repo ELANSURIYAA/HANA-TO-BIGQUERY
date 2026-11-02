@@ -1,0 +1,139 @@
+-- =====================================================================
+-- CONSOLIDATED BIGQUERY SQL
+-- Final Consumer: CV_COMP_FORECAST_MJE_STATIC
+-- Artifact Chain:
+--   CV_COMP_FORECAST_MJE_STATIC
+--     <- STP_WSS_FORECAST_MJE (procedure: DELETE + INSERT from CV_COMP_FORECAST_MJE)
+--        <- CV_COMP_FORECAST_MJE (calculation view — NOT SUPPLIED; referenced as BigQuery object)
+-- =====================================================================
+-- RUNTIME PARAMETERS:
+--   None required by the supplied logic.
+--
+-- NOTES ON CV_COMP_FORECAST_MJE:
+--   The converted SQL for CV_COMP_FORECAST_MJE was NOT supplied in
+--   main consolidation input. It is referenced here as the BigQuery
+--   object `edp-qa-finstorage.edp_saps4_shared_cnsv.cv_comp_forecast_mje`
+--   (placeholder — actual project/dataset/object name must be validated
+--   at implementation time; see ISSUES TO FIX in the description file).
+--
+-- PROCEDURE HANDLING:
+--   STP_WSS_FORECAST_MJE performs:
+--     1. DELETE all rows from TBL_WSS_FORECAST_MJE
+--     2. INSERT INTO TBL_WSS_FORECAST_MJE SELECT ... FROM CV_COMP_FORECAST_MJE
+--   The DELETE wrapper and the INSERT wrapper are skipped.
+--   The SELECT body (1:1 pass-through from CV_COMP_FORECAST_MJE) is inlined.
+--   SNAPSHOT_TIMESTAMP (CURRENT_TIMESTAMP) and CREATED_BY (SESSION_USER)
+--   are audit-only INSERT columns not consumed by downstream logic; omitted.
+--
+-- COLUMN NAME MAPPING:
+--   All column names are converted to BigQuery style (lowercase, no
+--   leading underscores, '/' replaced with '_').
+--   _BIC_ZIO_SWEEK -> bic_zio_sweek
+--   All other columns are already lowercase-compatible; aliases that
+--   only change case are removed.
+--
+-- AGGREGATION:
+--   CV_COMP_FORECAST_MJE_STATIC is a CUBE view with aggregationType="sum"
+--   for six measure columns. All other columns are attributes (GROUP BY).
+-- =====================================================================
+
+-- =====================================================================
+-- CTE 1: cv_comp_forecast_mje_static
+-- Logic: Aggregates all columns from CV_COMP_FORECAST_MJE (the upstream
+--        calculation view populated into TBL_WSS_FORECAST_MJE by
+--        STP_WSS_FORECAST_MJE). The procedure's SELECT body is a 1:1
+--        pass-through from CV_COMP_FORECAST_MJE; the staging table
+--        TBL_WSS_FORECAST_MJE is replaced by its source.
+--        Six measure columns are summed; all other columns are grouped.
+-- Source: CV_COMP_FORECAST_MJE (BigQuery object — see ISSUES TO FIX)
+-- Aggregation: SUM(fin_fcst_amount), SUM(skf_fcst_qty), SUM(sbt),
+--              SUM(skf_mje_qty), SUM(cal_fs_sales_mje),
+--              SUM(cal_rx_sales_mje); GROUP BY all non-measure columns
+-- =====================================================================
+SELECT
+  cal_comp_flag_desc,
+  cal_emerg_mkt_ind,
+  mandt,
+  cal_source,
+  division_code,
+  division_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  strnum,
+  prctr,
+  emerg_mkt_ind,
+  rep_mkt_code,
+  rep_mkt_desc,
+  comp_flag,
+  fs_rx_flag,
+  bic_zio_sweek,
+  fs_rx_flag_ext,
+  zrwstrtdate,
+  zrwenddate,
+  cal_week_number,
+  city,
+  state,
+  fin_forecast_currency,
+  profit_center_text,
+  cal_data_category1,
+  cal_data_category2,
+  fs_open_dat,
+  rx_open_dat,
+  area_code,
+  area_desc,
+  SUM(fin_fcst_amount)    AS fin_fcst_amount,
+  SUM(skf_fcst_qty)       AS skf_fcst_qty,
+  SUM(sbt)                AS sbt,
+  SUM(skf_mje_qty)        AS skf_mje_qty,
+  SUM(cal_fs_sales_mje)   AS cal_fs_sales_mje,
+  SUM(cal_rx_sales_mje)   AS cal_rx_sales_mje
+FROM
+  `edp-qa-finstorage.edp_saps4_shared_cnsv.cv_comp_forecast_mje`
+  -- NOTE: The BigQuery object name for CV_COMP_FORECAST_MJE must be
+  -- validated. The project/dataset above is inferred from Columns_Mapping
+  -- patterns (edp-qa-finstorage / edp_saps4_shared_cnsv). The table/view
+  -- name 'cv_comp_forecast_mje' is derived from the HANA artifact name.
+  -- See ISSUES TO FIX in the description file.
+GROUP BY
+  cal_comp_flag_desc,
+  cal_emerg_mkt_ind,
+  mandt,
+  cal_source,
+  division_code,
+  division_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  strnum,
+  prctr,
+  emerg_mkt_ind,
+  rep_mkt_code,
+  rep_mkt_desc,
+  comp_flag,
+  fs_rx_flag,
+  bic_zio_sweek,
+  fs_rx_flag_ext,
+  zrwstrtdate,
+  zrwenddate,
+  cal_week_number,
+  city,
+  state,
+  fin_forecast_currency,
+  profit_center_text,
+  cal_data_category1,
+  cal_data_category2,
+  fs_open_dat,
+  rx_open_dat,
+  area_code,
+  area_desc
