@@ -1,0 +1,6 @@
+Parameter,Assigned Value
+@ip_version,"'ACT01'"
+@ip_week_ly,(Select WEEKDATES.LY_WEEK_NBR from WEEKDATES)
+@ip_week_cy,(Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
+@ip_version_comp_flag,"'ACT01'"
+@v_week,(Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
