@@ -1,0 +1,6 @@
+Parameter,Assigned Value
+@ip_version,"'LEDGER_BUD'"
+@ip_week_ending_from,(Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
+@ip_week_ending_to,(Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
+@ip_fc_count,(SELECT IP_FC_COUNT FROM FC_CONTROL)
+@v_week,(Select WEEKDATES.PREV_WEEK_NBR from WEEKDATES)
