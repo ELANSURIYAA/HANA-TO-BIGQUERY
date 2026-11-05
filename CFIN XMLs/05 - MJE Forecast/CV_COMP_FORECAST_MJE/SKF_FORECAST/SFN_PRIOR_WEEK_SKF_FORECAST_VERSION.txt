@@ -1,0 +1,40 @@
+/**************************************************************************
+Scalar Function Name    :  SFN_PRIOR_WEEK_SKF_FORECAST_VERSION
+Version          	    :  1.0
+Team Responsible        :  CVS FRIP
+Created By              :  Upamanyu Mukherjee
+Created On              :  02/06/2020
+Updated By              :             
+Updated On              :  
+Objective               :  Return latest SKF Forecast Version based on Prior Week
+						   for static report
+Source                  :  CV_BASE_SKF_WEEKLY_FORECAST_S4
+Target                  :  OP_CURRENT_WEEK_FORECAST_VERSION
+***************************************************************************/
+
+FUNCTION "CVS_FRIP"."CVS_FRIP.Composite.Master::SFN_PRIOR_WEEK_SKF_FORECAST_VERSION" ( ) 
+	RETURNS OP_PRIOR_WEEK_FORECAST_VERSION NVARCHAR(20)
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY DEFINER 
+	DEFAULT SCHEMA CVS_FRIP
+	AS
+BEGIN
+
+DECLARE V_PRIOR_WEEK NVARCHAR(6);
+DECLARE V_PRIOR_WEEK_FORECAST_VERSION NVARCHAR(20);
+--Pick previous week
+SELECT "CVS_FRIP"."CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK" ( ) INTO V_PRIOR_WEEK FROM DUMMY
+;
+--Pick latest forecast version from live SKF Forecast DSO
+SELECT MAX(_BIC_ZIO_VER) AS LATEST_VERSION INTO V_PRIOR_WEEK_FORECAST_VERSION FROM "_SYS_BIC"."CVS_FRIP.Base.FI/CV_BASE_SKF_WEEKLY_FORECAST_S4" 
+WHERE _BIC_ZIO_SWEEK = :V_PRIOR_WEEK 
+AND _BIC_ZIO_SAUDT IN ('1','10') 
+AND FISCVARNT = 'K4' 
+AND _BIC_ZIO_VER
+in ('01_JAN','02_FEB','03_MAR','04_APR',
+'05_MAY','06_JUN','07_JUL','08_AUG','09_SEP','10_OCT','11_NOV','12_DEC')
+;
+
+OP_PRIOR_WEEK_FORECAST_VERSION := V_PRIOR_WEEK_FORECAST_VERSION
+;
+END;

@@ -1,0 +1,29 @@
+CREATE /**************************************************************************
+Scalar Function Name    :  SFN_FC_FLAG
+Version          	    :  1.0
+Team Responsible        :  CVS FRIP
+Created By              :  Praveen Vemuluri
+Created On              :  04/03/2021
+Updated By              :             
+Updated On              :  
+Objective               :  To check if data exists in Frozen cube
+Source                  :  CV_BASE_FIN_WEEKLY_BUDGET_S4
+Target                  :  OP_FC_COUNT
+***************************************************************************/
+FUNCTION "CVS_FRIP"."CVS_FRIP.Composite.Master::SFN_FC_FLAG" ( IN IP_VERSION NVARCHAR(20) ) 
+	RETURNS OP_FC_COUNT NVARCHAR(10)
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY DEFINER
+	DEFAULT SCHEMA "CVS_FRIP"
+	AS
+BEGIN
+
+DECLARE V_PRIOR_WEEK NVARCHAR(6);
+--Pick previous week
+	SELECT "CVS_FRIP"."CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK" ( ) INTO V_PRIOR_WEEK FROM DUMMY;
+
+	SELECT COUNT(*) INTO OP_FC_COUNT FROM "CVS_FRIP"."AZSRP_DS052_VT_S4" WHERE _BIC_ZIO_SWEEK = :V_PRIOR_WEEK
+																		   AND _BIC_ZIO_VER = :IP_VERSION;
+	
+	
+END;
