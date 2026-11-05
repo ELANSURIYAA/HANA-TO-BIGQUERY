@@ -1,0 +1,1071 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_COMP_TOPSIDE_ADJUSTMENTS" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Composite View for Topside Adjustments (CAR)"/>
+  <localVariables>
+    <variable id="IP_WEEK_ENDING_FROM" parameter="true">
+      <descriptions defaultDescription="Week Ending From"/>
+      <variableProperties datatype="CHAR" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="true">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_ENDING_TO" parameter="true">
+      <descriptions defaultDescription="Week Ending To"/>
+      <variableProperties datatype="CHAR" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="true">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_VERSION_COMP_FLAG" parameter="true">
+      <descriptions defaultDescription="Version for Comp Flag"/>
+      <variableProperties datatype="CHAR" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule>
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="36"/>
+  <dataSources>
+    <DataSource id="CV_BASE_TOPSIDE_ADJUSTMENTS_CAR" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.FI/calculationviews/CV_BASE_TOPSIDE_ADJUSTMENTS_CAR</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_SRPACT_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_SRPACT_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_COMPFL_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_COMPFL_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_RCALWEEK_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_RCALWEEK_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_CEPCT_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Text/calculationviews/CV_BASE_MD_CEPCT_S4</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="TOPSIDE_ADJUSTMENTS">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="WEEK_YEAR">
+          <filter xsi:type="AccessControl:RangeValueFilter" operator="BT" including="true" lowValue="$$IP_WEEK_ENDING_FROM$$" highValue="$$IP_WEEK_ENDING_TO$$"/>
+        </viewAttribute>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_LY"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_TOPSIDE_ADJUSTMENTS_CAR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="STORE_ATTRIBUTES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_SRPACT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_1" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="WEEK_YEAR"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_LY"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#TOPSIDE_ADJUSTMENTS">
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+      </input>
+      <input node="#STORE_ATTRIBUTES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+      </input>
+      <joinAttribute name="PRCTR"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="COMP_FLAG" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="ZWEEK"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="COMP_VER"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_COMPFL_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZWEEK" source="ZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMP_VER" source="COMP_VER"/>
+      </input>
+      <filter>(&quot;COMP_VER&quot; = '$$IP_VERSION_COMP_FLAG$$')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_2" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="WEEK_YEAR"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_LY"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#COMP_FLAG">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="ZWEEK"/>
+      </input>
+      <joinAttribute name="PRCTR"/>
+      <joinAttribute name="WEEK_YEAR"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="RETAIL_CALENDAR">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZZWEEK"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_RCALWEEK_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_3" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="SC_90AS3_LY"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="WEEK_YEAR"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_2">
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#RETAIL_CALENDAR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="ZZWEEK"/>
+      </input>
+      <joinAttribute name="WEEK_YEAR"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="PROFIT_CENTER_TEXT">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="LTEXT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_CEPCT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LTEXT" source="LTEXT"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_4" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="WEEK_YEAR"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_LY"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="PROFIT_CENTER_DESCR"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_3">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#PROFIT_CENTER_TEXT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_DESCR" source="LTEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+      </input>
+      <joinAttribute name="PRCTR"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="WEEK_YEAR"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_LY"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="PROFIT_CENTER_DESCR"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_COMP_FLAG" length="10" expressionLanguage="COLUMN_ENGINE">
+          <formula>MAX(&quot;FS_COMP_WK&quot;,&quot;RX_COMP_WK&quot;)</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_WEEK_NUMBER" length="2" expressionLanguage="COLUMN_ENGINE">
+          <formula>RIGHTSTR(&quot;WEEK_YEAR&quot;,2)</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#Join_4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_DESCR" source="PROFIT_CENTER_DESCR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="APPLICATION" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Application"/>
+        <keyMapping columnObjectName="Projection_1" columnName="APPLICATION"/>
+      </attribute>
+      <attribute id="DESCRIPTION" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DESCRIPTION"/>
+      </attribute>
+      <attribute id="PRCTR" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="S4_ACCOUNT" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="S4 Account"/>
+        <keyMapping columnObjectName="Projection_1" columnName="S4_ACCOUNT"/>
+      </attribute>
+      <attribute id="SEGMENT" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Segment"/>
+        <keyMapping columnObjectName="Projection_1" columnName="SEGMENT"/>
+      </attribute>
+      <attribute id="TYPE" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type"/>
+        <keyMapping columnObjectName="Projection_1" columnName="TYPE"/>
+      </attribute>
+      <attribute id="WEEK_YEAR" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Week"/>
+        <keyMapping columnObjectName="Projection_1" columnName="WEEK_YEAR"/>
+      </attribute>
+      <attribute id="ZYEAR" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZYEAR"/>
+      </attribute>
+      <attribute id="STRNUM" order="15" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store Number"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STRNUM"/>
+      </attribute>
+      <attribute id="DIVISION_CODE" order="16" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_CODE"/>
+      </attribute>
+      <attribute id="DIVISION_DESC" order="17" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DIVISION_DESC"/>
+      </attribute>
+      <attribute id="DISTRICT_CODE" order="18" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_DESC" order="19" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISTRICT_DESC"/>
+      </attribute>
+      <attribute id="REGION_DESC" order="20" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_DESC"/>
+      </attribute>
+      <attribute id="REGION_CODE" order="21" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REGION_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_CODE" order="22" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REP_MKT_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_DESC" order="23" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market"/>
+        <keyMapping columnObjectName="Projection_1" columnName="REP_MKT_DESC"/>
+      </attribute>
+      <attribute id="CITY" order="24" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="City"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CITY"/>
+      </attribute>
+      <attribute id="STATE" order="25" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="State"/>
+        <keyMapping columnObjectName="Projection_1" columnName="STATE"/>
+      </attribute>
+      <attribute id="FS_OPEN_DAT" order="26" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store(FS) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="RX_OPEN_DAT" order="27" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy(RX) Open Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="AREA_CODE" order="28" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Code"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_CODE"/>
+      </attribute>
+      <attribute id="AREA_DESC" order="29" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="AREA_DESC"/>
+      </attribute>
+      <attribute id="EMERG_MKT_IND" order="30" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="Projection_1" columnName="EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="CAL_COMP_FLAG" order="47" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp Flag"/>
+        <keyMapping columnObjectName="Projection_1" columnName="CAL_COMP_FLAG"/>
+      </attribute>
+      <attribute id="ZRWSTRTDATE" order="48" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Start Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRWSTRTDATE"/>
+      </attribute>
+      <attribute id="ZRWENDDATE" order="49" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week End Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZRWENDDATE"/>
+      </attribute>
+      <attribute id="PROFIT_CENTER_DESCR" order="50" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center Description"/>
+        <keyMapping columnObjectName="Projection_1" columnName="PROFIT_CENTER_DESCR"/>
+      </attribute>
+      <attribute id="RX_DIVISION_CODE" order="51" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DIVISION_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_DIVISION_CODE"/>
+      </attribute>
+      <attribute id="RX_AREA_CODE" order="52" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_AREA_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_AREA_CODE"/>
+      </attribute>
+      <attribute id="RX_REGION_CODE" order="53" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_REGION_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_REGION_CODE"/>
+      </attribute>
+      <attribute id="RX_DISTRICT_CODE" order="54" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DISTRICT_CODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RX_DISTRICT_CODE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes>
+      <calculatedAttribute id="CAL_WEEK_NUMBER" hidden="false" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyCalculation datatype="NVARCHAR" expressionLanguage="COLUMN_ENGINE" length="2">
+          <formula>rightstr(&quot;WEEK_YEAR&quot;,2)</formula>
+        </keyCalculation>
+      </calculatedAttribute>
+    </calculatedAttributes>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="FS_BUD" order="31" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Budget Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_BUD"/>
+      </measure>
+      <measure id="FS_FCT" order="32" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Forecast Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_FCT"/>
+      </measure>
+      <measure id="FS_FLASH" order="33" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Sales Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_FLASH"/>
+      </measure>
+      <measure id="FS_LY" order="34" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS LY Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_LY"/>
+      </measure>
+      <measure id="RX_BUD" order="35" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Budget Amount "/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_BUD"/>
+      </measure>
+      <measure id="RX_FCT" order="36" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Forecast Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_FCT"/>
+      </measure>
+      <measure id="RX_FLASH" order="37" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Sales Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_FLASH"/>
+      </measure>
+      <measure id="RX_LY" order="38" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx LY Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_LY"/>
+      </measure>
+      <measure id="SC_90AS1_BUD" order="39" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Budget Scripts 90as1"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS1_BUD"/>
+      </measure>
+      <measure id="SC_90AS1_FCT" order="40" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Scripts 90as1"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS1_FCT"/>
+      </measure>
+      <measure id="SC_90AS1_FLASH" order="41" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Flash Scripts 90as1"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS1_FLASH"/>
+      </measure>
+      <measure id="SC_90AS1_LY" order="42" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="LY Scripts 90as1"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS1_LY"/>
+      </measure>
+      <measure id="SC_90AS3_BUD" order="43" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Budget Scripts 90as3"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS3_BUD"/>
+      </measure>
+      <measure id="SC_90AS3_FCT" order="44" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Scripts 90as3"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS3_FCT"/>
+      </measure>
+      <measure id="SC_90AS3_FLASH" order="45" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Flash Scripts 90as3"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS3_FLASH"/>
+      </measure>
+      <measure id="SC_90AS3_LY" order="46" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="LY Scripts 90as3"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SC_90AS3_LY"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures>
+      <measure id="CAL_SC_90AS3_FLASH" hidden="false" order="1" aggregationType="sum" measureType="simple" datatype="INTEGER" expressionLanguage="COLUMN_ENGINE">
+        <descriptions defaultDescription="Flash Scripts 90as3"/>
+        <formula>IF(IN(&quot;SEGMENT&quot;,'CMX','MC'),0,&#xD;
+&quot;SC_90AS3_FLASH&quot; + &#xD;
+if ( &quot;S4_ACCOUNT&quot; = '804013' &#xD;
+   , &quot;SC_90AS1_FLASH&quot;*2&#xD;
+  , &quot;SC_90AS1_FLASH&quot;&#xD;
+   ))</formula>
+      </measure>
+      <measure id="CAL_SC_90AS3_BUD" hidden="false" order="2" aggregationType="sum" measureType="simple" datatype="DECIMAL" expressionLanguage="COLUMN_ENGINE" length="34" scale="3">
+        <descriptions defaultDescription="Budget Scripts 90as3"/>
+        <formula>IF(IN(&quot;SEGMENT&quot;,'CMX','MC'),0,&#xD;
+&quot;SC_90AS3_BUD&quot; + &#xD;
+if ( &quot;S4_ACCOUNT&quot; = '804013' &#xD;
+   , &quot;SC_90AS1_BUD&quot;*2&#xD;
+  , &quot;SC_90AS1_BUD&quot;&#xD;
+   ))</formula>
+      </measure>
+      <measure id="CAL_SC_90AS3_FCT" hidden="false" order="3" aggregationType="sum" measureType="simple" datatype="DECIMAL" expressionLanguage="COLUMN_ENGINE" length="34" scale="3">
+        <descriptions defaultDescription="Forecast Scripts 90as3"/>
+        <formula>IF(IN(&quot;SEGMENT&quot;,'CMX','MC'),0,&#xD;
+&quot;SC_90AS3_FCT&quot; + &#xD;
+if ( &quot;S4_ACCOUNT&quot; = '804013' &#xD;
+   , &quot;SC_90AS1_FCT&quot;*2&#xD;
+  , &quot;SC_90AS1_FCT&quot;&#xD;
+   ))</formula>
+      </measure>
+      <measure id="CAL_SC_90AS3_LY" hidden="false" order="4" aggregationType="sum" measureType="simple" datatype="DECIMAL" expressionLanguage="COLUMN_ENGINE" length="34" scale="3">
+        <descriptions defaultDescription="LY Scripts 90as3"/>
+        <formula>IF(IN(&quot;SEGMENT&quot;,'CMX','MC'),0,&#xD;
+&quot;SC_90AS3_LY&quot; + &#xD;
+if ( &quot;S4_ACCOUNT&quot; = '804013' &#xD;
+   , &quot;SC_90AS1_LY&quot;*2&#xD;
+  , &quot;SC_90AS1_LY&quot;&#xD;
+   ))</formula>
+      </measure>
+    </calculatedMeasures>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="203" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="TOPSIDE_ADJUSTMENTS" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="627"/>
+        <rectangleSize height="66" width="181"/>
+      </shape>
+      <shape expanded="true" modelObjectName="STORE_ATTRIBUTES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="217" y="627"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="129" y="531"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COMP_FLAG" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="283" y="531"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_2" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="204" y="435"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="RETAIL_CALENDAR" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="358" y="435"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_3" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="280" y="339"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="PROFIT_CENTER_TEXT" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="126" y="339"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_4" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="203" y="243"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="203" y="165"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

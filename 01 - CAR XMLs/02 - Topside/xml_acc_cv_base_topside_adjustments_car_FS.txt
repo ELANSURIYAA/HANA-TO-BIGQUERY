@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_TOPSIDE_ADJUSTMENTS_CAR" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <descriptions defaultDescription="Base View for Topside Adjustments (CAR)"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="41"/>
+  <dataSources>
+    <DataSource id="TOPSIDE_ADJUSTMENTS_VT_CAR" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="TOPSIDE_ADJUSTMENTS_VT_CAR"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="TOPSIDE_ADJUSTMENTS">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="APPLICATION"/>
+        <viewAttribute id="DESCRIPTION"/>
+        <viewAttribute id="MANDT">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="110"/>
+            <operands value="200"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="S4_ACCOUNT"/>
+        <viewAttribute id="SEGMENT"/>
+        <viewAttribute id="TYPE"/>
+        <viewAttribute id="WEEK_YEAR"/>
+        <viewAttribute id="ZYEAR"/>
+        <viewAttribute id="FS_BUD"/>
+        <viewAttribute id="FS_FCT"/>
+        <viewAttribute id="FS_FLASH"/>
+        <viewAttribute id="FS_LY"/>
+        <viewAttribute id="RX_BUD"/>
+        <viewAttribute id="RX_FCT"/>
+        <viewAttribute id="RX_FLASH"/>
+        <viewAttribute id="RX_LY"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SC_90AS3_BUD"/>
+        <viewAttribute id="SC_90AS3_FCT"/>
+        <viewAttribute id="SC_90AS3_FLASH"/>
+        <viewAttribute id="SC_90AS3_LY"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#TOPSIDE_ADJUSTMENTS_VT_CAR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="APPLICATION" source="APPLICATION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="S4_ACCOUNT" source="S4_ACCOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TYPE" source="TYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WEEK_YEAR" source="WEEK_YEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZYEAR" source="ZYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUD" source="FS_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FCT" source="FS_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_FLASH" source="FS_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_LY" source="FS_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUD" source="RX_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FCT" source="RX_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_FLASH" source="RX_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_LY" source="RX_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_BUD" source="SC_90AS3_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FCT" source="SC_90AS3_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_FLASH" source="SC_90AS3_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS3_LY" source="SC_90AS3_LY"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="TOPSIDE_ADJUSTMENTS">
+    <descriptions/>
+    <attributes>
+      <attribute id="APPLICATION" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Application"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="APPLICATION"/>
+      </attribute>
+      <attribute id="DESCRIPTION" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Description"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="DESCRIPTION"/>
+      </attribute>
+      <attribute id="MANDT" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="MANDT"/>
+      </attribute>
+      <attribute id="PRCTR" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="S4_ACCOUNT" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="S4 Account"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="S4_ACCOUNT"/>
+      </attribute>
+      <attribute id="SEGMENT" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Segment"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SEGMENT"/>
+      </attribute>
+      <attribute id="TYPE" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Type"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="TYPE"/>
+      </attribute>
+      <attribute id="WEEK_YEAR" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Week"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="WEEK_YEAR"/>
+      </attribute>
+      <attribute id="ZYEAR" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Fiscal Year"/>
+        <keyMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="ZYEAR"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="FS_BUD" order="10" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Budget Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="FS_BUD"/>
+      </measure>
+      <measure id="FS_FCT" order="11" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Forecast Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="FS_FCT"/>
+      </measure>
+      <measure id="FS_FLASH" order="12" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Sales Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="FS_FLASH"/>
+      </measure>
+      <measure id="FS_LY" order="13" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS LY Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="FS_LY"/>
+      </measure>
+      <measure id="RX_BUD" order="14" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Budget Amount "/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="RX_BUD"/>
+      </measure>
+      <measure id="RX_FCT" order="15" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Forecast Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="RX_FCT"/>
+      </measure>
+      <measure id="RX_FLASH" order="16" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Sales Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="RX_FLASH"/>
+      </measure>
+      <measure id="RX_LY" order="17" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx LY Amount"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="RX_LY"/>
+      </measure>
+      <measure id="SC_90AS1_BUD" order="18" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Budget Scripts 90as1"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS1_BUD"/>
+      </measure>
+      <measure id="SC_90AS1_FCT" order="19" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Scripts 90as1"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS1_FCT"/>
+      </measure>
+      <measure id="SC_90AS1_FLASH" order="20" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Flash Scripts 90as1"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS1_FLASH"/>
+      </measure>
+      <measure id="SC_90AS1_LY" order="21" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="LY Scripts 90as1"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS1_LY"/>
+      </measure>
+      <measure id="SC_90AS3_BUD" order="22" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Budget Scripts 90as3"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS3_BUD"/>
+      </measure>
+      <measure id="SC_90AS3_FCT" order="23" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Scripts 90as3"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS3_FCT"/>
+      </measure>
+      <measure id="SC_90AS3_FLASH" order="24" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Flash Scripts 90as3"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS3_FLASH"/>
+      </measure>
+      <measure id="SC_90AS3_LY" order="25" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="LY Scripts 90as3"/>
+        <measureMapping columnObjectName="TOPSIDE_ADJUSTMENTS" columnName="SC_90AS3_LY"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="TOPSIDE_ADJUSTMENTS" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_FIN_FLASH_SALES_CAR" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for Flash Sales from CAR"/>
+  <localVariables>
+    <variable id="IP_UPD_TIMESTAMP_FROM" parameter="true">
+      <descriptions defaultDescription="Update Timestamp From"/>
+      <variableProperties datatype="NVARCHAR" defaultValue="19000101000000" length="15" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+    <variable id="IP_UPD_TIMESTAMP_TO" parameter="true">
+      <descriptions defaultDescription="Update Timestamp To"/>
+      <variableProperties datatype="NVARCHAR" defaultValue="99991231125959" length="15" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="31"/>
+  <dataSources>
+    <DataSource id="FLASH_SALES_VT_CAR" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="CVS_FRIP" columnObjectName="FLASH_SALES_VT_CAR"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="DECIMAL" id="CAL_UPD_TIMESTAMP_FROM" length="15" scale="0" expressionLanguage="COLUMN_ENGINE">
+          <formula>'$$IP_UPD_TIMESTAMP_FROM$$'</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="DECIMAL" id="CAL_UPD_TIMESTAMP_TO" length="15" scale="0" expressionLanguage="COLUMN_ENGINE">
+          <formula>'$$IP_UPD_TIMESTAMP_TO$$'</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#FLASH_SALES_VT_CAR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+      </input>
+      <filter>&quot;ZZ_UPD_TIMESTAMP&quot; >= &quot;CAL_UPD_TIMESTAMP_FROM&quot; and &quot;ZZ_UPD_TIMESTAMP&quot; &lt;= &quot;CAL_UPD_TIMESTAMP_TO&quot;</filter>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RETAILSTOREID" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Store ID"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RETAILSTOREID"/>
+      </attribute>
+      <attribute id="BUSINESSDAYDATE" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Day Date"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUSINESSDAYDATE"/>
+      </attribute>
+      <attribute id="ZZ_UPD_TIMESTAMP" order="16" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Update Timestamp"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_UPD_TIMESTAMP"/>
+      </attribute>
+      <attribute id="TRANSCURRENCY" order="17" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Currency"/>
+        <keyMapping columnObjectName="Projection_1" columnName="TRANSCURRENCY"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="FS_SALESAMOUNT" order="4" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Sales Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_SALESAMOUNT"/>
+      </measure>
+      <measure id="REDUCTIONAMOUNT" order="5" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Discount Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="REDUCTIONAMOUNT"/>
+      </measure>
+      <measure id="RX_SALESAMOUNT" order="6" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Sales Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_SALESAMOUNT"/>
+      </measure>
+      <measure id="CAL_FS_UNITS" order="7" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Units"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_FS_UNITS"/>
+      </measure>
+      <measure id="EMP_REDUCTIONAMOUNT" order="8" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Employee Discount Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="EMP_REDUCTIONAMOUNT"/>
+      </measure>
+      <measure id="CAL_RX_CNT_GE84_NS" order="9" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count GE84 NS"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_RX_CNT_GE84_NS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_GE84_RE" order="10" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count GE84 Refill"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_RX_CNT_GE84_RE"/>
+      </measure>
+      <measure id="CAL_RX_CNT_NS" order="11" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count NS"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_RX_CNT_NS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_RE" order="12" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count Refill"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_RX_CNT_RE"/>
+      </measure>
+      <measure id="RX_UPD_TIMESTAMP" order="13" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="Rx Update Timestamp"/>
+        <measureMapping columnObjectName="Projection_1" columnName="RX_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="FS_UPD_TIMESTAMP" order="14" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="FS Update Timestamp"/>
+        <measureMapping columnObjectName="Projection_1" columnName="FS_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="SCRIPTS_UPD_TIMESTAMP" order="15" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="Scripts Update Timestamp"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SCRIPTS_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="CVD_AMOUNT" order="18" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CVD Amount"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CVD_AMOUNT"/>
+      </measure>
+      <measure id="CAL_CVD_UNITS" order="19" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CVD Units"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CAL_CVD_UNITS"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

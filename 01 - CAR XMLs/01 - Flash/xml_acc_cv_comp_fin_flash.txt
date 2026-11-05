@@ -1,0 +1,1573 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" schemaVersion="2.3" id="CV_COMP_FIN_FLASH" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="true" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Composite View for Weekly Flash Sales (CAR)"/>
+  <localVariables>
+    <variable id="IP_VERSION" parameter="true">
+      <descriptions defaultDescription="Version"/>
+      <variableProperties datatype="NVARCHAR" length="10" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule>
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_ENDING_FROM" parameter="true">
+      <descriptions defaultDescription="Week Ending From"/>
+      <variableProperties datatype="NVARCHAR" length="8" mandatory="true">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="true">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_CURRENT_WEEK_START_DATE</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_WEEK_ENDING_TO" parameter="true">
+      <descriptions defaultDescription="Week Ending To"/>
+      <variableProperties datatype="NVARCHAR" length="8" mandatory="true">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+        <derivationRule inputEnabled="true">
+          <scalarFunctionName>CVS_FRIP.Composite.Master::SFN_CURRENT_WEEK_END_DATE</scalarFunctionName>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+    <variable id="IP_UPD_TIMESTAMP_FROM" parameter="true">
+      <descriptions defaultDescription="Update Timestamp From"/>
+      <variableProperties datatype="NVARCHAR" defaultValue="19000101000000" length="15" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+    <variable id="IP_UPD_TIMESTAMP_TO" parameter="true">
+      <descriptions defaultDescription="Update Timestamp To"/>
+      <variableProperties datatype="NVARCHAR" defaultValue="99991231125959" length="20" mandatory="false">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings>
+    <mapping xsi:type="Variable:VariableMapping" dataSource="#CV_BASE_FIN_FLASH_SALES_CAR">
+      <targetVariable name="IP_UPD_TIMESTAMP_FROM" resourceUri="/CVS_FRIP.Base.FI/calculationviews/CV_BASE_FIN_FLASH_SALES_CAR"/>
+      <localVariable>#IP_UPD_TIMESTAMP_FROM</localVariable>
+    </mapping>
+    <mapping xsi:type="Variable:VariableMapping" dataSource="#CV_BASE_FIN_FLASH_SALES_CAR">
+      <targetVariable name="IP_UPD_TIMESTAMP_TO" resourceUri="/CVS_FRIP.Base.FI/calculationviews/CV_BASE_FIN_FLASH_SALES_CAR"/>
+      <localVariable>#IP_UPD_TIMESTAMP_TO</localVariable>
+    </mapping>
+  </variableMappings>
+  <informationModelLayout relativeWidthScenario="70"/>
+  <dataSources>
+    <DataSource id="CV_BASE_FIN_FLASH_SALES_CAR" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.FI/calculationviews/CV_BASE_FIN_FLASH_SALES_CAR</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_RCALWEEK_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_RCALWEEK_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_COMPFL_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_COMPFL_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_HRRP_NODE_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_HRRP_NODE_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_SRPACT_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_SRPACT_S4</resourceUri>
+    </DataSource>
+    <DataSource id="COMP_NONCOMP_STORE_ATTR$$$$CV_BASE_MD_SRPACT_S4$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_SRPACT_S4</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_MD_CEPCT_S4" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Base.Text/calculationviews/CV_BASE_MD_CEPCT_S4</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="FLASH" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="RETAILSTOREID_CAR"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_WEEK_ENDING_DATE" length="8" expressionLanguage="SQL">
+          <formula>REPLACE(TO_CHAR(add_days(TO_DATE(&quot;BUSINESSDAYDATE&quot;),5-replace(weekday(TO_DATE(&quot;BUSINESSDAYDATE&quot;)),6,-1))),'-','')</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#CV_BASE_FIN_FLASH_SALES_CAR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID_CAR" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+      </input>
+      <filter>(&quot;RETAILSTOREID_CAR&quot;&lt;'0000020000' or &quot;RETAILSTOREID_CAR&quot; > '0000024999')  AND (&quot;BUSINESSDAYDATE&quot;>= '$$IP_WEEK_ENDING_FROM$$' AND &quot;BUSINESSDAYDATE&quot; &lt;= '$$IP_WEEK_ENDING_TO$$')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="RETAIL_CALENDAR">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="RCLNT"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_RCALWEEK_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RCLNT" source="RCLNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="WEEK" cardinality="CN_1" dynamic="false" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="RETAILSTOREID_CAR"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#FLASH">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID_CAR" source="RETAILSTOREID_CAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+      </input>
+      <input node="#RETAIL_CALENDAR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="ZRWENDDATE"/>
+      </input>
+      <joinAttribute name="CAL_WEEK_ENDING_DATE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="COMP_FLAG" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="COMP_VER"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="ZWEEK"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_COMPFL_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COMP_VER" source="COMP_VER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZWEEK" source="ZWEEK"/>
+      </input>
+      <filter>(&quot;COMP_VER&quot; ='$$IP_VERSION$$')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="HIERARCHY" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PARNODE"/>
+        <viewAttribute id="HRYVALTO"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="NODEVALUE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_HRRP_NODE_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARNODE" source="PARNODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="HRYVALTO" source="HRYVALTO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="NODEVALUE" source="NODEVALUE"/>
+      </input>
+      <filter>(match(&quot;PARNODE&quot;,'*CORE_RET*')) AND (&quot;HRYVALTO&quot; ='99991231')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="STORE_ATTR">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_SRPACT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_6" cardinality="CN_1" dynamic="false" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#WEEK">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID_CAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+      </input>
+      <input node="#STORE_ATTR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="STRNUM"/>
+      </input>
+      <joinAttribute name="RETAILSTOREID"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_3" cardinality="C1_N" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+        <viewAttribute hidden="true" id="JOIN$NODEVALUE$PRCTR"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#HIERARCHY">
+        <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$NODEVALUE$PRCTR" source="NODEVALUE"/>
+      </input>
+      <input node="#Join_6">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$NODEVALUE$PRCTR" source="PRCTR"/>
+      </input>
+      <joinAttribute name="JOIN$NODEVALUE$PRCTR"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="COMP_FLG" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Join_3">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#COMP_FLAG">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZWEEK"/>
+      </input>
+      <joinAttribute name="PRCTR"/>
+      <joinAttribute name="ZZWEEK"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="CALCULATIONS">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_SCRIPTS_90AS3" expressionLanguage="COLUMN_ENGINE">
+          <formula>&quot;CAL_RX_CNT_NS&quot;+&quot;CAL_RX_CNT_RE&quot;+(&quot;CAL_RX_CNT_GE84_NS&quot;+&quot;CAL_RX_CNT_GE84_RE&quot;)*2</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_COMP_FLAG" length="10" expressionLanguage="COLUMN_ENGINE">
+          <formula>IF(ISNULL(MAX(&quot;FS_COMP_WK&quot;,&quot;RX_COMP_WK&quot;)),'0',MAX(&quot;FS_COMP_WK&quot;,&quot;RX_COMP_WK&quot;))</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_WEEK_NUMBER" length="2" expressionLanguage="COLUMN_ENGINE">
+          <formula>RIGHTSTR(&quot;ZZWEEK&quot;,2)</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#COMP_FLG">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:AggregationView" id="EMPLOYEE_DISCOUNT">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute aggregationType="sum" id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="CAL_COMP_FLAG"/>
+        <viewAttribute id="CAL_WEEK_NUMBER"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="PRCTR_ORG"/>
+        <viewAttribute aggregationType="max" id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute aggregationType="max" id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute aggregationType="max" id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="NVARCHAR" id="CAL_PRCTR" length="10" expressionLanguage="COLUMN_ENGINE">
+          <formula>CASE(&quot;CAL_COMP_FLAG&quot;,'1','0000562075','0','0000562076',string(null))</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#CALCULATIONS">
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG" source="CAL_COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR_ORG" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="COMP_NONCOMP_STORE_ATTR">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="0000562075"/>
+            <operands value="0000562076"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#COMP_NONCOMP_STORE_ATTR$$$$CV_BASE_MD_SRPACT_S4$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_4" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="CAL_WEEK_NUMBER"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="CAL_COMP_FLAG"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#EMPLOYEE_DISCOUNT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="CAL_PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG" source="CAL_COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+      </input>
+      <input node="#COMP_NONCOMP_STORE_ATTR">
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+      </input>
+      <joinAttribute name="PRCTR"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:UnionView" id="Union_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute datatype="NVARCHAR" id="RETAILSTOREID" length="10" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="CAL_WEEK_ENDING_DATE" length="8" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="FS_COMP_WK" length="1" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="RX_COMP_WK" length="1" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="EMERG_MKT_IND" length="1" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="REP_MKT_CODE" length="10" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="REP_MKT_DESC" length="60" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="CAL_COMP_FLAG" length="10" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="DIVISION_CODE" length="10" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="DIVISION_DESC" length="60" scale="0"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_SCRIPTS_90AS3"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute datatype="NVARCHAR" id="REGION_CODE" length="10" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="REGION_DESC" length="60" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="DISTRICT_CODE" length="10" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="DISTRICT_DESC" length="60" scale="0"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="CAL_WEEK_NUMBER"/>
+        <viewAttribute datatype="NVARCHAR" id="CITY" length="35" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="STATE" length="2" scale="0"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute datatype="NVARCHAR" id="FS_OPEN_DAT" length="8" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="RX_OPEN_DAT" length="8" scale="0"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute datatype="DECIMAL" id="ZZ_UPD_TIMESTAMP" length="15" scale="0"/>
+        <viewAttribute datatype="NVARCHAR" id="TRANSCURRENCY" length="5" scale="0"/>
+        <viewAttribute id="AREA_CODE" transparentFilter="false"/>
+        <viewAttribute id="AREA_DESC" transparentFilter="false"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="RX_DIVISION_CODE" transparentFilter="false"/>
+        <viewAttribute id="RX_AREA_CODE" transparentFilter="false"/>
+        <viewAttribute id="RX_REGION_CODE" transparentFilter="false"/>
+        <viewAttribute id="RX_DISTRICT_CODE" transparentFilter="false"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input emptyUnionBehavior="NO_ROW" node="#CALCULATIONS">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG" source="CAL_COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SCRIPTS_90AS3" source="CAL_SCRIPTS_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="EMP_REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Join_4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG" source="CAL_COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_FS_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_SCRIPTS_90AS3" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CVD_AMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_CVD_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="PROFIT_CENTER_TEXT">
+      <descriptions defaultDescription="Profit Center Desc"/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_MD_CEPCT_S4">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="LTEXT"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_5" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="leftOuter">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="ZZWEEK"/>
+        <viewAttribute id="ZRYEAR"/>
+        <viewAttribute id="ZRPERIOD"/>
+        <viewAttribute id="ZRYRP"/>
+        <viewAttribute id="CAL_WEEK_ENDING_DATE"/>
+        <viewAttribute id="FS_COMP_WK"/>
+        <viewAttribute id="RX_COMP_WK"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="CAL_COMP_FLAG"/>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="CAL_WEEK_NUMBER"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_SCRIPTS_90AS3"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="AREA_CODE" transparentFilter="false"/>
+        <viewAttribute id="AREA_DESC" transparentFilter="false"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="RX_DIVISION_CODE" transparentFilter="false"/>
+        <viewAttribute id="RX_AREA_CODE" transparentFilter="false"/>
+        <viewAttribute id="RX_REGION_CODE" transparentFilter="false"/>
+        <viewAttribute id="RX_DISTRICT_CODE" transparentFilter="false"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Union_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZWEEK" source="ZZWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYEAR" source="ZRYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRPERIOD" source="ZRPERIOD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRYRP" source="ZRYRP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_ENDING_DATE" source="CAL_WEEK_ENDING_DATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_COMP_WK" source="FS_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_COMP_WK" source="RX_COMP_WK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG" source="CAL_COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SCRIPTS_90AS3" source="CAL_SCRIPTS_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+      <input node="#PROFIT_CENTER_TEXT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="PROFIT_CENTER_TEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+      </input>
+      <joinAttribute name="PRCTR"/>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Join_5">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="Join_5" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RETAILSTOREID" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Store ID"/>
+        <keyMapping columnObjectName="Join_5" columnName="RETAILSTOREID"/>
+      </attribute>
+      <attribute id="PRCTR" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="Join_5" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="BUSINESSDAYDATE" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Day Date"/>
+        <keyMapping columnObjectName="Join_5" columnName="BUSINESSDAYDATE"/>
+      </attribute>
+      <attribute id="ZZWEEK" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZZWEEK"/>
+      </attribute>
+      <attribute id="ZRYEAR" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Year"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZRYEAR"/>
+      </attribute>
+      <attribute id="ZRPERIOD" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Period"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZRPERIOD"/>
+      </attribute>
+      <attribute id="ZRYRP" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Period/Year"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZRYRP"/>
+      </attribute>
+      <attribute id="CAL_WEEK_ENDING_DATE" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Ending Date"/>
+        <keyMapping columnObjectName="Join_5" columnName="CAL_WEEK_ENDING_DATE"/>
+      </attribute>
+      <attribute id="FS_COMP_WK" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="Join_5" columnName="FS_COMP_WK"/>
+      </attribute>
+      <attribute id="RX_COMP_WK" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="Join_5" columnName="RX_COMP_WK"/>
+      </attribute>
+      <attribute id="EMERG_MKT_IND" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="Join_5" columnName="EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="REP_MKT_CODE" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Code"/>
+        <keyMapping columnObjectName="Join_5" columnName="REP_MKT_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_DESC" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market"/>
+        <keyMapping columnObjectName="Join_5" columnName="REP_MKT_DESC"/>
+      </attribute>
+      <attribute id="CAL_COMP_FLAG" order="15" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp Flag Final Weekly"/>
+        <keyMapping columnObjectName="Join_5" columnName="CAL_COMP_FLAG"/>
+      </attribute>
+      <attribute id="DIVISION_CODE" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Code"/>
+        <keyMapping columnObjectName="Join_5" columnName="DIVISION_CODE"/>
+      </attribute>
+      <attribute id="DIVISION_DESC" order="17" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Description"/>
+        <keyMapping columnObjectName="Join_5" columnName="DIVISION_DESC"/>
+      </attribute>
+      <attribute id="REGION_CODE" order="18" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Code"/>
+        <keyMapping columnObjectName="Join_5" columnName="REGION_CODE"/>
+      </attribute>
+      <attribute id="REGION_DESC" order="19" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Description"/>
+        <keyMapping columnObjectName="Join_5" columnName="REGION_DESC"/>
+      </attribute>
+      <attribute id="DISTRICT_CODE" order="20" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Code"/>
+        <keyMapping columnObjectName="Join_5" columnName="DISTRICT_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_DESC" order="21" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Description"/>
+        <keyMapping columnObjectName="Join_5" columnName="DISTRICT_DESC"/>
+      </attribute>
+      <attribute id="ZRWENDDATE" order="22" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="End Date"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZRWENDDATE"/>
+      </attribute>
+      <attribute id="ZRWSTRTDATE" order="23" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail  Week Start Date"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZRWSTRTDATE"/>
+      </attribute>
+      <attribute id="CAL_WEEK_NUMBER" order="24" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="Join_5" columnName="CAL_WEEK_NUMBER"/>
+      </attribute>
+      <attribute id="CITY" order="25" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="City"/>
+        <keyMapping columnObjectName="Join_5" columnName="CITY"/>
+      </attribute>
+      <attribute id="STATE" order="26" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="State"/>
+        <keyMapping columnObjectName="Join_5" columnName="STATE"/>
+      </attribute>
+      <attribute id="PROFIT_CENTER_TEXT" order="37" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center Desc"/>
+        <keyMapping columnObjectName="Join_5" columnName="PROFIT_CENTER_TEXT"/>
+      </attribute>
+      <attribute id="FS_OPEN_DAT" order="38" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store (FS) Open Date"/>
+        <keyMapping columnObjectName="Join_5" columnName="FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="RX_OPEN_DAT" order="39" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy (RX) Open Date"/>
+        <keyMapping columnObjectName="Join_5" columnName="RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="ZZ_UPD_TIMESTAMP" order="43" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Update Timestamp"/>
+        <keyMapping columnObjectName="Join_5" columnName="ZZ_UPD_TIMESTAMP"/>
+      </attribute>
+      <attribute id="TRANSCURRENCY" order="44" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Currency"/>
+        <keyMapping columnObjectName="Join_5" columnName="TRANSCURRENCY"/>
+      </attribute>
+      <attribute id="AREA_CODE" order="45" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="Area Code"/>
+        <keyMapping columnObjectName="Join_5" columnName="AREA_CODE"/>
+      </attribute>
+      <attribute id="AREA_DESC" order="46" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="Area Description"/>
+        <keyMapping columnObjectName="Join_5" columnName="AREA_DESC"/>
+      </attribute>
+      <attribute id="RX_DIVISION_CODE" order="49" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="RX_DIVISION_CODE"/>
+        <keyMapping columnObjectName="Join_5" columnName="RX_DIVISION_CODE"/>
+      </attribute>
+      <attribute id="RX_AREA_CODE" order="50" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="RX_AREA_CODE"/>
+        <keyMapping columnObjectName="Join_5" columnName="RX_AREA_CODE"/>
+      </attribute>
+      <attribute id="RX_REGION_CODE" order="51" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="RX_REGION_CODE"/>
+        <keyMapping columnObjectName="Join_5" columnName="RX_REGION_CODE"/>
+      </attribute>
+      <attribute id="RX_DISTRICT_CODE" order="52" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="RX_DISTRICT_CODE"/>
+        <keyMapping columnObjectName="Join_5" columnName="RX_DISTRICT_CODE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="FS_SALESAMOUNT" order="27" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Sales Amount"/>
+        <measureMapping columnObjectName="Join_5" columnName="FS_SALESAMOUNT"/>
+      </measure>
+      <measure id="REDUCTIONAMOUNT" order="28" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Discount Amount"/>
+        <measureMapping columnObjectName="Join_5" columnName="REDUCTIONAMOUNT"/>
+      </measure>
+      <measure id="RX_SALESAMOUNT" order="29" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Sales Amount"/>
+        <measureMapping columnObjectName="Join_5" columnName="RX_SALESAMOUNT"/>
+      </measure>
+      <measure id="CAL_FS_UNITS" order="30" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Units"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_FS_UNITS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_GE84_NS" order="31" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count GE84 NS"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_RX_CNT_GE84_NS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_GE84_RE" order="32" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count GE84 Refill"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_RX_CNT_GE84_RE"/>
+      </measure>
+      <measure id="CAL_SCRIPTS_90AS3" order="33" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Scripts 90as3"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_SCRIPTS_90AS3"/>
+      </measure>
+      <measure id="CAL_RX_CNT_NS" order="34" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count NS"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_RX_CNT_NS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_RE" order="35" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count Refill"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_RX_CNT_RE"/>
+      </measure>
+      <measure id="EMP_REDUCTIONAMOUNT" order="36" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Employee Discount Amount"/>
+        <measureMapping columnObjectName="Join_5" columnName="EMP_REDUCTIONAMOUNT"/>
+      </measure>
+      <measure id="RX_UPD_TIMESTAMP" order="40" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="RX Update Timestamp"/>
+        <measureMapping columnObjectName="Join_5" columnName="RX_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="FS_UPD_TIMESTAMP" order="41" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="FS Update Timestamp"/>
+        <measureMapping columnObjectName="Join_5" columnName="FS_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="SCRIPTS_UPD_TIMESTAMP" order="42" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="Scripts Update Timestamp"/>
+        <measureMapping columnObjectName="Join_5" columnName="SCRIPTS_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="CVD_AMOUNT" order="47" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CVD_AMOUNT"/>
+        <measureMapping columnObjectName="Join_5" columnName="CVD_AMOUNT"/>
+      </measure>
+      <measure id="CAL_CVD_UNITS" order="48" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CAL_CVD_UNITS"/>
+        <measureMapping columnObjectName="Join_5" columnName="CAL_CVD_UNITS"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="186" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="FLASH" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="105" y="1013"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="RETAIL_CALENDAR" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="259" y="1013"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="WEEK" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="182" y="917"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COMP_FLAG" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="339" y="725"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="HIERARCHY" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="106" y="821"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="STORE_ATTR" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="336" y="917"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_6" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="260" y="821"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_3" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="185" y="725"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COMP_FLG" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="263" y="629"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="CALCULATIONS" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="263" y="551"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="EMPLOYEE_DISCOUNT" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="473"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COMP_NONCOMP_STORE_ATTR" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="473"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_4" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="377"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Union_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="263" y="261"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="PROFIT_CENTER_TEXT" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="109" y="261"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_5" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="186" y="165"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

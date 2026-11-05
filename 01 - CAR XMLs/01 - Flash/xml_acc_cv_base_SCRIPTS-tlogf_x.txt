@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_TLOGF_X" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" calculationScenarioType="TREE_BASED" dataCategory="DIMENSION" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Projection">
+  <origin/>
+  <descriptions defaultDescription="Base View for Transaction Log Extensions table"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="27"/>
+  <dataSources>
+    <DataSource id="_POSDW_TLOGF_X" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAPABAP1" columnObjectName="/POSDW/TLOGF_X" alias="_POSDW_TLOGF_X"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RECORDQUALIFIER">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="25"/>
+        </viewAttribute>
+        <viewAttribute id="WORKSTATIONID">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="false" value="0000000000"/>
+        </viewAttribute>
+        <viewAttribute id="ARCHIVED"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="false" value="0"/>
+        </viewAttribute>
+        <viewAttribute id="ZZ_CUSTTYPE"/>
+        <viewAttribute id="ZZ_RX_CNT_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_RE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#_POSDW_TLOGF_X">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDQUALIFIER" source="RECORDQUALIFIER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WORKSTATIONID" source="WORKSTATIONID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ARCHIVED" source="ARCHIVED"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_CUSTTYPE" source="ZZ_CUSTTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="MANDT"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RETAILSTOREID" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RETAILSTOREID"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RETAILSTOREID"/>
+      </attribute>
+      <attribute id="BUSINESSDAYDATE" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="BUSINESSDAYDATE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUSINESSDAYDATE"/>
+      </attribute>
+      <attribute id="RECORDQUALIFIER" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RECORDQUALIFIER"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RECORDQUALIFIER"/>
+      </attribute>
+      <attribute id="WORKSTATIONID" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="WORKSTATIONID"/>
+        <keyMapping columnObjectName="Projection_1" columnName="WORKSTATIONID"/>
+      </attribute>
+      <attribute id="ARCHIVED" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ARCHIVED"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ARCHIVED"/>
+      </attribute>
+      <attribute id="ZZ_UPD_TIMESTAMP" order="7" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_UPD_TIMESTAMP"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_UPD_TIMESTAMP"/>
+      </attribute>
+      <attribute id="ZZ_CUSTTYPE" order="8" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_CUSTTYPE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_CUSTTYPE"/>
+      </attribute>
+      <attribute id="ZZ_RX_CNT_NS" order="9" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_RX_CNT_NS"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_RX_CNT_NS"/>
+      </attribute>
+      <attribute id="ZZ_RX_CNT_REFILL" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_RX_CNT_REFILL"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_RX_CNT_REFILL"/>
+      </attribute>
+      <attribute id="ZZ_RX_CNT_GE84_NS" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_RX_CNT_GE84_NS"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_RX_CNT_GE84_NS"/>
+      </attribute>
+      <attribute id="ZZ_RX_CNT_GE84_RE" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_RX_CNT_GE84_RE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_RX_CNT_GE84_RE"/>
+      </attribute>
+      <attribute id="ZZ_RX_MCRX_GE84_NS" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_RX_MCRX_GE84_NS"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_RX_MCRX_GE84_NS"/>
+      </attribute>
+      <attribute id="ZZ_RX_MCRX_GE84_RE" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_RX_MCRX_GE84_RE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_RX_MCRX_GE84_RE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures/>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

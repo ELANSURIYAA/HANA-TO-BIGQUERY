@@ -1,0 +1,1066 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_COMP_FLASH_SALES" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Composite View for Flash Sales Extract from CAR"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="66"/>
+  <dataSources>
+    <DataSource id="CV_BASE_NAVIX" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_NAVIX</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_TLOGF" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF</resourceUri>
+    </DataSource>
+    <DataSource id="FS_DISCOUNT$$$$CV_BASE_TLOGF$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF</resourceUri>
+    </DataSource>
+    <DataSource id="RX_SALES$$$$CV_BASE_TLOGF$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_TLOGF_X" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF_X</resourceUri>
+    </DataSource>
+    <DataSource id="NAVIX_2$$$$CV_BASE_NAVIX$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_NAVIX</resourceUri>
+    </DataSource>
+    <DataSource id="EMP_DISCOUNT$$$$CV_BASE_TLOGF$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_PARAMETERS" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_PARAMETERS</resourceUri>
+    </DataSource>
+    <DataSource id="EMP_DISC_TYPES$$$$CV_BASE_PARAMETERS$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_PARAMETERS</resourceUri>
+    </DataSource>
+    <DataSource id="RX_RETAIL_TYPES$$$$CV_BASE_PARAMETERS$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_PARAMETERS</resourceUri>
+    </DataSource>
+    <DataSource id="FS_DISC_TYPES$$$$CV_BASE_PARAMETERS$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_PARAMETERS</resourceUri>
+    </DataSource>
+    <DataSource id="CV_BASE_TLOGF_COVID" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_TLOGF_COVID</resourceUri>
+    </DataSource>
+    <DataSource id="RX_RETAIL_TYPES_COVID$$$$CV_BASE_PARAMETERS$$" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/SAPCAR.CVS_FRIP.Base/calculationviews/CV_BASE_PARAMETERS</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="NAVIX">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_NAVIX">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="FS_SALES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RECORDQUALIFIER">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="5"/>
+        </viewAttribute>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_TLOGF">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDQUALIFIER" source="RECORDQUALIFIER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="FS_DISCOUNT">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RECORDQUALIFIER">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="6"/>
+        </viewAttribute>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="DISCTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#FS_DISCOUNT$$$$CV_BASE_TLOGF$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDQUALIFIER" source="RECORDQUALIFIER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="DISCTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="RX_SALES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RECORDQUALIFIER">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="5"/>
+        </viewAttribute>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#RX_SALES$$$$CV_BASE_TLOGF$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDQUALIFIER" source="RECORDQUALIFIER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="SCRIPTS">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="ZZ_RX_CNT_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_RE"/>
+        <viewAttribute id="ZZ_CUSTTYPE"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_RX_CNT_NS_1"/>
+        <viewAttribute id="WORKSTATIONID"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_TLOGF_X">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_CUSTTYPE" source="ZZ_CUSTTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS_1" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WORKSTATIONID" source="WORKSTATIONID"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="NAVIX_2">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="CURRENCY"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#NAVIX_2$$$$CV_BASE_NAVIX$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_1" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="inner" optimizeJoinColumns="false">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="ZZ_RX_CNT_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_RE"/>
+        <viewAttribute id="ZZ_CUSTTYPE"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="WORKSTATIONID"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#SCRIPTS">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_CUSTTYPE" source="ZZ_CUSTTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WORKSTATIONID" source="WORKSTATIONID"/>
+      </input>
+      <input node="#NAVIX_2">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+      </input>
+      <joinAttribute name="MANDT"/>
+      <joinAttribute name="RETAILSTOREID"/>
+      <joinAttribute name="BUSINESSDAYDATE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="SCRIPT_KPIs">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="ZZ_RX_CNT_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_RE"/>
+        <viewAttribute id="ZZ_CUSTTYPE"/>
+        <viewAttribute id="CURRENCY"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="WORKSTATIONID"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_FS_UNITS" expressionLanguage="COLUMN_ENGINE">
+          <formula>IF(IN(&quot;ZZ_CUSTTYPE&quot;,'F','M','R'),1,IF(IN(&quot;ZZ_CUSTTYPE&quot;,'X','Y','Z'),-1,0 ) )</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_RX_CNT_GE84_NS" expressionLanguage="COLUMN_ENGINE">
+          <formula>if(&quot;ZZ_RX_CNT_GE84_NS&quot; = '',0,int(&quot;ZZ_RX_CNT_GE84_NS&quot;))</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_RX_CNT_GE84_RE" expressionLanguage="COLUMN_ENGINE">
+          <formula>if(&quot;ZZ_RX_CNT_GE84_RE&quot;='',0,int(&quot;ZZ_RX_CNT_GE84_RE&quot;))</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_RX_CNT_NS" expressionLanguage="COLUMN_ENGINE">
+          <formula>if(&quot;ZZ_RX_CNT_NS&quot; = '',0,int(&quot;ZZ_RX_CNT_NS&quot;))</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_RX_CNT_RE" expressionLanguage="COLUMN_ENGINE">
+          <formula>if(&quot;ZZ_RX_CNT_REFILL&quot;='',0,int(&quot;ZZ_RX_CNT_REFILL&quot;))</formula>
+        </calculatedViewAttribute>
+        <calculatedViewAttribute datatype="INTEGER" id="CAL_CVD_UNITS" expressionLanguage="COLUMN_ENGINE">
+          <formula>IF(&quot;WORKSTATIONID&quot; = '0000000555',IF(IN(&quot;ZZ_CUSTTYPE&quot;,'C'),1,IF(IN(&quot;ZZ_CUSTTYPE&quot;,'W'),-1,0)),0)&#xD;
+&#xD;
+&#xD;
+</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#Join_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_CUSTTYPE" source="ZZ_CUSTTYPE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WORKSTATIONID" source="WORKSTATIONID"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="EMP_DISCOUNT">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RECORDQUALIFIER">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="6"/>
+        </viewAttribute>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="DISCTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#EMP_DISCOUNT$$$$CV_BASE_TLOGF$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDQUALIFIER" source="RECORDQUALIFIER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="DISCTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="FS_RETAIL_TYPES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PARAM_NAME">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="FS_RETAIL_TYPE_CODE"/>
+        </viewAttribute>
+        <viewAttribute id="LOW_CHAR"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_PARAMETERS">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARAM_NAME" source="PARAM_NAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOW_CHAR" source="LOW_CHAR"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_2" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#FS_SALES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+      </input>
+      <input node="#FS_RETAIL_TYPES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="LOW_CHAR"/>
+      </input>
+      <joinAttribute name="RETAILTYPECODE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="EMP_DISC_TYPES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PARAM_NAME">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="EMP_DISC_TYPE_CODE"/>
+        </viewAttribute>
+        <viewAttribute id="LOW_CHAR"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#EMP_DISC_TYPES$$$$CV_BASE_PARAMETERS$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARAM_NAME" source="PARAM_NAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOW_CHAR" source="LOW_CHAR"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_3" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="DISCTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="EMP_DISC_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#EMP_DISCOUNT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="DISCTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_DISC_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+      <input node="#EMP_DISC_TYPES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="LOW_CHAR"/>
+      </input>
+      <joinAttribute name="DISCTYPECODE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="RX_RETAIL_TYPES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PARAM_NAME">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="RX_RETAIL_TYPE_CODE"/>
+        </viewAttribute>
+        <viewAttribute id="LOW_CHAR"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#RX_RETAIL_TYPES$$$$CV_BASE_PARAMETERS$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARAM_NAME" source="PARAM_NAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOW_CHAR" source="LOW_CHAR"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_4" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#RX_SALES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+      </input>
+      <input node="#RX_RETAIL_TYPES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="LOW_CHAR"/>
+      </input>
+      <joinAttribute name="RETAILTYPECODE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="FS_DISC_TYPES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PARAM_NAME">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="FS_DISC_TYPE_CODE"/>
+        </viewAttribute>
+        <viewAttribute id="LOW_CHAR"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#FS_DISC_TYPES$$$$CV_BASE_PARAMETERS$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARAM_NAME" source="PARAM_NAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOW_CHAR" source="LOW_CHAR"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_5" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="DISCTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="FS_DISC_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#FS_DISCOUNT">
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="DISCTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_DISC_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+      <input node="#FS_DISC_TYPES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="LOW_CHAR"/>
+      </input>
+      <joinAttribute name="DISCTYPECODE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="COVID_SALES">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="CVD_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_BASE_TLOGF_COVID">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="RX_RETAIL_TYPES_COVID" filterExpressionLanguage="COLUMN_ENGINE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="PARAM_NAME"/>
+        <viewAttribute id="LOW_CHAR"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#RX_RETAIL_TYPES_COVID$$$$CV_BASE_PARAMETERS$$">
+        <mapping xsi:type="Calculation:AttributeMapping" target="PARAM_NAME" source="PARAM_NAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="LOW_CHAR" source="LOW_CHAR"/>
+      </input>
+      <filter>(&quot;PARAM_NAME&quot;='RX_RETAIL_TYPE_CODE')</filter>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_6" cardinality="CN_1" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="CVD_UPD_TIMESTAMP"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#COVID_SALES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_UPD_TIMESTAMP" source="CVD_UPD_TIMESTAMP"/>
+      </input>
+      <input node="#RX_RETAIL_TYPES_COVID">
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="LOW_CHAR"/>
+      </input>
+      <joinAttribute name="RETAILTYPECODE"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:UnionView" id="Union_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="ZZ_RX_CNT_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_RE"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP" transparentFilter="false"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP" transparentFilter="false"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input emptyUnionBehavior="NO_ROW" node="#SCRIPT_KPIs">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="EMP_REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="CURRENCY"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CVD_AMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Join_2">
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_REFILL" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_FS_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="EMP_REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CVD_AMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_CVD_UNITS" null="true" value=""/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Join_3">
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_REFILL" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_FS_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="EMP_DISC_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CVD_AMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_CVD_UNITS" null="true" value=""/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Join_4">
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_REFILL" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_FS_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="EMP_REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CVD_AMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_CVD_UNITS" null="true" value=""/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Join_5">
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_REFILL" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_FS_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="EMP_REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="FS_DISC_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CVD_AMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_CVD_UNITS" null="true" value=""/>
+      </input>
+      <input emptyUnionBehavior="NO_ROW" node="#Join_6">
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_REFILL" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="ZZ_RX_MCRX_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_FS_UNITS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_GE84_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="EMP_REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_SALESAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="REDUCTIONAMOUNT" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_NS" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_RX_CNT_RE" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="FS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="RX_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" null="true" value=""/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="CVD_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:ConstantAttributeMapping" target="CAL_CVD_UNITS" null="true" value=""/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:AggregationView" id="COMBINE_DATA">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute aggregationType="sum" id="FS_SALESAMOUNT"/>
+        <viewAttribute aggregationType="sum" id="REDUCTIONAMOUNT"/>
+        <viewAttribute aggregationType="sum" id="RX_SALESAMOUNT"/>
+        <viewAttribute aggregationType="count" id="ZZ_RX_CNT_NS"/>
+        <viewAttribute aggregationType="count" id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute aggregationType="count" id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute aggregationType="count" id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute aggregationType="count" id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute aggregationType="count" id="ZZ_RX_MCRX_GE84_RE"/>
+        <viewAttribute aggregationType="sum" id="CAL_FS_UNITS"/>
+        <viewAttribute aggregationType="sum" id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute aggregationType="sum" id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute aggregationType="sum" id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute aggregationType="sum" id="CAL_RX_CNT_NS"/>
+        <viewAttribute aggregationType="sum" id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute aggregationType="max" id="FS_UPD_TIMESTAMP" transparentFilter="false"/>
+        <viewAttribute aggregationType="max" id="RX_UPD_TIMESTAMP" transparentFilter="false"/>
+        <viewAttribute aggregationType="max" id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute aggregationType="sum" id="CVD_AMOUNT"/>
+        <viewAttribute aggregationType="sum" id="CAL_CVD_UNITS"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Union_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+      </input>
+    </calculationView>
+    <calculationView xsi:type="Calculation:JoinView" id="MERGED" cardinality="C1_N" joinOrder="OUTSIDE_IN" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="FS_SALESAMOUNT"/>
+        <viewAttribute id="REDUCTIONAMOUNT"/>
+        <viewAttribute id="RX_SALESAMOUNT"/>
+        <viewAttribute id="ZZ_RX_CNT_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_REFILL"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_CNT_GE84_RE"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_NS"/>
+        <viewAttribute id="ZZ_RX_MCRX_GE84_RE"/>
+        <viewAttribute id="CAL_FS_UNITS"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_NS"/>
+        <viewAttribute id="CAL_RX_CNT_GE84_RE"/>
+        <viewAttribute id="CAL_RX_CNT_NS"/>
+        <viewAttribute id="CAL_RX_CNT_RE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="RX_UPD_TIMESTAMP" transparentFilter="false"/>
+        <viewAttribute id="FS_UPD_TIMESTAMP" transparentFilter="false"/>
+        <viewAttribute id="SCRIPTS_UPD_TIMESTAMP"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#NAVIX">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+      </input>
+      <input node="#COMBINE_DATA">
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_SALESAMOUNT" source="FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REDUCTIONAMOUNT" source="REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_SALESAMOUNT" source="RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_NS" source="ZZ_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_REFILL" source="ZZ_RX_CNT_REFILL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_NS" source="ZZ_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_CNT_GE84_RE" source="ZZ_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_NS" source="ZZ_RX_MCRX_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_RX_MCRX_GE84_RE" source="ZZ_RX_MCRX_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_UNITS" source="CAL_FS_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_NS" source="CAL_RX_CNT_GE84_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_GE84_RE" source="CAL_RX_CNT_GE84_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_NS" source="CAL_RX_CNT_NS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_CNT_RE" source="CAL_RX_CNT_RE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_UPD_TIMESTAMP" source="RX_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_UPD_TIMESTAMP" source="FS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SCRIPTS_UPD_TIMESTAMP" source="SCRIPTS_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+      </input>
+      <joinAttribute name="MANDT"/>
+      <joinAttribute name="RETAILSTOREID"/>
+      <joinAttribute name="BUSINESSDAYDATE"/>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="MERGED">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Client"/>
+        <keyMapping columnObjectName="MERGED" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RETAILSTOREID" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Store ID"/>
+        <keyMapping columnObjectName="MERGED" columnName="RETAILSTOREID"/>
+      </attribute>
+      <attribute id="BUSINESSDAYDATE" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Business Day Date"/>
+        <keyMapping columnObjectName="MERGED" columnName="BUSINESSDAYDATE"/>
+      </attribute>
+      <attribute id="TRANSCURRENCY" order="4" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Transaction Currency"/>
+        <keyMapping columnObjectName="MERGED" columnName="TRANSCURRENCY"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="ZZ_UPD_TIMESTAMP" order="5" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="Update Timestamp"/>
+        <measureMapping columnObjectName="MERGED" columnName="ZZ_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="FS_SALESAMOUNT" order="6" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Sales Amount"/>
+        <measureMapping columnObjectName="MERGED" columnName="FS_SALESAMOUNT"/>
+      </measure>
+      <measure id="REDUCTIONAMOUNT" order="7" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Discount Amount"/>
+        <measureMapping columnObjectName="MERGED" columnName="REDUCTIONAMOUNT"/>
+      </measure>
+      <measure id="RX_SALESAMOUNT" order="8" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Sales Amount"/>
+        <measureMapping columnObjectName="MERGED" columnName="RX_SALESAMOUNT"/>
+      </measure>
+      <measure id="CAL_FS_UNITS" order="9" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Units"/>
+        <measureMapping columnObjectName="MERGED" columnName="CAL_FS_UNITS"/>
+      </measure>
+      <measure id="EMP_REDUCTIONAMOUNT" order="10" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Employee Discount Amount"/>
+        <measureMapping columnObjectName="MERGED" columnName="EMP_REDUCTIONAMOUNT"/>
+      </measure>
+      <measure id="CAL_RX_CNT_GE84_NS" order="11" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count GE84 NS"/>
+        <measureMapping columnObjectName="MERGED" columnName="CAL_RX_CNT_GE84_NS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_GE84_RE" order="12" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count GE84 Refill"/>
+        <measureMapping columnObjectName="MERGED" columnName="CAL_RX_CNT_GE84_RE"/>
+      </measure>
+      <measure id="CAL_RX_CNT_NS" order="13" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count NS"/>
+        <measureMapping columnObjectName="MERGED" columnName="CAL_RX_CNT_NS"/>
+      </measure>
+      <measure id="CAL_RX_CNT_RE" order="14" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Count Refill"/>
+        <measureMapping columnObjectName="MERGED" columnName="CAL_RX_CNT_RE"/>
+      </measure>
+      <measure id="RX_UPD_TIMESTAMP" order="15" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="RX Update Timestamp"/>
+        <measureMapping columnObjectName="MERGED" columnName="RX_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="FS_UPD_TIMESTAMP" order="16" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="FS Update Timestamp"/>
+        <measureMapping columnObjectName="MERGED" columnName="FS_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="SCRIPTS_UPD_TIMESTAMP" order="17" aggregationType="max" measureType="simple">
+        <descriptions defaultDescription="Scripts Update Timestamp"/>
+        <measureMapping columnObjectName="MERGED" columnName="SCRIPTS_UPD_TIMESTAMP"/>
+      </measure>
+      <measure id="CVD_AMOUNT" order="18" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CVD Amount"/>
+        <measureMapping columnObjectName="MERGED" columnName="CVD_AMOUNT"/>
+      </measure>
+      <measure id="CAL_CVD_UNITS" order="19" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CVD Units"/>
+        <measureMapping columnObjectName="MERGED" columnName="CAL_CVD_UNITS"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="689" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="NAVIX" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="612" y="261"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="FS_SALES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="FS_DISCOUNT" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="1100" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="RX_SALES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="792" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="SCRIPTS" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="253" y="719"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="NAVIX_2" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="407" y="719"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="330" y="623"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="SCRIPT_KPIs" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="484" y="527"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="EMP_DISCOUNT" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="484" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="FS_RETAIL_TYPES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_2" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="176" y="527"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="EMP_DISC_TYPES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="638" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_3" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="638" y="527"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="RX_RETAIL_TYPES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="946" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_4" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="792" y="527"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="FS_DISC_TYPES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="1254" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_5" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="1100" y="527"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COVID_SALES" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="1408" y="623"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="RX_RETAIL_TYPES_COVID" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="1562" y="623"/>
+        <rectangleSize height="54" width="140"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_6" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="1408" y="527"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Union_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="766" y="339"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="COMBINE_DATA" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="766" y="261"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="MERGED" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="689" y="165"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

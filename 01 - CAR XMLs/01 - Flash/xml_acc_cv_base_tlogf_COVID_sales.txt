@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_BASE_TLOGF_COVID" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Base View for Transaction Log Flat table"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="21"/>
+  <dataSources>
+    <DataSource id="_POSDW_TLOGF" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAPABAP1" columnObjectName="/POSDW/TLOGF" alias="_POSDW_TLOGF"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="MANDT"/>
+        <viewAttribute id="RETAILSTOREID"/>
+        <viewAttribute id="BUSINESSDAYDATE"/>
+        <viewAttribute id="RECORDQUALIFIER">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="true">
+            <operands value="5"/>
+            <operands value="6"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="TRANSTYPECODE">
+          <filter xsi:type="AccessControl:ListValueFilter" operator="IN" including="false">
+            <operands value="1107"/>
+            <operands value="1197"/>
+            <operands value="1020"/>
+          </filter>
+        </viewAttribute>
+        <viewAttribute id="WORKSTATIONID">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="false" value="0000000000"/>
+        </viewAttribute>
+        <viewAttribute id="SALESAMOUNT"/>
+        <viewAttribute id="ARCHIVED">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value=""/>
+        </viewAttribute>
+        <viewAttribute id="RETAILTYPECODE"/>
+        <viewAttribute id="ZZ_UPD_TIMESTAMP">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="false" value="0"/>
+        </viewAttribute>
+        <viewAttribute id="DISCTYPECODE"/>
+        <viewAttribute id="TRANSCURRENCY"/>
+        <viewAttribute id="ITEMID">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="A01-433556"/>
+        </viewAttribute>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#_POSDW_TLOGF">
+        <mapping xsi:type="Calculation:AttributeMapping" target="MANDT" source="MANDT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILSTOREID" source="RETAILSTOREID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="BUSINESSDAYDATE" source="BUSINESSDAYDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RECORDQUALIFIER" source="RECORDQUALIFIER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSTYPECODE" source="TRANSTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="WORKSTATIONID" source="WORKSTATIONID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SALESAMOUNT" source="SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ARCHIVED" source="ARCHIVED"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RETAILTYPECODE" source="RETAILTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZZ_UPD_TIMESTAMP" source="ZZ_UPD_TIMESTAMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISCTYPECODE" source="DISCTYPECODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="TRANSCURRENCY" source="TRANSCURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ITEMID" source="ITEMID"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="MANDT" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="MANDT"/>
+        <keyMapping columnObjectName="Projection_1" columnName="MANDT"/>
+      </attribute>
+      <attribute id="RETAILSTOREID" order="2" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RETAILSTOREID"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RETAILSTOREID"/>
+      </attribute>
+      <attribute id="BUSINESSDAYDATE" order="3" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="BUSINESSDAYDATE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="BUSINESSDAYDATE"/>
+      </attribute>
+      <attribute id="RECORDQUALIFIER" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RECORDQUALIFIER"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RECORDQUALIFIER"/>
+      </attribute>
+      <attribute id="TRANSTYPECODE" order="5" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="TRANSTYPECODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="TRANSTYPECODE"/>
+      </attribute>
+      <attribute id="WORKSTATIONID" order="6" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="WORKSTATIONID"/>
+        <keyMapping columnObjectName="Projection_1" columnName="WORKSTATIONID"/>
+      </attribute>
+      <attribute id="ARCHIVED" order="8" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ARCHIVED"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ARCHIVED"/>
+      </attribute>
+      <attribute id="RETAILTYPECODE" order="9" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RETAILTYPECODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="RETAILTYPECODE"/>
+      </attribute>
+      <attribute id="ZZ_UPD_TIMESTAMP" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="ZZ_UPD_TIMESTAMP"/>
+        <keyMapping columnObjectName="Projection_1" columnName="ZZ_UPD_TIMESTAMP"/>
+      </attribute>
+      <attribute id="DISCTYPECODE" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="DISCTYPECODE"/>
+        <keyMapping columnObjectName="Projection_1" columnName="DISCTYPECODE"/>
+      </attribute>
+      <attribute id="TRANSCURRENCY" order="12" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="TRANSCURRENCY"/>
+        <keyMapping columnObjectName="Projection_1" columnName="TRANSCURRENCY"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="SALESAMOUNT" order="7" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="SALESAMOUNT"/>
+        <measureMapping columnObjectName="Projection_1" columnName="SALESAMOUNT"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>
