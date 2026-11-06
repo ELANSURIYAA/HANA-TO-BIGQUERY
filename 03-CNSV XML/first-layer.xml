@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:DataFoundation="http://www.sap.com/ndb/BiModelDataFoundation.ecore" xmlns:Dimension="http://www.sap.com/ndb/BiModelDimension.ecore" schemaVersion="2.3" id="CV_CONS_WEEKLY_FLASH_REPORT_STATIC" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="Static FLash Report Report Consumption View"/>
+  <localVariables/>
+  <variableMappings/>
+  <informationModelLayout relativeWidthScenario="29"/>
+  <dataSources>
+    <DataSource id="CV_COMP_FIN_FLASH_COMBINED_STATIC" type="CALCULATION_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/CVS_FRIP.Composite.FI/calculationviews/CV_COMP_FIN_FLASH_COMBINED_STATIC</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="WEEKLY_FLASH">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="DIVISION_CODE"/>
+        <viewAttribute id="DIVISION_DESC"/>
+        <viewAttribute id="REGION_CODE"/>
+        <viewAttribute id="REGION_DESC"/>
+        <viewAttribute id="DISTRICT_CODE"/>
+        <viewAttribute id="DISTRICT_DESC"/>
+        <viewAttribute id="STRNUM"/>
+        <viewAttribute id="PRCTR"/>
+        <viewAttribute id="REP_MKT_CODE"/>
+        <viewAttribute id="REP_MKT_DESC"/>
+        <viewAttribute id="FS_RX_FLAG"/>
+        <viewAttribute id="_BIC_ZIO_SWEEK"/>
+        <viewAttribute id="CAL_FS_SALES"/>
+        <viewAttribute id="CAL_SCRIPTS_90AS3"/>
+        <viewAttribute id="EMP_REDUCTIONAMOUNT"/>
+        <viewAttribute id="FIN_BUDGET_AMOUNT"/>
+        <viewAttribute id="SKF_BUDGET_QTY"/>
+        <viewAttribute id="FIN_FCST_AMOUNT"/>
+        <viewAttribute id="SKF_FCST_QTY"/>
+        <viewAttribute id="FIN_LY_AMOUNT"/>
+        <viewAttribute id="SKF_LY_QTY"/>
+        <viewAttribute id="CAL_RX_BUDGET"/>
+        <viewAttribute id="FS_RX_FLAG_EXT"/>
+        <viewAttribute id="EMERG_MKT_IND"/>
+        <viewAttribute id="ZRWSTRTDATE"/>
+        <viewAttribute id="ZRWENDDATE"/>
+        <viewAttribute id="CAL_WEEK_NUMBER"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="STATE"/>
+        <viewAttribute id="FS_BUDGET_CURRENCY"/>
+        <viewAttribute id="FIN_LY_CURRENCY"/>
+        <viewAttribute id="FIN_FORECAST_CURRENCY"/>
+        <viewAttribute id="RX_BUDGET_CURRENCY"/>
+        <viewAttribute id="CAL_SKF_LY_VAR"/>
+        <viewAttribute id="CAL_SKF_BUD_VAR"/>
+        <viewAttribute id="CAL_SKF_FORECAST_VAR"/>
+        <viewAttribute id="CAL_RX_BUD_VAR"/>
+        <viewAttribute id="CAL_FS_BUD_VAR"/>
+        <viewAttribute id="CAL_FS_BUD_CORP_VAR"/>
+        <viewAttribute id="CAL_RX_FORECAST_VAR"/>
+        <viewAttribute id="CAL_RX_LY_VAR"/>
+        <viewAttribute id="CAL_FS_FORECAST_VAR"/>
+        <viewAttribute id="CAL_FS_LY_VAR"/>
+        <viewAttribute id="CAL_FS_FORECAST_CORP_VAR"/>
+        <viewAttribute id="CAL_FS_LY_CORP_VAR"/>
+        <viewAttribute id="PROFIT_CENTER_TEXT"/>
+        <viewAttribute id="CAL_DATA_CATEGORY1" keepFlag="false"/>
+        <viewAttribute id="CAL_DATA_CATEGORY2" keepFlag="false"/>
+        <viewAttribute id="FS_OPEN_DAT"/>
+        <viewAttribute id="RX_OPEN_DAT"/>
+        <viewAttribute id="CAL_COMP_FS_BUDGET_AMOUNT"/>
+        <viewAttribute id="CAL_COMP_RX_BUDGET_AMOUNT"/>
+        <viewAttribute id="CAL_COMP_CORPFS_SALES_AMOUNT"/>
+        <viewAttribute id="CAL_COMP_FS_SALESAMOUNT"/>
+        <viewAttribute id="CAL_COMP_RX_SALESAMOUNT"/>
+        <viewAttribute id="CAL_COMP_BUDGET_90AS3"/>
+        <viewAttribute id="CAL_COMP_FLASH_90AS3"/>
+        <viewAttribute id="CAL_COMP_FORECAST_AMOUNT"/>
+        <viewAttribute id="CAL_COMP_FORECAST_90AS3"/>
+        <viewAttribute id="CAL_COMP_LY_AMOUNT"/>
+        <viewAttribute id="CAL_COMP_LY_90AS3"/>
+        <viewAttribute id="CAL_COMP_FS_BUD_VAR"/>
+        <viewAttribute id="CAL_COMP_FS_FORECAST_VAR"/>
+        <viewAttribute id="CAL_COMP_FS_LY_VAR"/>
+        <viewAttribute id="CAL_COMP_RX_BUD_VAR"/>
+        <viewAttribute id="CAL_COMP_RX_FORECAST_VAR"/>
+        <viewAttribute id="CAL_COMP_RX_LY_VAR"/>
+        <viewAttribute id="CAL_COMP_SKF_FORECAST_VAR"/>
+        <viewAttribute id="CAL_COMP_SKF_BUD_VAR"/>
+        <viewAttribute id="CAL_COMP_SKF_LY_VAR"/>
+        <viewAttribute id="CAL_COMP_FS_BUD_CORP_VAR"/>
+        <viewAttribute id="CAL_COMP_FS_FORECAST_CORP_VAR"/>
+        <viewAttribute id="CAL_COMP_FS_LY_CORP_VAR"/>
+        <viewAttribute id="CAL_COMP_FLAG"/>
+        <viewAttribute id="SKF_MJE_QTY"/>
+        <viewAttribute id="CAL_FS_SALES_MJE"/>
+        <viewAttribute id="CAL_RX_SALES_MJE"/>
+        <viewAttribute id="CAL_RX_SALES"/>
+        <viewAttribute id="SBT"/>
+        <viewAttribute id="SEGMENT" transparentFilter="false"/>
+        <viewAttribute id="DESCRIPTION" transparentFilter="false"/>
+        <viewAttribute id="SC_90AS1_BUD"/>
+        <viewAttribute id="SC_90AS1_FCT"/>
+        <viewAttribute id="SC_90AS1_FLASH"/>
+        <viewAttribute id="SC_90AS1_LY"/>
+        <viewAttribute id="SALES_SOURCE"/>
+        <viewAttribute id="AREA_CODE"/>
+        <viewAttribute id="AREA_DESC"/>
+        <viewAttribute id="FIN_BUD_CUBE" transparentFilter="false"/>
+        <viewAttribute id="SKF_BUD_CUBE" transparentFilter="false"/>
+        <viewAttribute id="CAL_CVD_UNITS"/>
+        <viewAttribute id="CVD_AMOUNT"/>
+        <viewAttribute id="RX_DIVISION_CODE"/>
+        <viewAttribute id="RX_AREA_CODE"/>
+        <viewAttribute id="RX_REGION_CODE"/>
+        <viewAttribute id="RX_DISTRICT_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#CV_COMP_FIN_FLASH_COMBINED_STATIC">
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_CODE" source="DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DIVISION_DESC" source="DIVISION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_CODE" source="REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REGION_DESC" source="REGION_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_CODE" source="DISTRICT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DISTRICT_DESC" source="DISTRICT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STRNUM" source="STRNUM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PRCTR" source="PRCTR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_CODE" source="REP_MKT_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="REP_MKT_DESC" source="REP_MKT_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_RX_FLAG" source="FS_RX_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="_BIC_ZIO_SWEEK" source="_BIC_ZIO_SWEEK"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_SALES" source="CAL_FS_SALES"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SCRIPTS_90AS3" source="CAL_SCRIPTS_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMP_REDUCTIONAMOUNT" source="EMP_REDUCTIONAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_BUDGET_AMOUNT" source="FIN_BUDGET_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_BUDGET_QTY" source="SKF_BUDGET_QTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_FCST_AMOUNT" source="FIN_FCST_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_FCST_QTY" source="SKF_FCST_QTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_LY_AMOUNT" source="FIN_LY_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_LY_QTY" source="SKF_LY_QTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_BUDGET" source="CAL_RX_BUDGET"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_RX_FLAG_EXT" source="FS_RX_FLAG_EXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="EMERG_MKT_IND" source="CAL_EMERG_MKT_IND"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWSTRTDATE" source="ZRWSTRTDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZRWENDDATE" source="ZRWENDDATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_WEEK_NUMBER" source="CAL_WEEK_NUMBER"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="STATE" source="STATE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_BUDGET_CURRENCY" source="FS_BUDGET_CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_LY_CURRENCY" source="FIN_LY_CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_FORECAST_CURRENCY" source="FIN_FORECAST_CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_BUDGET_CURRENCY" source="RX_BUDGET_CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SKF_LY_VAR" source="CAL_SKF_LY_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SKF_BUD_VAR" source="CAL_SKF_BUD_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_SKF_FORECAST_VAR" source="CAL_SKF_FORECAST_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_BUD_VAR" source="CAL_RX_BUD_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_BUD_VAR" source="CAL_FS_BUD_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_BUD_CORP_VAR" source="CAL_FS_BUD_CORP_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_FORECAST_VAR" source="CAL_RX_FORECAST_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_LY_VAR" source="CAL_RX_LY_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_FORECAST_VAR" source="CAL_FS_FORECAST_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_LY_VAR" source="CAL_FS_LY_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_FORECAST_CORP_VAR" source="CAL_FS_FORECAST_CORP_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_LY_CORP_VAR" source="CAL_FS_LY_CORP_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="PROFIT_CENTER_TEXT" source="PROFIT_CENTER_TEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_DATA_CATEGORY1" source="CAL_DATA_CATEGORY1"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_DATA_CATEGORY2" source="CAL_DATA_CATEGORY2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FS_OPEN_DAT" source="FS_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_OPEN_DAT" source="RX_OPEN_DAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_BUDGET_AMOUNT" source="CAL_COMP_FS_BUDGET_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_RX_BUDGET_AMOUNT" source="CAL_COMP_RX_BUDGET_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_CORPFS_SALES_AMOUNT" source="CAL_COMP_CORPFS_SALES_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_SALESAMOUNT" source="CAL_COMP_FS_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_RX_SALESAMOUNT" source="CAL_COMP_RX_SALESAMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_BUDGET_90AS3" source="CAL_COMP_BUDGET_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLASH_90AS3" source="CAL_COMP_FLASH_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FORECAST_AMOUNT" source="CAL_COMP_FORECAST_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FORECAST_90AS3" source="CAL_COMP_FORECAST_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_LY_AMOUNT" source="CAL_COMP_LY_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_LY_90AS3" source="CAL_COMP_LY_90AS3"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_BUD_VAR" source="CAL_COMP_FS_BUD_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_FORECAST_VAR" source="CAL_COMP_FS_FORECAST_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_LY_VAR" source="CAL_COMP_FS_LY_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_RX_BUD_VAR" source="CAL_COMP_RX_BUD_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_RX_FORECAST_VAR" source="CAL_COMP_RX_FORECAST_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_RX_LY_VAR" source="CAL_COMP_RX_LY_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_SKF_FORECAST_VAR" source="CAL_COMP_SKF_FORECAST_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_SKF_BUD_VAR" source="CAL_COMP_SKF_BUD_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_SKF_LY_VAR" source="CAL_COMP_SKF_LY_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_BUD_CORP_VAR" source="CAL_COMP_FS_BUD_CORP_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_FORECAST_CORP_VAR" source="CAL_COMP_FS_FORECAST_CORP_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FS_LY_CORP_VAR" source="CAL_COMP_FS_LY_CORP_VAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_COMP_FLAG" source="CAL_COMP_FLAG"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_MJE_QTY" source="SKF_MJE_QTY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_FS_SALES_MJE" source="CAL_FS_SALES_MJE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_SALES_MJE" source="CAL_RX_SALES_MJE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_RX_SALES" source="CAL_RX_SALES"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SBT" source="SBT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SEGMENT" source="SEGMENT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DESCRIPTION" source="DESCRIPTION"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_BUD" source="SC_90AS1_BUD"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FCT" source="SC_90AS1_FCT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_FLASH" source="SC_90AS1_FLASH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SC_90AS1_LY" source="SC_90AS1_LY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SALES_SOURCE" source="SALES_SOURCE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_CODE" source="AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AREA_DESC" source="AREA_DESC"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FIN_BUD_CUBE" source="FIN_BUD_CUBE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SKF_BUD_CUBE" source="SKF_BUD_CUBE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CAL_CVD_UNITS" source="CAL_CVD_UNITS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CVD_AMOUNT" source="CVD_AMOUNT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DIVISION_CODE" source="RX_DIVISION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_AREA_CODE" source="RX_AREA_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_REGION_CODE" source="RX_REGION_CODE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="RX_DISTRICT_CODE" source="RX_DISTRICT_CODE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="WEEKLY_FLASH">
+    <descriptions/>
+    <attributes>
+      <attribute id="DIVISION_CODE" order="1" attributeHierarchyActive="false" descriptionColumnName="DIVISION_DESC" displayAttribute="false">
+        <descriptions defaultDescription="Division Code"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="DIVISION_CODE"/>
+      </attribute>
+      <attribute id="DIVISION_DESC" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Division Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="DIVISION_DESC"/>
+      </attribute>
+      <attribute id="REGION_CODE" order="3" attributeHierarchyActive="false" descriptionColumnName="REGION_DESC" displayAttribute="false">
+        <descriptions defaultDescription="Region Code"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="REGION_CODE"/>
+      </attribute>
+      <attribute id="DISTRICT_CODE" order="4" attributeHierarchyActive="false" descriptionColumnName="DISTRICT_DESC" displayAttribute="false">
+        <descriptions defaultDescription="District Code"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="DISTRICT_CODE"/>
+      </attribute>
+      <attribute id="REGION_DESC" order="5" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Region Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="REGION_DESC"/>
+      </attribute>
+      <attribute id="DISTRICT_DESC" order="6" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="District Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="DISTRICT_DESC"/>
+      </attribute>
+      <attribute id="STRNUM" order="7" attributeHierarchyActive="false" descriptionColumnName="PROFIT_CENTER_TEXT" displayAttribute="false">
+        <descriptions defaultDescription="Store"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="STRNUM"/>
+      </attribute>
+      <attribute id="PRCTR" order="8" attributeHierarchyActive="false" descriptionColumnName="PROFIT_CENTER_TEXT" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="PRCTR"/>
+      </attribute>
+      <attribute id="REP_MKT_CODE" order="9" attributeHierarchyActive="false" descriptionColumnName="REP_MKT_DESC" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Code"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="REP_MKT_CODE"/>
+      </attribute>
+      <attribute id="REP_MKT_DESC" order="10" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Report Market Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="REP_MKT_DESC"/>
+      </attribute>
+      <attribute id="FS_RX_FLAG" order="11" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Flag"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FS_RX_FLAG"/>
+      </attribute>
+      <attribute id="_BIC_ZIO_SWEEK" order="12" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="_BIC_ZIO_SWEEK"/>
+      </attribute>
+      <attribute id="FS_RX_FLAG_EXT" order="13" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Rx Flag"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FS_RX_FLAG_EXT"/>
+      </attribute>
+      <attribute id="EMERG_MKT_IND" order="14" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Emerging Market Indicator"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="EMERG_MKT_IND"/>
+      </attribute>
+      <attribute id="ZRWSTRTDATE" order="15" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Week Start Date"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="ZRWSTRTDATE"/>
+      </attribute>
+      <attribute id="ZRWENDDATE" order="16" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Retail Week End Date"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="ZRWENDDATE"/>
+      </attribute>
+      <attribute id="CAL_WEEK_NUMBER" order="17" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Week Number"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_WEEK_NUMBER"/>
+      </attribute>
+      <attribute id="CITY" order="18" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="City"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="CITY"/>
+      </attribute>
+      <attribute id="STATE" order="19" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="State"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="STATE"/>
+      </attribute>
+      <attribute id="FS_BUDGET_CURRENCY" order="20" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FS Budget Currency"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FS_BUDGET_CURRENCY"/>
+      </attribute>
+      <attribute id="FIN_LY_CURRENCY" order="21" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Finance LY Currency"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FIN_LY_CURRENCY"/>
+      </attribute>
+      <attribute id="FIN_FORECAST_CURRENCY" order="22" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Finance Forecast Currency"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FIN_FORECAST_CURRENCY"/>
+      </attribute>
+      <attribute id="RX_BUDGET_CURRENCY" order="23" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Rx Budget Currency"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="RX_BUDGET_CURRENCY"/>
+      </attribute>
+      <attribute id="PROFIT_CENTER_TEXT" order="24" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Profit Center Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="PROFIT_CENTER_TEXT"/>
+      </attribute>
+      <attribute id="FS_OPEN_DAT" order="25" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Front Store(FS) Open Date"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FS_OPEN_DAT"/>
+      </attribute>
+      <attribute id="RX_OPEN_DAT" order="26" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Pharmacy(RX) Open Date"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="RX_OPEN_DAT"/>
+      </attribute>
+      <attribute id="COMP_FLAG" order="27" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Comp Flag"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FLAG"/>
+      </attribute>
+      <attribute id="SEGMENT" order="28" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="Segment"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="SEGMENT"/>
+      </attribute>
+      <attribute id="DESCRIPTION" order="29" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="DESCRIPTION"/>
+      </attribute>
+      <attribute id="SALES_SOURCE" order="30" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Source of Sales"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="SALES_SOURCE"/>
+      </attribute>
+      <attribute id="AREA_CODE" order="31" semanticType="empty" attributeHierarchyActive="false" descriptionColumnName="AREA_DESC" displayAttribute="false">
+        <descriptions defaultDescription="Area Code"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="AREA_CODE"/>
+      </attribute>
+      <attribute id="AREA_DESC" order="32" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Area Description"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="AREA_DESC"/>
+      </attribute>
+      <attribute id="FIN_BUD_CUBE" order="33" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions defaultDescription="FIN_BUD_CUBE"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="FIN_BUD_CUBE"/>
+      </attribute>
+      <attribute id="SKF_BUD_CUBE" order="34" attributeHierarchyActive="false" displayAttribute="false" transparentFilter="false">
+        <descriptions/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="SKF_BUD_CUBE"/>
+      </attribute>
+      <attribute id="RX_DIVISION_CODE" order="79" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DIVISION_CODE"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="RX_DIVISION_CODE"/>
+      </attribute>
+      <attribute id="RX_AREA_CODE" order="80" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_AREA_CODE"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="RX_AREA_CODE"/>
+      </attribute>
+      <attribute id="RX_REGION_CODE" order="81" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_REGION_CODE"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="RX_REGION_CODE"/>
+      </attribute>
+      <attribute id="RX_DISTRICT_CODE" order="82" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="RX_DISTRICT_CODE"/>
+        <keyMapping columnObjectName="WEEKLY_FLASH" columnName="RX_DISTRICT_CODE"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="CAL_FS_SALES" order="35" semanticType="amount" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="FS Sales Amount"/>
+        <fixedCurrency>USD</fixedCurrency>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_FS_SALES"/>
+      </measure>
+      <measure id="CAL_SCRIPTS_90AS3" order="36" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Flash Scripts 90as3"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_SCRIPTS_90AS3"/>
+      </measure>
+      <measure id="FIN_BUDGET_AMOUNT" order="37" semanticType="amount" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="Budget Amount"/>
+        <unitCurrencyAttribute attributeName="FS_BUDGET_CURRENCY"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="FIN_BUDGET_AMOUNT"/>
+      </measure>
+      <measure id="SKF_BUDGET_QTY" order="38" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Budget Quantity"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SKF_BUDGET_QTY"/>
+      </measure>
+      <measure id="FIN_FCST_AMOUNT" order="39" semanticType="amount" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="Forecast Amount"/>
+        <unitCurrencyAttribute attributeName="FIN_FORECAST_CURRENCY"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="FIN_FCST_AMOUNT"/>
+      </measure>
+      <measure id="SKF_FCST_QTY" order="40" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Quantity"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SKF_FCST_QTY"/>
+      </measure>
+      <measure id="FIN_LY_AMOUNT" order="41" semanticType="amount" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="LY Amount"/>
+        <unitCurrencyAttribute attributeName="FIN_LY_CURRENCY"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="FIN_LY_AMOUNT"/>
+      </measure>
+      <measure id="SKF_LY_QTY" order="42" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="LY Quantity"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SKF_LY_QTY"/>
+      </measure>
+      <measure id="CAL_RX_BUDGET" order="43" semanticType="amount" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="Rx Budget Amount"/>
+        <unitCurrencyAttribute attributeName="RX_BUDGET_CURRENCY"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_RX_BUDGET"/>
+      </measure>
+      <measure id="CAL_SKF_LY_VAR" order="44" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="SKF LY Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_SKF_LY_VAR"/>
+      </measure>
+      <measure id="CAL_SKF_BUD_VAR" order="45" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="SKF Budget Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_SKF_BUD_VAR"/>
+      </measure>
+      <measure id="CAL_SKF_FORECAST_VAR" order="46" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="SKF Forecast Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_SKF_FORECAST_VAR"/>
+      </measure>
+      <measure id="CAL_RX_BUD_VAR" order="47" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Budget Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_RX_BUD_VAR"/>
+      </measure>
+      <measure id="CAL_FS_BUD_CORP_VAR" order="48" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Budget Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_FS_BUD_CORP_VAR"/>
+      </measure>
+      <measure id="CAL_RX_FORECAST_VAR" order="49" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX Forecast Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_RX_FORECAST_VAR"/>
+      </measure>
+      <measure id="CAL_RX_LY_VAR" order="50" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="RX LY Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_RX_LY_VAR"/>
+      </measure>
+      <measure id="CAL_FS_FORECAST_CORP_VAR" order="51" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS Forecast Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_FS_FORECAST_CORP_VAR"/>
+      </measure>
+      <measure id="CAL_FS_LY_CORP_VAR" order="52" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="FS LY Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_FS_LY_CORP_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_FS_BUDGET_AMOUNT" order="53" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp FS Budget Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FS_BUDGET_AMOUNT"/>
+      </measure>
+      <measure id="CAL_COMP_RX_BUDGET_AMOUNT" order="54" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Rx Budget Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_RX_BUDGET_AMOUNT"/>
+      </measure>
+      <measure id="CAL_COMP_CORPFS_SALES_AMOUNT" order="55" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp FS Sales Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_CORPFS_SALES_AMOUNT"/>
+      </measure>
+      <measure id="CAL_COMP_RX_SALESAMOUNT" order="56" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Rx Sales Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_RX_SALESAMOUNT"/>
+      </measure>
+      <measure id="CAL_COMP_BUDGET_90AS3" order="57" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Budget Scripts 90as3"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_BUDGET_90AS3"/>
+      </measure>
+      <measure id="CAL_COMP_FLASH_90AS3" order="58" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Flash Scripts 90as3"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FLASH_90AS3"/>
+      </measure>
+      <measure id="CAL_COMP_FORECAST_AMOUNT" order="59" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Forecast Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FORECAST_AMOUNT"/>
+      </measure>
+      <measure id="CAL_COMP_FORECAST_90AS3" order="60" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Forecast Scripts 90as3"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FORECAST_90AS3"/>
+      </measure>
+      <measure id="CAL_COMP_LY_AMOUNT" order="61" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp LY Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_LY_AMOUNT"/>
+      </measure>
+      <measure id="CAL_COMP_LY_90AS3" order="62" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp LY Scripts 90as3"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_LY_90AS3"/>
+      </measure>
+      <measure id="CAL_COMP_RX_BUD_VAR" order="63" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Rx Budget Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_RX_BUD_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_RX_FORECAST_VAR" order="64" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Rx Forecast Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_RX_FORECAST_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_RX_LY_VAR" order="65" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp Rx LY Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_RX_LY_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_SKF_FORECAST_VAR" order="66" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp SKF Forecast Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_SKF_FORECAST_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_SKF_BUD_VAR" order="67" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp SKF Budget Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_SKF_BUD_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_SKF_LY_VAR" order="68" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp SKF LY Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_SKF_LY_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_FS_BUD_CORP_VAR" order="69" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp FS Budget Variance "/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FS_BUD_CORP_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_FS_FORECAST_CORP_VAR" order="70" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp FS Forecast Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FS_FORECAST_CORP_VAR"/>
+      </measure>
+      <measure id="CAL_COMP_FS_LY_CORP_VAR" order="71" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Comp FS LY Variance"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_COMP_FS_LY_CORP_VAR"/>
+      </measure>
+      <measure id="CAL_RX_SALES" order="72" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Rx Sales Amount"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_RX_SALES"/>
+      </measure>
+      <measure id="SC_90AS1_BUD" order="73" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Budget Scripts 90as1"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SC_90AS1_BUD"/>
+      </measure>
+      <measure id="SC_90AS1_FCT" order="74" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Forecast Scripts 90as1"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SC_90AS1_FCT"/>
+      </measure>
+      <measure id="SC_90AS1_FLASH" order="75" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="Flash Scripts 90as1"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SC_90AS1_FLASH"/>
+      </measure>
+      <measure id="SC_90AS1_LY" order="76" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="LY Scripts 90as1"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="SC_90AS1_LY"/>
+      </measure>
+      <measure id="CAL_CVD_UNITS" order="77" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CAL_CVD_UNITS"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CAL_CVD_UNITS"/>
+      </measure>
+      <measure id="CVD_AMOUNT" order="78" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CVD_AMOUNT"/>
+        <measureMapping columnObjectName="WEEKLY_FLASH" columnName="CVD_AMOUNT"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions>
+      <localDimension id="HIER_REGION">
+        <attributeRef xsi:type="DataFoundation:Attribute">#DIVISION_DESC</attributeRef>
+        <attributeRef xsi:type="DataFoundation:Attribute">#REGION_DESC</attributeRef>
+        <attributeRef xsi:type="DataFoundation:Attribute">#DISTRICT_DESC</attributeRef>
+        <attributeRef xsi:type="DataFoundation:Attribute">#STRNUM</attributeRef>
+        <hierarchies>
+          <hierarchy xsi:type="Dimension:LeveledHierarchy" id="HIER_REGION" aggregateAllNodes="true" rootNodeVisibility="ADD_ROOT_NODE" withRootNode="true" nodeStyle="NAME_ONLY">
+            <descriptions defaultDescription="Region Hierarchy"/>
+            <levels>
+              <level levelAttribute="#DIVISION_DESC" levelType="MDLEVEL_TYPE_REGULAR" order="1" orderAttribute="#DIVISION_DESC"/>
+              <level levelAttribute="#REGION_DESC" levelType="MDLEVEL_TYPE_REGULAR" order="2" orderAttribute="#REGION_DESC"/>
+              <level levelAttribute="#DISTRICT_DESC" levelType="MDLEVEL_TYPE_REGULAR" order="3" orderAttribute="#DISTRICT_DESC"/>
+              <level levelAttribute="#STRNUM" levelType="MDLEVEL_TYPE_REGULAR" order="4" orderAttribute="#STRNUM"/>
+            </levels>
+          </hierarchy>
+        </hierarchies>
+      </localDimension>
+      <localDimension id="HIER_MARKET">
+        <attributeRef xsi:type="DataFoundation:Attribute">#REP_MKT_CODE</attributeRef>
+        <attributeRef xsi:type="DataFoundation:Attribute">#STRNUM</attributeRef>
+        <hierarchies>
+          <hierarchy xsi:type="Dimension:LeveledHierarchy" id="HIER_MARKET" aggregateAllNodes="true" rootNodeVisibility="ADD_ROOT_NODE" withRootNode="true" nodeStyle="NAME_ONLY">
+            <descriptions defaultDescription="Market-Store Hierarchy"/>
+            <levels>
+              <level levelAttribute="#REP_MKT_CODE" levelType="MDLEVEL_TYPE_REGULAR" order="1" orderAttribute="#REP_MKT_CODE"/>
+              <level levelAttribute="#STRNUM" levelType="MDLEVEL_TYPE_REGULAR" order="2" orderAttribute="#STRNUM"/>
+            </levels>
+          </hierarchy>
+        </hierarchies>
+      </localDimension>
+    </localDimensions>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="WEEKLY_FLASH" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>
