@@ -1,0 +1,822 @@
+-- ================================================================================
+-- FINAL CONSOLIDATED BIGQUERY SQL
+-- Artifact: CV_COMP_FIN_FLASH (CVS_FRIP.Composite.FI Calculation View)
+-- Source: 9-projections-layer.xml
+-- Consolidation Agent: DI HANA to BigQuery Consolidation and SQL Generation Agent
+-- ================================================================================
+--
+-- RUNTIME PARAMETERS (supply at execution time — no default values):
+--   @ip_week_ending_from  STRING  — Fiscal week range start; passed as PLACEHOLDER to all source views
+--   @ip_week_ending_to    STRING  — Fiscal week range end; passed as PLACEHOLDER to all source views
+--
+-- ISSUES TO FIX (see Consolidation Description for full details):
+--   1. All nine source Calculation View BigQuery equivalents are UNRESOLVED.
+--      Replace PROJECT.DATASET.<view_name> placeholders with actual BQ_FULL_TABLE paths.
+--   2. Join types and join key columns between all source views are UNRESOLVED.
+--      All joins use TRUE placeholder conditions and LEFT JOIN type.
+--   3. SFN_PRIOR_FISCAL_WEEK scalar function filter logic is UNRESOLVED.
+--   4. CAL_RX_BUDGET_COMP_LEVEL source column is UNRESOLVED.
+--   5. Several comp-store variance source columns are UNRESOLVED (see Final_Output CTE).
+--   6. Topside adjustment column names from CV_COMP_TOPSIDE_ADJUSTMENTS are UNRESOLVED.
+--   7. CAL_TOTAL_BUDGET_ASP circular dependency resolved using RX_BUDGET (raw) as proxy — requires validation.
+--   8. None of the nine source Calculation Views appear in Columns_Mapping_v3.csv as physical tables.
+--      Their output columns, join keys, and parameter behavior are unknown from supplied inputs.
+-- ================================================================================
+
+WITH
+
+-- =====================================================================
+-- CTE 1: Flash_Static
+-- Logic: Reads flash (actual front-store) financial data from
+--        CV_COMP_FIN_FLASH_STATIC with fiscal week range filter applied
+--        via runtime parameters @ip_week_ending_from / @ip_week_ending_to.
+-- Source: PROJECT.DATASET.CV_COMP_FIN_FLASH_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter
+--          filter and SFN_PRIOR_FISCAL_WEEK filter are UNRESOLVED.
+-- =====================================================================
+Flash_Static AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_FIN_FLASH_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO filter using @ip_week_ending_from / @ip_week_ending_to.
+  -- UNRESOLVED: Apply SFN_PRIOR_FISCAL_WEEK filter (scalar function definition not supplied).
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 2: Budget_Static
+-- Logic: Reads financial budget data from CV_COMP_FIN_BUDGET_STATIC
+--        (first reference — main budget join) with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_FIN_BUDGET_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+Budget_Static AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_FIN_BUDGET_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 3: SKF_Budget_Static
+-- Logic: Reads statistical key figure budget quantities from
+--        CV_COMP_SKF_BUDGET_STATIC with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_SKF_BUDGET_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+SKF_Budget_Static AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_SKF_BUDGET_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 4: Forecast_MJE_Static
+-- Logic: Reads forecast and manual journal entry data from
+--        CV_COMP_FORECAST_MJE_STATIC with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_FORECAST_MJE_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+Forecast_MJE_Static AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_FORECAST_MJE_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 5: Actual_Static
+-- Logic: Reads financial actual (LY / prior year) data from
+--        CV_COMP_FIN_ACTUAL_STATIC with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_FIN_ACTUAL_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+Actual_Static AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_FIN_ACTUAL_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 6: SKF_Actual_Static
+-- Logic: Reads statistical key figure actual quantities (LY) from
+--        CV_COMP_SKF_ACTUAL_STATIC with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_SKF_ACTUAL_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+SKF_Actual_Static AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_SKF_ACTUAL_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 7: Budget_Static_Comp
+-- Logic: Reads financial budget data from CV_COMP_FIN_BUDGET_STATIC
+--        (second reference — comp-level budget join) with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_FIN_BUDGET_STATIC (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+Budget_Static_Comp AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_FIN_BUDGET_STATIC`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 8: Topside_Adjustments_FS
+-- Logic: Reads topside adjustment amounts from CV_COMP_TOPSIDE_ADJUSTMENTS
+--        (first reference — FS topside) with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_TOPSIDE_ADJUSTMENTS (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+Topside_Adjustments_FS AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_TOPSIDE_ADJUSTMENTS`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 9: Topside_Adjustments_RX
+-- Logic: Reads topside adjustment amounts from CV_COMP_TOPSIDE_ADJUSTMENTS
+--        (second reference — RX topside) with fiscal week range filter.
+-- Source: PROJECT.DATASET.CV_COMP_TOPSIDE_ADJUSTMENTS (UNRESOLVED BQ path)
+-- Filters: PLACEHOLDER — IP_WEEK_ENDING_FROM / IP_WEEK_ENDING_TO parameter filter UNRESOLVED.
+-- =====================================================================
+Topside_Adjustments_RX AS (
+  SELECT *
+  FROM `PROJECT.DATASET.CV_COMP_TOPSIDE_ADJUSTMENTS`
+  -- UNRESOLVED: Replace with actual BigQuery table/view path.
+  -- UNRESOLVED: Apply @ip_week_ending_from / @ip_week_ending_to filter.
+  WHERE TRUE  -- placeholder; actual filter condition UNRESOLVED
+),
+
+-- =====================================================================
+-- CTE 10: Joined_Source_Data
+-- Logic: Joins all nine source Calculation Views together to produce
+--        the combined row-level dataset. Dimension columns are taken from
+--        Flash_Static (f). Measure columns are sourced from their respective
+--        views as documented in the converted SQL.
+-- Source: Flash_Static (f), Budget_Static (b), SKF_Budget_Static (skfb),
+--         Forecast_MJE_Static (fmje), Actual_Static (act),
+--         SKF_Actual_Static (skfa), Budget_Static_Comp (bcomp),
+--         Topside_Adjustments_FS (tfs), Topside_Adjustments_RX (trx)
+-- Join: LEFT JOIN — join types and join key columns are UNRESOLVED from XML.
+--       All join conditions use TRUE placeholder; must be replaced with actual keys.
+-- =====================================================================
+Joined_Source_Data AS (
+  SELECT
+    -- Dimension columns (from Flash_Static)
+    f.PRCTR,
+    f.SEGMENT,
+    f.PROFIT_CENTER_NAME,
+    f.STORE_NUMBER,
+    f.STORE_NAME,
+    f.STORE_TYPE,
+    f.REGION,
+    f.DISTRICT,
+    f.DISTRICT_NAME,
+    f.REGION_NAME,
+    f.DIVISION,
+    f.DIVISION_NAME,
+    f.COMPANY_CODE,
+    f.COMPANY_CODE_NAME,
+    f.COST_CENTER,
+    f.COST_CENTER_NAME,
+    f.CURRENCY,
+    f.WEEK_ENDING,
+    f.FISCAL_WEEK,
+    f.FISCAL_MONTH,
+    f.FISCAL_QUARTER,
+    f.FISCAL_YEAR,
+    f.FISCAL_PERIOD,
+    f.FISCAL_PERIOD_NAME,
+    f.FS_RX_FLAG,
+    f.FS_RX_FLAG_EXT,
+    f.COMP_FLAG,
+    f.BUDGET_COMP_FLAG,
+    f.EMERG_MKT_IND,
+    f.ZRWSTRTDATE_SAP,
+    f.ZRWENDDATE_SAP,
+    f.FS_UPD_TIMESTAMP_SAP,
+    f.RX_UPD_TIMESTAMP_SAP,
+    f.FS_OPEN_DAT_SAP,
+    f.RX_OPEN_DAT_SAP,
+    f.TOPSIDE_CATEGORY,
+    -- Measure columns from Flash_Static
+    f.FS_SALESAMOUNT,
+    f.RX_SALESAMOUNT,
+    f.REDUCTIONAMOUNT,
+    f.EMP_REDUCTIONAMOUNT,
+    f.CAL_SCRIPTS_90AS3_CAR,
+    -- MJE / SBT measures from Forecast_MJE_Static
+    fmje.CAL_FS_SALES_MJE,
+    fmje.CAL_RX_SALES_MJE,
+    fmje.SBT,
+    fmje.SKF_MJE_QTY,
+    fmje.FIN_FCST_AMOUNT,
+    -- Budget amounts from Budget_Static
+    b.FIN_BUDGET_AMOUNT,
+    b.RX_BUDGET,
+    -- SKF Budget quantities from SKF_Budget_Static
+    skfb.SKF_BUDGET_QTY,
+    skfb.SKF_FCST_QTY,
+    -- LY (actual prior year) amounts from Actual_Static
+    act.FIN_LY_AMOUNT,
+    -- SKF Actual quantities from SKF_Actual_Static
+    skfa.SKF_LY_QTY,
+    -- Topside adjustments (FS and RX) — column names UNRESOLVED
+    tfs.TOPSIDE_FS_AMOUNT,   -- UNRESOLVED: actual column name from CV_COMP_TOPSIDE_ADJUSTMENTS
+    trx.TOPSIDE_RX_AMOUNT    -- UNRESOLVED: actual column name from CV_COMP_TOPSIDE_ADJUSTMENTS
+  FROM Flash_Static f
+  -- UNRESOLVED: All join types and join key columns below must be validated and corrected.
+  LEFT JOIN Budget_Static b
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN SKF_Budget_Static skfb
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN Forecast_MJE_Static fmje
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN Actual_Static act
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN SKF_Actual_Static skfa
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN Budget_Static_Comp bcomp
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN Topside_Adjustments_FS tfs
+    ON TRUE  -- UNRESOLVED: actual join condition
+  LEFT JOIN Topside_Adjustments_RX trx
+    ON TRUE  -- UNRESOLVED: actual join condition
+),
+
+-- =====================================================================
+-- CTE 11: FILTER_Segment
+-- Logic: Applies the node-level SEGMENT filter from the HANA XML:
+--        passes only rows where SEGMENT IS NULL or UPPER(SEGMENT) = 'CONVDRUG'.
+-- Source: Joined_Source_Data
+-- Filters: SEGMENT IS NULL OR UPPER(SEGMENT) = 'CONVDRUG'
+-- =====================================================================
+FILTER_Segment AS (
+  SELECT *
+  FROM Joined_Source_Data
+  WHERE
+    SEGMENT IS NULL
+    OR UPPER(SEGMENT) = 'CONVDRUG'
+),
+
+-- =====================================================================
+-- CTE 12: Projected_Base_Calculations
+-- Logic: Computes Step A base sales calculated columns:
+--        CAL_FS_SALES = FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT
+--                       + CAL_FS_SALES_MJE + SBT
+--        CAL_RX_SALES = RX_SALESAMOUNT + CAL_RX_SALES_MJE
+--        CAL_SCRIPTS_90AS3 = CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY
+--        Also computes FS_SALESAMOUNT-based variance columns:
+--        CAL_FS_BUDGET_VAR, CAL_FS_FCST_VAR, CAL_FS_LY_VAR.
+--        All raw measure and dimension columns are passed through for
+--        downstream use.
+-- Source: FILTER_Segment
+-- Calculation: CAL_FS_SALES, CAL_RX_SALES, CAL_SCRIPTS_90AS3,
+--              CAL_FS_BUDGET_VAR, CAL_FS_FCST_VAR, CAL_FS_LY_VAR
+-- =====================================================================
+Projected_Base_Calculations AS (
+  SELECT
+    -- Pass-through dimension columns
+    PRCTR,
+    SEGMENT,
+    PROFIT_CENTER_NAME,
+    STORE_NUMBER,
+    STORE_NAME,
+    STORE_TYPE,
+    REGION,
+    DISTRICT,
+    DISTRICT_NAME,
+    REGION_NAME,
+    DIVISION,
+    DIVISION_NAME,
+    COMPANY_CODE,
+    COMPANY_CODE_NAME,
+    COST_CENTER,
+    COST_CENTER_NAME,
+    CURRENCY,
+    WEEK_ENDING,
+    FISCAL_WEEK,
+    FISCAL_MONTH,
+    FISCAL_QUARTER,
+    FISCAL_YEAR,
+    FISCAL_PERIOD,
+    FISCAL_PERIOD_NAME,
+    FS_RX_FLAG,
+    FS_RX_FLAG_EXT,
+    COMP_FLAG,
+    BUDGET_COMP_FLAG,
+    EMERG_MKT_IND,
+    ZRWSTRTDATE_SAP,
+    ZRWENDDATE_SAP,
+    FS_UPD_TIMESTAMP_SAP,
+    RX_UPD_TIMESTAMP_SAP,
+    FS_OPEN_DAT_SAP,
+    RX_OPEN_DAT_SAP,
+    TOPSIDE_CATEGORY,
+    -- Pass-through raw measures
+    FS_SALESAMOUNT,
+    RX_SALESAMOUNT,
+    FIN_BUDGET_AMOUNT,
+    FIN_FCST_AMOUNT,
+    FIN_LY_AMOUNT,
+    SKF_BUDGET_QTY,
+    SKF_FCST_QTY,
+    SKF_LY_QTY,
+    CAL_FS_SALES_MJE,
+    CAL_RX_SALES_MJE,
+    SBT,
+    SKF_MJE_QTY,
+    REDUCTIONAMOUNT,
+    EMP_REDUCTIONAMOUNT,
+    CAL_SCRIPTS_90AS3_CAR,
+    RX_BUDGET,
+    -- Step A: Base sales calculations
+    (FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT + CAL_FS_SALES_MJE + SBT)
+      AS CAL_FS_SALES,
+    (RX_SALESAMOUNT + CAL_RX_SALES_MJE)
+      AS CAL_RX_SALES,
+    (CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY)
+      AS CAL_SCRIPTS_90AS3,
+    -- Step B: FS_SALESAMOUNT-based variance columns
+    (FS_SALESAMOUNT - FIN_BUDGET_AMOUNT)
+      AS CAL_FS_BUDGET_VAR,
+    IF(FS_RX_FLAG = 'FS', FS_SALESAMOUNT - FIN_FCST_AMOUNT, 0)
+      AS CAL_FS_FCST_VAR,
+    IF(FS_RX_FLAG = 'FS', FS_SALESAMOUNT - FIN_LY_AMOUNT, 0)
+      AS CAL_FS_LY_VAR
+  FROM FILTER_Segment
+),
+
+-- =====================================================================
+-- CTE 13: Projected_Extended_Calculations
+-- Logic: Computes CAL_FS_SALES-based variances, CAL_RX_SALES-based variances,
+--        CAL_SCRIPTS_90AS3-based variances, comp-store flag-gated columns,
+--        and the initial ASP chain steps (CAL_TOTAL_BUDGET_ASP,
+--        CAL_STORE_FLASH_ASP, CAL_TOTAL_FLASH_ASP).
+--        NOTE: CAL_TOTAL_BUDGET_ASP uses RX_BUDGET (raw) as proxy for the
+--        initial ASP calculation due to the circular dependency in the HANA
+--        node execution order (see ISSUES TO FIX #7).
+-- Source: Projected_Base_Calculations
+-- Calculation: CAL_FS_SALES_BUDGET_VAR, CAL_FS_SALES_FCST_VAR,
+--              CAL_FS_SALES_LY_VAR, CAL_RX_FCST_VAR, CAL_RX_LY_VAR,
+--              CAL_SCRIPTS_FCST_VAR, CAL_SCRIPTS_BUDGET_VAR,
+--              CAL_SCRIPTS_LY_VAR, CAL_COMP_BUDGET_AMOUNT,
+--              CAL_COMP_FS_SALES, CAL_COMP_FS_SALESAMOUNT,
+--              CAL_COMP_RX_SALES, CAL_COMP_BUDGET_QTY, CAL_COMP_SCRIPTS,
+--              CAL_COMP_FCST_AMOUNT, CAL_COMP_FCST_QTY,
+--              CAL_COMP_LY_AMOUNT, CAL_COMP_LY_QTY,
+--              CAL_TOTAL_BUDGET_ASP, CAL_STORE_FLASH_ASP, CAL_TOTAL_FLASH_ASP
+-- =====================================================================
+Projected_Extended_Calculations AS (
+  SELECT
+    -- Pass-through all columns from previous step
+    PRCTR,
+    SEGMENT,
+    PROFIT_CENTER_NAME,
+    STORE_NUMBER,
+    STORE_NAME,
+    STORE_TYPE,
+    REGION,
+    DISTRICT,
+    DISTRICT_NAME,
+    REGION_NAME,
+    DIVISION,
+    DIVISION_NAME,
+    COMPANY_CODE,
+    COMPANY_CODE_NAME,
+    COST_CENTER,
+    COST_CENTER_NAME,
+    CURRENCY,
+    WEEK_ENDING,
+    FISCAL_WEEK,
+    FISCAL_MONTH,
+    FISCAL_QUARTER,
+    FISCAL_YEAR,
+    FISCAL_PERIOD,
+    FISCAL_PERIOD_NAME,
+    FS_RX_FLAG,
+    FS_RX_FLAG_EXT,
+    COMP_FLAG,
+    BUDGET_COMP_FLAG,
+    EMERG_MKT_IND,
+    ZRWSTRTDATE_SAP,
+    ZRWENDDATE_SAP,
+    FS_UPD_TIMESTAMP_SAP,
+    RX_UPD_TIMESTAMP_SAP,
+    FS_OPEN_DAT_SAP,
+    RX_OPEN_DAT_SAP,
+    TOPSIDE_CATEGORY,
+    FS_SALESAMOUNT,
+    RX_SALESAMOUNT,
+    FIN_BUDGET_AMOUNT,
+    FIN_FCST_AMOUNT,
+    FIN_LY_AMOUNT,
+    SKF_BUDGET_QTY,
+    SKF_FCST_QTY,
+    SKF_LY_QTY,
+    CAL_FS_SALES_MJE,
+    CAL_RX_SALES_MJE,
+    SBT,
+    SKF_MJE_QTY,
+    REDUCTIONAMOUNT,
+    EMP_REDUCTIONAMOUNT,
+    CAL_SCRIPTS_90AS3_CAR,
+    RX_BUDGET,
+    CAL_FS_SALES,
+    CAL_RX_SALES,
+    CAL_SCRIPTS_90AS3,
+    CAL_FS_BUDGET_VAR,
+    CAL_FS_FCST_VAR,
+    CAL_FS_LY_VAR,
+    -- CAL_FS_SALES-based variances
+    (CAL_FS_SALES - FIN_BUDGET_AMOUNT)
+      AS CAL_FS_SALES_BUDGET_VAR,
+    IF(FS_RX_FLAG = 'FS', CAL_FS_SALES - FIN_FCST_AMOUNT, 0)
+      AS CAL_FS_SALES_FCST_VAR,
+    IF(FS_RX_FLAG = 'FS', CAL_FS_SALES - FIN_LY_AMOUNT, 0)
+      AS CAL_FS_SALES_LY_VAR,
+    -- CAL_RX_SALES-based variances
+    IF(FS_RX_FLAG_EXT = 'RX', CAL_RX_SALES - FIN_FCST_AMOUNT, 0)
+      AS CAL_RX_FCST_VAR,
+    IF(FS_RX_FLAG_EXT = 'RX', CAL_RX_SALES - FIN_LY_AMOUNT, 0)
+      AS CAL_RX_LY_VAR,
+    -- CAL_SCRIPTS_90AS3-based variances
+    (CAL_SCRIPTS_90AS3 - SKF_FCST_QTY)
+      AS CAL_SCRIPTS_FCST_VAR,
+    (CAL_SCRIPTS_90AS3 - SKF_BUDGET_QTY)
+      AS CAL_SCRIPTS_BUDGET_VAR,
+    (CAL_SCRIPTS_90AS3 - SKF_LY_QTY)
+      AS CAL_SCRIPTS_LY_VAR,
+    -- Comp-store flag-gated columns
+    IF(BUDGET_COMP_FLAG = '1', FIN_BUDGET_AMOUNT, 0)
+      AS CAL_COMP_BUDGET_AMOUNT,
+    IF(COMP_FLAG = '1', CAL_FS_SALES, 0)
+      AS CAL_COMP_FS_SALES,
+    IF(COMP_FLAG = '1', FS_SALESAMOUNT, 0)
+      AS CAL_COMP_FS_SALESAMOUNT,
+    IF(COMP_FLAG = '1', CAL_RX_SALES, 0)
+      AS CAL_COMP_RX_SALES,
+    IF(BUDGET_COMP_FLAG = '1', SKF_BUDGET_QTY, 0)
+      AS CAL_COMP_BUDGET_QTY,
+    IF(COMP_FLAG = '1', CAL_SCRIPTS_90AS3, 0)
+      AS CAL_COMP_SCRIPTS,
+    IF(COMP_FLAG = '1', FIN_FCST_AMOUNT, 0)
+      AS CAL_COMP_FCST_AMOUNT,
+    IF(COMP_FLAG = '1', SKF_FCST_QTY, 0)
+      AS CAL_COMP_FCST_QTY,
+    IF(COMP_FLAG = '1', FIN_LY_AMOUNT, 0)
+      AS CAL_COMP_LY_AMOUNT,
+    IF(COMP_FLAG = '1', SKF_LY_QTY, 0)
+      AS CAL_COMP_LY_QTY,
+    -- ASP chain Step D (initial):
+    -- NOTE: CAL_TOTAL_BUDGET_ASP uses RX_BUDGET (raw) as proxy due to circular dependency.
+    -- REQUIRES VALIDATION: In HANA, CAL_TOTAL_BUDGET_ASP = IF(SKF_BUDGET_QTY=0, 0,
+    --   ROUND(CAL_RX_BUDGET/SKF_BUDGET_QTY, 2)) where CAL_RX_BUDGET is computed in a later node.
+    -- The BigQuery conversion uses RX_BUDGET (raw) as the initial proxy value.
+    IF(SKF_BUDGET_QTY = 0, 0, ROUND(RX_BUDGET / SKF_BUDGET_QTY, 2))
+      AS CAL_TOTAL_BUDGET_ASP,
+    IF(CAL_SCRIPTS_90AS3 = 0, 0, ROUND(CAL_RX_SALES / CAL_SCRIPTS_90AS3, 2))
+      AS CAL_STORE_FLASH_ASP,
+    IF(CAL_SCRIPTS_90AS3 = 0, 0, ROUND(CAL_RX_SALES / CAL_SCRIPTS_90AS3, 2))
+      AS CAL_TOTAL_FLASH_ASP
+  FROM Projected_Base_Calculations
+),
+
+-- =====================================================================
+-- CTE 14: Projected_ASP_Calculations
+-- Logic: Computes CAL_ASP_CHANGE_PERCT from the ASP chain:
+--        CAL_ASP_CHANGE_PERCT = IF(CAL_TOTAL_BUDGET_ASP=0, 0,
+--          ROUND((CAL_TOTAL_FLASH_ASP / CAL_TOTAL_BUDGET_ASP) - 1, 4))
+-- Source: Projected_Extended_Calculations
+-- Calculation: CAL_ASP_CHANGE_PERCT
+-- =====================================================================
+Projected_ASP_Calculations AS (
+  SELECT
+    *,
+    IF(CAL_TOTAL_BUDGET_ASP = 0, 0,
+       ROUND((CAL_TOTAL_FLASH_ASP / CAL_TOTAL_BUDGET_ASP) - 1, 4))
+      AS CAL_ASP_CHANGE_PERCT
+  FROM Projected_Extended_Calculations
+),
+
+-- =====================================================================
+-- CTE 15: Projected_ASP_Adj
+-- Logic: Computes CAL_ASP_ADJ_AMOUNT from the ASP chain:
+--        CAL_ASP_ADJ_AMOUNT = IF(CAL_ASP_CHANGE_PERCT=-1, 0,
+--          ROUND(CAL_STORE_FLASH_ASP / (1 + CAL_ASP_CHANGE_PERCT), 2))
+-- Source: Projected_ASP_Calculations
+-- Calculation: CAL_ASP_ADJ_AMOUNT
+-- =====================================================================
+Projected_ASP_Adj AS (
+  SELECT
+    *,
+    IF(CAL_ASP_CHANGE_PERCT = -1, 0,
+       ROUND(CAL_STORE_FLASH_ASP / (1 + CAL_ASP_CHANGE_PERCT), 2))
+      AS CAL_ASP_ADJ_AMOUNT
+  FROM Projected_ASP_Calculations
+),
+
+-- =====================================================================
+-- CTE 16: Projected_RX_Budget
+-- Logic: Computes CAL_RX_BUDGET using the node-level filter logic:
+--        Filter: (CAL_RX_BUDGET = 0) OR isnull(CAL_RX_BUDGET) gates the
+--        ASP-based budget derivation path.
+--        CAL_RX_BUDGET = IF(RX_BUDGET=0 OR RX_BUDGET IS NULL,
+--          ROUND(SKF_BUDGET_QTY * CAL_ASP_ADJ_AMOUNT, 2), RX_BUDGET)
+-- Source: Projected_ASP_Adj
+-- Filters: (RX_BUDGET = 0 OR RX_BUDGET IS NULL) gates ASP-based derivation
+-- Calculation: CAL_RX_BUDGET
+-- =====================================================================
+Projected_RX_Budget AS (
+  SELECT
+    *,
+    IF(RX_BUDGET = 0 OR RX_BUDGET IS NULL,
+       ROUND(SKF_BUDGET_QTY * CAL_ASP_ADJ_AMOUNT, 2),
+       RX_BUDGET)
+      AS CAL_RX_BUDGET
+  FROM Projected_ASP_Adj
+),
+
+-- =====================================================================
+-- CTE 17: Projected_RX_Budget_Final
+-- Logic: Computes CAL_RX_BUDGET_FINAL and CAL_COMP_RX_BUDGET.
+--        Filter: (NOT isNull(BUDGET_COMP_FLAG)) AND ((RX_BUDGET=0) OR
+--                isnull(RX_BUDGET)) gates the comp-level PRCTR derivation.
+--        PRCTR_DERIVED = IF(BUDGET_COMP_FLAG='1','0000502656','0000502657')
+--        CAL_RX_BUDGET_FINAL: For PRCTR IN ('0000502656','0000502657') AND
+--          BUDGET_COMP_FLAG IN ('0','1'):
+--            RX_BUDGET - CAL_RX_BUDGET_COMP_LEVEL  [UNRESOLVED source column]
+--          Otherwise: CAL_RX_BUDGET
+--        CAL_COMP_RX_BUDGET = IF(BUDGET_COMP_FLAG='1', CAL_RX_BUDGET_FINAL, 0)
+-- Source: Projected_RX_Budget
+-- Filters: BUDGET_COMP_FLAG IS NOT NULL AND (RX_BUDGET=0 OR RX_BUDGET IS NULL)
+--          gates comp-level path
+-- Calculation: PRCTR_DERIVED (internal), CAL_RX_BUDGET_FINAL, CAL_COMP_RX_BUDGET
+-- =====================================================================
+Projected_RX_Budget_Final AS (
+  SELECT
+    *,
+    -- PRCTR_DERIVED: used for comp-level budget lookup (internal, not a final output column)
+    IF(BUDGET_COMP_FLAG = '1', '0000502656', '0000502657')
+      AS PRCTR_DERIVED,
+    -- CAL_RX_BUDGET_FINAL
+    -- UNRESOLVED: CAL_RX_BUDGET_COMP_LEVEL source column is not defined in the supplied XML.
+    -- It likely originates from Budget_Static_Comp but cannot be confirmed from supplied inputs.
+    IF(
+      PRCTR IN ('0000502656', '0000502657')
+      AND BUDGET_COMP_FLAG IN ('0', '1'),
+      RX_BUDGET - CAL_RX_BUDGET_COMP_LEVEL,  -- UNRESOLVED: CAL_RX_BUDGET_COMP_LEVEL
+      CAL_RX_BUDGET
+    ) AS CAL_RX_BUDGET_FINAL,
+    -- CAL_COMP_RX_BUDGET
+    IF(BUDGET_COMP_FLAG = '1',
+       IF(
+         PRCTR IN ('0000502656', '0000502657')
+         AND BUDGET_COMP_FLAG IN ('0', '1'),
+         RX_BUDGET - CAL_RX_BUDGET_COMP_LEVEL,  -- UNRESOLVED: CAL_RX_BUDGET_COMP_LEVEL
+         CAL_RX_BUDGET
+       ),
+       0)
+      AS CAL_COMP_RX_BUDGET
+  FROM Projected_RX_Budget
+),
+
+-- =====================================================================
+-- CTE 18: Projected_RX_Budget_Variance
+-- Logic: Computes CAL_RX_BUDGET_VAR:
+--        CAL_RX_BUDGET_VAR = CAL_RX_SALES - CAL_RX_BUDGET
+-- Source: Projected_RX_Budget_Final
+-- Calculation: CAL_RX_BUDGET_VAR
+-- =====================================================================
+Projected_RX_Budget_Variance AS (
+  SELECT
+    *,
+    (CAL_RX_SALES - CAL_RX_BUDGET)
+      AS CAL_RX_BUDGET_VAR
+  FROM Projected_RX_Budget_Final
+),
+
+-- =====================================================================
+-- CTE 19: Final_Output
+-- Logic: Applies the logical model calculated attributes and outputs all
+--        defined columns. Computes:
+--        - CAL_COMP_FLAG = GREATEST(COALESCE(COMP_FLAG,'0'), COALESCE(BUDGET_COMP_FLAG,'0'))
+--        - COMP_LABEL: 'Comp'/'Non-Comp'/'' from CAL_COMP_FLAG
+--        - EMERG_MKT_IND_LABEL: 'Yes'/'No'/'' from EMERG_MKT_IND
+--        - Date formatting: ZRWSTRTDATE_FMT, ZRWENDDATE_FMT, FS_OPEN_DAT_FMT,
+--          RX_OPEN_DAT_FMT using MM/DD/YYYY pattern (assumes YYYYMMDD integer/string source)
+--        - Timestamp formatting: FS_UPD_TIMESTAMP_FMT, RX_UPD_TIMESTAMP_FMT
+--          (assumes YYYYMMDDHHMMSS 14-digit format)
+--        - All twelve comp-store variance measures (final logical model)
+--        NOTE: Several comp-store variance columns are UNRESOLVED — see inline comments.
+-- Source: Projected_RX_Budget_Variance
+-- Calculation: CAL_COMP_FLAG, COMP_LABEL, EMERG_MKT_IND_LABEL,
+--              ZRWSTRTDATE_FMT, ZRWENDDATE_FMT, FS_OPEN_DAT_FMT, RX_OPEN_DAT_FMT,
+--              FS_UPD_TIMESTAMP_FMT, RX_UPD_TIMESTAMP_FMT,
+--              CAL_COMP_FS_VAR_BUDGET, CAL_COMP_FS_VAR_FCST, CAL_COMP_FS_VAR_LY,
+--              CAL_COMP_RX_VAR_BUDGET, CAL_COMP_RX_VAR_FCST, CAL_COMP_RX_VAR_LY,
+--              CAL_COMP_FLASH_VAR_FCST, CAL_COMP_FLASH_VAR_BUDGET, CAL_COMP_FLASH_VAR_LY,
+--              CAL_COMP_CORPFS_VAR_BUDGET, CAL_COMP_CORPFS_VAR_FCST, CAL_COMP_CORPFS_VAR_LY
+-- =====================================================================
+Final_Output AS (
+  SELECT
+    -- Dimension attributes
+    PRCTR,
+    SEGMENT,
+    PROFIT_CENTER_NAME,
+    STORE_NUMBER,
+    STORE_NAME,
+    STORE_TYPE,
+    REGION,
+    DISTRICT,
+    DISTRICT_NAME,
+    REGION_NAME,
+    DIVISION,
+    DIVISION_NAME,
+    COMPANY_CODE,
+    COMPANY_CODE_NAME,
+    COST_CENTER,
+    COST_CENTER_NAME,
+    CURRENCY,
+    WEEK_ENDING,
+    FISCAL_WEEK,
+    FISCAL_MONTH,
+    FISCAL_QUARTER,
+    FISCAL_YEAR,
+    FISCAL_PERIOD,
+    FISCAL_PERIOD_NAME,
+    FS_RX_FLAG,
+    FS_RX_FLAG_EXT,
+    COMP_FLAG,
+    BUDGET_COMP_FLAG,
+    EMERG_MKT_IND,
+    TOPSIDE_CATEGORY,
+
+    -- Formatted date attributes
+    -- HANA: format(date(ZRWSTRTDATE_SAP), 'MM/DD/YYYY')
+    -- Assumes ZRWSTRTDATE_SAP is stored as YYYYMMDD integer or string.
+    -- UNRESOLVED: If already DATE type, remove PARSE_DATE wrapper.
+    FORMAT_DATE('%m/%d/%Y', PARSE_DATE('%Y%m%d', CAST(ZRWSTRTDATE_SAP AS STRING)))
+      AS ZRWSTRTDATE_FMT,
+
+    FORMAT_DATE('%m/%d/%Y', PARSE_DATE('%Y%m%d', CAST(ZRWENDDATE_SAP AS STRING)))
+      AS ZRWENDDATE_FMT,
+
+    FORMAT_DATE('%m/%d/%Y', PARSE_DATE('%Y%m%d', CAST(FS_OPEN_DAT_SAP AS STRING)))
+      AS FS_OPEN_DAT_FMT,
+
+    FORMAT_DATE('%m/%d/%Y', PARSE_DATE('%Y%m%d', CAST(RX_OPEN_DAT_SAP AS STRING)))
+      AS RX_OPEN_DAT_FMT,
+
+    -- Timestamp formatting for FS_UPD_TIMESTAMP_SAP
+    -- HANA: midstr(STRING(col),5,2)+'/'+midstr(STRING(col),7,2)+'/'+leftstr(STRING(col),4)+' '+...
+    -- Assumes FS_UPD_TIMESTAMP_SAP is a numeric timestamp in YYYYMMDDHHMMSS format (14 digits).
+    -- UNRESOLVED: If already STRING type, remove CAST(col AS STRING) wrappers.
+    IF(FS_UPD_TIMESTAMP_SAP IS NULL, '',
+       CONCAT(
+         SUBSTR(CAST(FS_UPD_TIMESTAMP_SAP AS STRING), 5, 2), '/',
+         SUBSTR(CAST(FS_UPD_TIMESTAMP_SAP AS STRING), 7, 2), '/',
+         SUBSTR(CAST(FS_UPD_TIMESTAMP_SAP AS STRING), 1, 4), ' ',
+         SUBSTR(CAST(FS_UPD_TIMESTAMP_SAP AS STRING), 9, 2), ':',
+         SUBSTR(CAST(FS_UPD_TIMESTAMP_SAP AS STRING), 11, 2), ':',
+         RIGHT(CAST(FS_UPD_TIMESTAMP_SAP AS STRING), 2)
+       )
+    ) AS FS_UPD_TIMESTAMP_FMT,
+
+    -- Timestamp formatting for RX_UPD_TIMESTAMP_SAP
+    IF(RX_UPD_TIMESTAMP_SAP IS NULL, '',
+       CONCAT(
+         SUBSTR(CAST(RX_UPD_TIMESTAMP_SAP AS STRING), 5, 2), '/',
+         SUBSTR(CAST(RX_UPD_TIMESTAMP_SAP AS STRING), 7, 2), '/',
+         SUBSTR(CAST(RX_UPD_TIMESTAMP_SAP AS STRING), 1, 4), ' ',
+         SUBSTR(CAST(RX_UPD_TIMESTAMP_SAP AS STRING), 9, 2), ':',
+         SUBSTR(CAST(RX_UPD_TIMESTAMP_SAP AS STRING), 11, 2), ':',
+         RIGHT(CAST(RX_UPD_TIMESTAMP_SAP AS STRING), 2)
+       )
+    ) AS RX_UPD_TIMESTAMP_FMT,
+
+    -- CAL_COMP_FLAG (logical model calculated attribute)
+    -- HANA: max(coalesce(COMP_FLAG,'0'), coalesce(BUDGET_COMP_FLAG,'0'))
+    -- BigQuery: GREATEST(COALESCE(...)) — scalar two-argument max equivalent
+    GREATEST(COALESCE(COMP_FLAG, '0'), COALESCE(BUDGET_COMP_FLAG, '0'))
+      AS CAL_COMP_FLAG,
+
+    -- COMP_LABEL (derived from CAL_COMP_FLAG)
+    -- HANA: case(CAL_COMP_FLAG,'1','Comp','0','Non-Comp','')
+    CASE GREATEST(COALESCE(COMP_FLAG, '0'), COALESCE(BUDGET_COMP_FLAG, '0'))
+      WHEN '1' THEN 'Comp'
+      WHEN '0' THEN 'Non-Comp'
+      ELSE ''
+    END AS COMP_LABEL,
+
+    -- EMERG_MKT_IND_LABEL
+    IF(EMERG_MKT_IND = 'Y', 'Yes', IF(EMERG_MKT_IND = 'N', 'No', ''))
+      AS EMERG_MKT_IND_LABEL,
+
+    -- Raw measure columns
+    FS_SALESAMOUNT,
+    RX_SALESAMOUNT,
+    FIN_BUDGET_AMOUNT,
+    FIN_FCST_AMOUNT,
+    FIN_LY_AMOUNT,
+    SKF_BUDGET_QTY,
+    SKF_FCST_QTY,
+    SKF_LY_QTY,
+    CAL_FS_SALES_MJE,
+    CAL_RX_SALES_MJE,
+    SBT,
+    SKF_MJE_QTY,
+    REDUCTIONAMOUNT,
+    EMP_REDUCTIONAMOUNT,
+    CAL_SCRIPTS_90AS3_CAR,
+    RX_BUDGET,
+
+    -- Intermediate calculated measures (carried through to output)
+    CAL_FS_SALES,
+    CAL_RX_SALES,
+    CAL_SCRIPTS_90AS3,
+    CAL_FS_BUDGET_VAR,
+    CAL_FS_FCST_VAR,
+    CAL_FS_LY_VAR,
+    CAL_FS_SALES_BUDGET_VAR,
+    CAL_FS_SALES_FCST_VAR,
+    CAL_FS_SALES_LY_VAR,
+    CAL_RX_FCST_VAR,
+    CAL_RX_LY_VAR,
+    CAL_SCRIPTS_FCST_VAR,
+    CAL_SCRIPTS_BUDGET_VAR,
+    CAL_SCRIPTS_LY_VAR,
+    CAL_COMP_BUDGET_AMOUNT,
+    CAL_COMP_FS_SALES,
+    CAL_COMP_FS_SALESAMOUNT,
+    CAL_COMP_RX_SALES,
+    CAL_COMP_BUDGET_QTY,
+    CAL_COMP_SCRIPTS,
+    CAL_COMP_FCST_AMOUNT,
+    CAL_COMP_FCST_QTY,
+    CAL_COMP_LY_AMOUNT,
+    CAL_COMP_LY_QTY,
+    CAL_TOTAL_BUDGET_ASP,
+    CAL_STORE_FLASH_ASP,
+    CAL_TOTAL_FLASH_ASP,
+    CAL_ASP_CHANGE_PERCT,
+    CAL_ASP_ADJ_AMOUNT,
+    CAL_RX_BUDGET,
+    CAL_RX_BUDGET_FINAL,
+    CAL_COMP_RX_BUDGET,
+    CAL_RX_BUDGET_VAR,
+
+    -- Comp-store variance measures (logical model)
+    (CAL_COMP_FS_SALESAMOUNT - CAL_COMP_BUDGET_AMOUNT)
+      AS CAL_COMP_FS_VAR_BUDGET,
+    IF(FS_RX_FLAG = 'FS', CAL_COMP_FS_SALESAMOUNT - CAL_COMP_FCST_AMOUNT, 0)
+      AS CAL_COMP_FS_VAR_FCST,
+    IF(FS_RX_FLAG = 'FS', CAL_COMP_FS_SALESAMOUNT - CAL_COMP_LY_AMOUNT, 0)
+      AS CAL_COMP_FS_VAR_LY,
+    (CAL_COMP_RX_SALES - CAL_COMP_RX_BUDGET)
+      AS CAL_COMP_RX_VAR_BUDGET,
+    IF(FS_RX_FLAG_EXT = 'RX', CAL_COMP_RX_SALES - CAL_COMP_FCST_AMOUNT, 0)
+      AS CAL_COMP_RX_VAR_FCST,
+    IF(FS_RX_FLAG_EXT = 'RX', CAL_COMP_RX_SALES - CAL_COMP_LY_AMOUNT, 0)
+      AS CAL_COMP_RX_VAR_LY,
+    -- UNRESOLVED: XML uses CAL_COMP_FLASH_90AS3 - CAL_COMP_FORECAST_90AS3;
+    -- closest available approximation using CAL_COMP_SCRIPTS and CAL_COMP_FCST_QTY.
+    (CAL_COMP_SCRIPTS - CAL_COMP_FCST_QTY)
+      AS CAL_COMP_FLASH_VAR_FCST,
+    -- UNRESOLVED: XML uses CAL_COMP_FLASH_90AS3 - CAL_COMP_BUDGET_90AS3
+    (CAL_COMP_SCRIPTS - CAL_COMP_BUDGET_QTY)
+      AS CAL_COMP_FLASH_VAR_BUDGET,
+    -- UNRESOLVED: XML uses CAL_COMP_FLASH_90AS3 - CAL_COMP_LY_90AS3
+    (CAL_COMP_SCRIPTS - CAL_COMP_LY_QTY)
+      AS CAL_COMP_FLASH_VAR_LY,
+    -- UNRESOLVED: XML uses CAL_COMP_CORPFS_SALES_AMOUNT - CAL_COMP_FS_BUDGET_AMOUNT
+    (CAL_COMP_FS_SALES - CAL_COMP_BUDGET_AMOUNT)
+      AS CAL_COMP_CORPFS_VAR_BUDGET,
+    -- UNRESOLVED: XML uses CAL_COMP_CORPFS_SALES_AMOUNT - CAL_COMP_FORECAST_AMOUNT
+    IF(FS_RX_FLAG = 'FS', CAL_COMP_FS_SALES - CAL_COMP_FCST_AMOUNT, 0)
+      AS CAL_COMP_CORPFS_VAR_FCST,
+    -- UNRESOLVED: XML uses CAL_COMP_CORPFS_SALES_AMOUNT - CAL_COMP_LY_AMOUNT
+    IF(FS_RX_FLAG = 'FS', CAL_COMP_FS_SALES - CAL_COMP_LY_AMOUNT, 0)
+      AS CAL_COMP_CORPFS_VAR_LY
+
+  FROM Projected_RX_Budget_Variance
+)
+
+-- Final SELECT
+SELECT * FROM Final_Output;
