@@ -1,0 +1,186 @@
+SOURCE_ARTIFACT:
+CV_BASE_TOPSIDE_ADJUSTMENTS_CAR
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_TOPSIDE_ADJUSTMENTS_CAR
+- Projection node: TOPSIDE_ADJUSTMENTS
+- Source table: CVS_FRIP.TOPSIDE_ADJUSTMENTS_VT_CAR
+- Logical model output: TOPSIDE_ADJUSTMENTS
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from CVS_FRIP.TOPSIDE_ADJUSTMENTS_VT_CAR through projection node TOPSIDE_ADJUSTMENTS:
+  - APPLICATION -> APPLICATION
+  - DESCRIPTION -> DESCRIPTION
+  - MANDT -> MANDT
+  - PRCTR -> PRCTR
+  - S4_ACCOUNT -> S4_ACCOUNT
+  - SEGMENT -> SEGMENT
+  - TYPE -> TYPE
+  - WEEK_YEAR -> WEEK_YEAR
+  - ZYEAR -> ZYEAR
+  - FS_BUD -> FS_BUD
+  - FS_FCT -> FS_FCT
+  - FS_FLASH -> FS_FLASH
+  - FS_LY -> FS_LY
+  - RX_BUD -> RX_BUD
+  - RX_FCT -> RX_FCT
+  - RX_FLASH -> RX_FLASH
+  - RX_LY -> RX_LY
+  - SC_90AS1_BUD -> SC_90AS1_BUD
+  - SC_90AS1_FCT -> SC_90AS1_FCT
+  - SC_90AS1_FLASH -> SC_90AS1_FLASH
+  - SC_90AS1_LY -> SC_90AS1_LY
+  - SC_90AS3_BUD -> SC_90AS3_BUD
+  - SC_90AS3_FCT -> SC_90AS3_FCT
+  - SC_90AS3_FLASH -> SC_90AS3_FLASH
+  - SC_90AS3_LY -> SC_90AS3_LY
+- Filter explicitly defined in projection:
+  - MANDT IN ('110','200') or equivalent typed representation depending on actual source datatype
+- Output attributes in logical model:
+  - APPLICATION
+  - DESCRIPTION
+  - MANDT
+  - PRCTR
+  - S4_ACCOUNT
+  - SEGMENT
+  - TYPE
+  - WEEK_YEAR
+  - ZYEAR
+- Output base measures in logical model, all with aggregationType="sum":
+  - FS_BUD
+  - FS_FCT
+  - FS_FLASH
+  - FS_LY
+  - RX_BUD
+  - RX_FCT
+  - RX_FLASH
+  - RX_LY
+  - SC_90AS1_BUD
+  - SC_90AS1_FCT
+  - SC_90AS1_FLASH
+  - SC_90AS1_LY
+  - SC_90AS3_BUD
+  - SC_90AS3_FCT
+  - SC_90AS3_FLASH
+  - SC_90AS3_LY
+- No calculated attributes
+- No calculated measures
+- No joins
+- No unions
+- No parameters/placeholders/variables explicitly defined
+
+SOURCE_LOGIC:
+The source artifact is a SAP HANA Calculation View XML. The root element specifies dataCategory="CUBE" and outputViewType="Aggregation". Therefore the final output is aggregated output, not row-level output, and the final SQL must GROUP BY all non-measure output columns and aggregate all measure columns using SUM().
+
+The view reads from a single base table CVS_FRIP.TOPSIDE_ADJUSTMENTS_VT_CAR through one projection node named TOPSIDE_ADJUSTMENTS. The projection passes through 25 columns with 1:1 mappings and applies one explicit filter on MANDT to include only values 110 and 200.
+
+There are no joins, no calculated columns, no restricted measures, no unions, and no procedural steps in the XML provided.
+
+The logical output consists of:
+- 9 non-measure attributes: APPLICATION, DESCRIPTION, MANDT, PRCTR, S4_ACCOUNT, SEGMENT, TYPE, WEEK_YEAR, ZYEAR
+- 16 measures aggregated with SUM: FS_BUD, FS_FCT, FS_FLASH, FS_LY, RX_BUD, RX_FCT, RX_FLASH, RX_LY, SC_90AS1_BUD, SC_90AS1_FCT, SC_90AS1_FLASH, SC_90AS1_LY, SC_90AS3_BUD, SC_90AS3_FCT, SC_90AS3_FLASH, SC_90AS3_LY
+
+Total final output columns required by the logical model: 25.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH TOPSIDE_ADJUSTMENTS AS (
+  SELECT
+    APPLICATION,
+    DESCRIPTION,
+    MANDT,
+    PRCTR,
+    S4_ACCOUNT,
+    SEGMENT,
+    TYPE,
+    WEEK_YEAR,
+    ZYEAR,
+    FS_BUD,
+    FS_FCT,
+    FS_FLASH,
+    FS_LY,
+    RX_BUD,
+    RX_FCT,
+    RX_FLASH,
+    RX_LY,
+    SC_90AS1_BUD,
+    SC_90AS1_FCT,
+    SC_90AS1_FLASH,
+    SC_90AS1_LY,
+    SC_90AS3_BUD,
+    SC_90AS3_FCT,
+    SC_90AS3_FLASH,
+    SC_90AS3_LY
+  FROM `PROJECT.DATASET.TOPSIDE_ADJUSTMENTS_VT_CAR`
+  WHERE MANDT IN ('110', '200')
+)
+
+SELECT
+  APPLICATION,
+  DESCRIPTION,
+  MANDT,
+  PRCTR,
+  S4_ACCOUNT,
+  SEGMENT,
+  TYPE,
+  WEEK_YEAR,
+  ZYEAR,
+  SUM(FS_BUD) AS FS_BUD,
+  SUM(FS_FCT) AS FS_FCT,
+  SUM(FS_FLASH) AS FS_FLASH,
+  SUM(FS_LY) AS FS_LY,
+  SUM(RX_BUD) AS RX_BUD,
+  SUM(RX_FCT) AS RX_FCT,
+  SUM(RX_FLASH) AS RX_FLASH,
+  SUM(RX_LY) AS RX_LY,
+  SUM(SC_90AS1_BUD) AS SC_90AS1_BUD,
+  SUM(SC_90AS1_FCT) AS SC_90AS1_FCT,
+  SUM(SC_90AS1_FLASH) AS SC_90AS1_FLASH,
+  SUM(SC_90AS1_LY) AS SC_90AS1_LY,
+  SUM(SC_90AS3_BUD) AS SC_90AS3_BUD,
+  SUM(SC_90AS3_FCT) AS SC_90AS3_FCT,
+  SUM(SC_90AS3_FLASH) AS SC_90AS3_FLASH,
+  SUM(SC_90AS3_LY) AS SC_90AS3_LY
+FROM TOPSIDE_ADJUSTMENTS
+GROUP BY
+  APPLICATION,
+  DESCRIPTION,
+  MANDT,
+  PRCTR,
+  S4_ACCOUNT,
+  SEGMENT,
+  TYPE,
+  WEEK_YEAR,
+  ZYEAR
+```
+
+CONVERSION_NOTES:
+- The artifact was interpreted semantically as a SAP HANA Calculation View XML, not as plain SQL.
+- The original projection node name TOPSIDE_ADJUSTMENTS was preserved exactly, per naming rules.
+- No generic intermediate CTE names such as PROJECTION_1 or JOIN_1 existed in the source artifact, so no renaming was required.
+- Because the root XML has dataCategory="CUBE" and outputViewType="Aggregation", the final BigQuery SQL applies:
+  - GROUP BY on all 9 non-measure attributes
+  - SUM() on all 16 base measures
+- The final SQL exposes exactly 25 columns, matching the logical model:
+  - 9 attributes
+  - 16 measures
+- The source schema/table CVS_FRIP.TOPSIDE_ADJUSTMENTS_VT_CAR was mapped to the BigQuery placeholder `PROJECT.DATASET.TOPSIDE_ADJUSTMENTS_VT_CAR` because actual BigQuery project and dataset names were not provided.
+- The filter on MANDT was preserved as `MANDT IN ('110', '200')`.
+- The XML does not provide datatype metadata for MANDT. Because datatype is unresolved, the filter values were preserved as string literals matching the XML operand values. This requires datatype validation against the target BigQuery table.
+- No joins, calculations, placeholders, variables, parameters, restricted measures, or calculated measures were present in the provided artifact.
+- No HANA-specific scalar/date/time function conversion was required in this artifact.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.TOPSIDE_ADJUSTMENTS_VT_CAR` is the intended BigQuery equivalent of HANA source object CVS_FRIP.TOPSIDE_ADJUSTMENTS_VT_CAR.
+- MANDT is string-compatible in the target BigQuery object, since the XML filter operands are provided as values "110" and "200". If MANDT is numeric in BigQuery, the literals must be adjusted accordingly after datatype validation.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset mapping for source object CVS_FRIP.TOPSIDE_ADJUSTMENTS_VT_CAR is not provided.
+- Datatype of MANDT is not provided in the XML, so the exact literal typing of the filter values requires validation.
+- Datatypes of all output columns and measures are not provided in the XML and therefore require target-side validation.
+
+CONFIDENCE:
+Medium

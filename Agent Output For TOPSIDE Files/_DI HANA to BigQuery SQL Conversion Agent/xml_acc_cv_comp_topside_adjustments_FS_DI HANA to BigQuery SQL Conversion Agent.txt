@@ -1,0 +1,711 @@
+SOURCE_ARTIFACT:
+CV_COMP_TOPSIDE_ADJUSTMENTS
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_COMP_TOPSIDE_ADJUSTMENTS
+- Source Calculation Views:
+  - CV_BASE_TOPSIDE_ADJUSTMENTS_CAR
+  - CV_BASE_MD_SRPACT_S4
+  - CV_BASE_MD_COMPFL_S4
+  - CV_BASE_MD_RCALWEEK_S4
+  - CV_BASE_MD_CEPCT_S4
+- Referenced scalar functions for variable derivation:
+  - CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK
+  - CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Input parameters / variables:
+  - IP_WEEK_ENDING_FROM (CHAR, parameter, derived by SFN_PRIOR_FISCAL_WEEK)
+  - IP_WEEK_ENDING_TO (CHAR, parameter, derived by SFN_PRIOR_FISCAL_WEEK)
+  - IP_VERSION_COMP_FLAG (CHAR, parameter, derived by SFN_ACTUALS_COMP_FLAG)
+
+- TOPSIDE_ADJUSTMENTS projection from CV_BASE_TOPSIDE_ADJUSTMENTS_CAR:
+  - APPLICATION -> APPLICATION
+  - DESCRIPTION -> DESCRIPTION
+  - MANDT -> MANDT
+  - PRCTR -> PRCTR
+  - S4_ACCOUNT -> S4_ACCOUNT
+  - SEGMENT -> SEGMENT
+  - TYPE -> TYPE
+  - WEEK_YEAR -> WEEK_YEAR
+  - ZYEAR -> ZYEAR
+  - FS_BUD -> FS_BUD
+  - FS_FCT -> FS_FCT
+  - FS_FLASH -> FS_FLASH
+  - FS_LY -> FS_LY
+  - RX_BUD -> RX_BUD
+  - RX_FCT -> RX_FCT
+  - RX_FLASH -> RX_FLASH
+  - RX_LY -> RX_LY
+  - SC_90AS1_BUD -> SC_90AS1_BUD
+  - SC_90AS1_FCT -> SC_90AS1_FCT
+  - SC_90AS1_FLASH -> SC_90AS1_FLASH
+  - SC_90AS1_LY -> SC_90AS1_LY
+  - SC_90AS3_BUD -> SC_90AS3_BUD
+  - SC_90AS3_FCT -> SC_90AS3_FCT
+  - SC_90AS3_FLASH -> SC_90AS3_FLASH
+  - SC_90AS3_LY -> SC_90AS3_LY
+- Filter in TOPSIDE_ADJUSTMENTS:
+  - WEEK_YEAR between $$IP_WEEK_ENDING_FROM$$ and $$IP_WEEK_ENDING_TO$$
+
+- STORE_ATTRIBUTES projection from CV_BASE_MD_SRPACT_S4:
+  - STRNUM -> STRNUM
+  - PRCTR -> PRCTR
+  - DIVISION_CODE -> DIVISION_CODE
+  - DIVISION_DESC -> DIVISION_DESC
+  - DISTRICT_CODE -> DISTRICT_CODE
+  - DISTRICT_DESC -> DISTRICT_DESC
+  - REGION_CODE -> REGION_CODE
+  - REGION_DESC -> REGION_DESC
+  - REP_MKT_CODE -> REP_MKT_CODE
+  - REP_MKT_DESC -> REP_MKT_DESC
+  - CITY -> CITY
+  - STATE -> STATE
+  - FS_OPEN_DAT -> FS_OPEN_DAT
+  - RX_OPEN_DAT -> RX_OPEN_DAT
+  - AREA_CODE -> AREA_CODE
+  - AREA_DESC -> AREA_DESC
+  - EMERG_MKT_IND -> EMERG_MKT_IND
+  - RX_DIVISION_CODE -> RX_DIVISION_CODE
+  - RX_AREA_CODE -> RX_AREA_CODE
+  - RX_REGION_CODE -> RX_REGION_CODE
+  - RX_DISTRICT_CODE -> RX_DISTRICT_CODE
+
+- Join_1:
+  - Left outer join TOPSIDE_ADJUSTMENTS to STORE_ATTRIBUTES
+  - Join key: PRCTR
+  - Adds store attributes to topside adjustments
+
+- COMP_FLAG projection from CV_BASE_MD_COMPFL_S4:
+  - PRCTR -> PRCTR
+  - ZWEEK -> ZWEEK
+  - FS_COMP_WK -> FS_COMP_WK
+  - RX_COMP_WK -> RX_COMP_WK
+  - COMP_VER -> COMP_VER
+- Filter in COMP_FLAG:
+  - COMP_VER = $$IP_VERSION_COMP_FLAG$$
+
+- Join_2:
+  - Left outer join Join_1 to COMP_FLAG
+  - Join keys:
+    - PRCTR = PRCTR
+    - WEEK_YEAR = ZWEEK
+  - Adds FS_COMP_WK and RX_COMP_WK
+
+- RETAIL_CALENDAR projection from CV_BASE_MD_RCALWEEK_S4:
+  - ZRWSTRTDATE -> ZRWSTRTDATE
+  - ZRWENDDATE -> ZRWENDDATE
+  - ZZWEEK -> ZZWEEK
+
+- Join_3:
+  - Left outer join Join_2 to RETAIL_CALENDAR
+  - Join key:
+    - WEEK_YEAR = ZZWEEK
+  - Adds ZRWSTRTDATE and ZRWENDDATE
+
+- PROFIT_CENTER_TEXT projection from CV_BASE_MD_CEPCT_S4:
+  - PRCTR -> PRCTR
+  - LTEXT -> LTEXT
+
+- Join_4:
+  - Left outer join Join_3 to PROFIT_CENTER_TEXT
+  - Join key: PRCTR
+  - LTEXT aliased to PROFIT_CENTER_DESCR
+
+- Projection_1 calculated attributes:
+  - CAL_COMP_FLAG = MAX("FS_COMP_WK","RX_COMP_WK") in HANA scalar semantics
+  - CAL_WEEK_NUMBER = RIGHTSTR("WEEK_YEAR",2)
+
+- Logical model output attributes:
+  - MANDT
+  - APPLICATION
+  - DESCRIPTION
+  - PRCTR
+  - S4_ACCOUNT
+  - SEGMENT
+  - TYPE
+  - WEEK_YEAR
+  - ZYEAR
+  - STRNUM
+  - DIVISION_CODE
+  - DIVISION_DESC
+  - DISTRICT_CODE
+  - DISTRICT_DESC
+  - REGION_DESC
+  - REGION_CODE
+  - REP_MKT_CODE
+  - REP_MKT_DESC
+  - CITY
+  - STATE
+  - FS_OPEN_DAT
+  - RX_OPEN_DAT
+  - AREA_CODE
+  - AREA_DESC
+  - EMERG_MKT_IND
+  - CAL_COMP_FLAG
+  - ZRWSTRTDATE
+  - ZRWENDDATE
+  - PROFIT_CENTER_DESCR
+  - RX_DIVISION_CODE
+  - RX_AREA_CODE
+  - RX_REGION_CODE
+  - RX_DISTRICT_CODE
+  - CAL_WEEK_NUMBER
+
+- Base measures with aggregationType="sum":
+  - FS_BUD
+  - FS_FCT
+  - FS_FLASH
+  - FS_LY
+  - RX_BUD
+  - RX_FCT
+  - RX_FLASH
+  - RX_LY
+  - SC_90AS1_BUD
+  - SC_90AS1_FCT
+  - SC_90AS1_FLASH
+  - SC_90AS1_LY
+  - SC_90AS3_BUD
+  - SC_90AS3_FCT
+  - SC_90AS3_FLASH
+  - SC_90AS3_LY
+
+- Calculated measures with aggregationType="sum":
+  - CAL_SC_90AS3_FLASH =
+    IF(IN(SEGMENT,'CMX','MC'),0,
+      SC_90AS3_FLASH + IF(S4_ACCOUNT='804013', SC_90AS1_FLASH*2, SC_90AS1_FLASH)
+    )
+  - CAL_SC_90AS3_BUD =
+    IF(IN(SEGMENT,'CMX','MC'),0,
+      SC_90AS3_BUD + IF(S4_ACCOUNT='804013', SC_90AS1_BUD*2, SC_90AS1_BUD)
+    )
+  - CAL_SC_90AS3_FCT =
+    IF(IN(SEGMENT,'CMX','MC'),0,
+      SC_90AS3_FCT + IF(S4_ACCOUNT='804013', SC_90AS1_FCT*2, SC_90AS1_FCT)
+    )
+  - CAL_SC_90AS3_LY =
+    IF(IN(SEGMENT,'CMX','MC'),0,
+      SC_90AS3_LY + IF(S4_ACCOUNT='804013', SC_90AS1_LY*2, SC_90AS1_LY)
+    )
+
+SOURCE_LOGIC:
+This is a SAP HANA Calculation View XML for artifact CV_COMP_TOPSIDE_ADJUSTMENTS. The root element specifies:
+- dataCategory="CUBE"
+- outputViewType="Aggregation"
+
+Therefore the final output is aggregated output and requires GROUP BY for all non-measure output columns and SUM aggregation for all measures.
+
+The logic is:
+1. Read topside adjustment data from CV_BASE_TOPSIDE_ADJUSTMENTS_CAR.
+2. Apply a WEEK_YEAR range filter using input parameters IP_WEEK_ENDING_FROM and IP_WEEK_ENDING_TO.
+3. Left join store master attributes from CV_BASE_MD_SRPACT_S4 by PRCTR.
+4. Read comp flag data from CV_BASE_MD_COMPFL_S4 filtered by COMP_VER = IP_VERSION_COMP_FLAG.
+5. Left join comp flag data by PRCTR and WEEK_YEAR = ZWEEK.
+6. Left join retail calendar data from CV_BASE_MD_RCALWEEK_S4 by WEEK_YEAR = ZZWEEK to get week start/end dates.
+7. Left join profit center text from CV_BASE_MD_CEPCT_S4 by PRCTR to get PROFIT_CENTER_DESCR.
+8. Derive:
+   - CAL_COMP_FLAG from scalar MAX(FS_COMP_WK, RX_COMP_WK), which should map to BigQuery GREATEST with semantic validation for NULL behavior.
+   - CAL_WEEK_NUMBER from rightmost 2 characters of WEEK_YEAR.
+9. Expose logical model attributes and measures.
+10. Because this is a CUBE/Aggregation output, aggregate all base measures with SUM and aggregate calculated measures after aggregation, grouped by every non-measure output attribute.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+-- BigQuery Standard SQL
+-- Parameter placeholders expected:
+--   @IP_WEEK_ENDING_FROM
+--   @IP_WEEK_ENDING_TO
+--   @IP_VERSION_COMP_FLAG
+
+WITH
+TOPSIDE_ADJUSTMENTS AS (
+  SELECT
+    APPLICATION,
+    DESCRIPTION,
+    MANDT,
+    PRCTR,
+    S4_ACCOUNT,
+    SEGMENT,
+    TYPE,
+    WEEK_YEAR,
+    ZYEAR,
+    FS_BUD,
+    FS_FCT,
+    FS_FLASH,
+    FS_LY,
+    RX_BUD,
+    RX_FCT,
+    RX_FLASH,
+    RX_LY,
+    SC_90AS1_BUD,
+    SC_90AS1_FCT,
+    SC_90AS1_FLASH,
+    SC_90AS1_LY,
+    SC_90AS3_BUD,
+    SC_90AS3_FCT,
+    SC_90AS3_FLASH,
+    SC_90AS3_LY
+  FROM `PROJECT.DATASET.CV_BASE_TOPSIDE_ADJUSTMENTS_CAR`
+  WHERE WEEK_YEAR BETWEEN @IP_WEEK_ENDING_FROM AND @IP_WEEK_ENDING_TO
+),
+
+STORE_ATTRIBUTES AS (
+  SELECT
+    STRNUM,
+    PRCTR,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    AREA_CODE,
+    AREA_DESC,
+    EMERG_MKT_IND,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.CV_BASE_MD_SRPACT_S4`
+),
+
+Topside_With_Store_Attributes AS (
+  SELECT
+    t.APPLICATION,
+    t.DESCRIPTION,
+    t.MANDT,
+    t.PRCTR,
+    t.S4_ACCOUNT,
+    t.SEGMENT,
+    t.TYPE,
+    t.WEEK_YEAR,
+    t.ZYEAR,
+    t.FS_BUD,
+    t.FS_FCT,
+    t.FS_FLASH,
+    t.FS_LY,
+    t.RX_BUD,
+    t.RX_FCT,
+    t.RX_FLASH,
+    t.RX_LY,
+    t.SC_90AS1_BUD,
+    t.SC_90AS1_FCT,
+    t.SC_90AS1_FLASH,
+    t.SC_90AS1_LY,
+    t.SC_90AS3_BUD,
+    t.SC_90AS3_FCT,
+    t.SC_90AS3_FLASH,
+    t.SC_90AS3_LY,
+    s.STRNUM,
+    s.DIVISION_CODE,
+    s.DIVISION_DESC,
+    s.DISTRICT_CODE,
+    s.DISTRICT_DESC,
+    s.REGION_DESC,
+    s.REGION_CODE,
+    s.REP_MKT_CODE,
+    s.REP_MKT_DESC,
+    s.CITY,
+    s.STATE,
+    s.FS_OPEN_DAT,
+    s.RX_OPEN_DAT,
+    s.AREA_CODE,
+    s.AREA_DESC,
+    s.EMERG_MKT_IND,
+    s.RX_DIVISION_CODE,
+    s.RX_AREA_CODE,
+    s.RX_REGION_CODE,
+    s.RX_DISTRICT_CODE
+  FROM TOPSIDE_ADJUSTMENTS t
+  LEFT JOIN STORE_ATTRIBUTES s
+    ON t.PRCTR = s.PRCTR
+),
+
+COMP_FLAG AS (
+  SELECT
+    PRCTR,
+    ZWEEK,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    COMP_VER
+  FROM `PROJECT.DATASET.CV_BASE_MD_COMPFL_S4`
+  WHERE COMP_VER = @IP_VERSION_COMP_FLAG
+),
+
+Topside_With_Comp_Flag AS (
+  SELECT
+    j1.MANDT,
+    j1.APPLICATION,
+    j1.DESCRIPTION,
+    j1.PRCTR,
+    j1.S4_ACCOUNT,
+    j1.SEGMENT,
+    j1.TYPE,
+    j1.WEEK_YEAR,
+    j1.ZYEAR,
+    j1.STRNUM,
+    j1.DIVISION_CODE,
+    j1.DIVISION_DESC,
+    j1.DISTRICT_CODE,
+    j1.DISTRICT_DESC,
+    j1.REGION_DESC,
+    j1.REGION_CODE,
+    j1.REP_MKT_CODE,
+    j1.REP_MKT_DESC,
+    j1.CITY,
+    j1.STATE,
+    j1.FS_OPEN_DAT,
+    j1.RX_OPEN_DAT,
+    j1.AREA_CODE,
+    j1.AREA_DESC,
+    j1.EMERG_MKT_IND,
+    j1.FS_BUD,
+    j1.FS_FCT,
+    j1.FS_FLASH,
+    j1.FS_LY,
+    j1.RX_BUD,
+    j1.RX_FCT,
+    j1.RX_FLASH,
+    j1.RX_LY,
+    j1.SC_90AS1_BUD,
+    j1.SC_90AS1_FCT,
+    j1.SC_90AS1_FLASH,
+    j1.SC_90AS1_LY,
+    j1.SC_90AS3_BUD,
+    j1.SC_90AS3_FCT,
+    j1.SC_90AS3_FLASH,
+    j1.SC_90AS3_LY,
+    c.FS_COMP_WK,
+    c.RX_COMP_WK,
+    j1.RX_DIVISION_CODE,
+    j1.RX_AREA_CODE,
+    j1.RX_REGION_CODE,
+    j1.RX_DISTRICT_CODE
+  FROM Topside_With_Store_Attributes j1
+  LEFT JOIN COMP_FLAG c
+    ON j1.PRCTR = c.PRCTR
+   AND j1.WEEK_YEAR = c.ZWEEK
+),
+
+RETAIL_CALENDAR AS (
+  SELECT
+    ZRWSTRTDATE,
+    ZRWENDDATE,
+    ZZWEEK
+  FROM `PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4`
+),
+
+Topside_With_Retail_Calendar AS (
+  SELECT
+    j2.SC_90AS3_LY,
+    j2.SC_90AS3_FLASH,
+    j2.SC_90AS3_FCT,
+    j2.SC_90AS3_BUD,
+    j2.SC_90AS1_LY,
+    j2.SC_90AS1_FLASH,
+    j2.SC_90AS1_FCT,
+    j2.SC_90AS1_BUD,
+    j2.RX_LY,
+    j2.RX_FLASH,
+    j2.RX_FCT,
+    j2.RX_BUD,
+    j2.FS_LY,
+    j2.FS_FLASH,
+    j2.FS_FCT,
+    j2.FS_BUD,
+    j2.EMERG_MKT_IND,
+    j2.AREA_DESC,
+    j2.AREA_CODE,
+    j2.RX_OPEN_DAT,
+    j2.FS_OPEN_DAT,
+    j2.STATE,
+    j2.CITY,
+    j2.REP_MKT_DESC,
+    j2.REP_MKT_CODE,
+    j2.REGION_CODE,
+    j2.REGION_DESC,
+    j2.DISTRICT_DESC,
+    j2.DISTRICT_CODE,
+    j2.DIVISION_DESC,
+    j2.DIVISION_CODE,
+    j2.STRNUM,
+    j2.ZYEAR,
+    j2.WEEK_YEAR,
+    j2.TYPE,
+    j2.SEGMENT,
+    j2.S4_ACCOUNT,
+    j2.PRCTR,
+    j2.DESCRIPTION,
+    j2.APPLICATION,
+    j2.MANDT,
+    r.ZRWSTRTDATE,
+    r.ZRWENDDATE,
+    j2.FS_COMP_WK,
+    j2.RX_COMP_WK,
+    j2.RX_DIVISION_CODE,
+    j2.RX_AREA_CODE,
+    j2.RX_REGION_CODE,
+    j2.RX_DISTRICT_CODE
+  FROM Topside_With_Comp_Flag j2
+  LEFT JOIN RETAIL_CALENDAR r
+    ON j2.WEEK_YEAR = r.ZZWEEK
+),
+
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    PRCTR,
+    LTEXT
+  FROM `PROJECT.DATASET.CV_BASE_MD_CEPCT_S4`
+),
+
+Topside_With_Profit_Center_Text AS (
+  SELECT
+    j3.MANDT,
+    j3.APPLICATION,
+    j3.DESCRIPTION,
+    j3.PRCTR,
+    j3.S4_ACCOUNT,
+    j3.SEGMENT,
+    j3.TYPE,
+    j3.WEEK_YEAR,
+    j3.ZYEAR,
+    j3.STRNUM,
+    j3.DIVISION_CODE,
+    j3.DIVISION_DESC,
+    j3.DISTRICT_CODE,
+    j3.DISTRICT_DESC,
+    j3.REGION_DESC,
+    j3.REGION_CODE,
+    j3.REP_MKT_CODE,
+    j3.REP_MKT_DESC,
+    j3.CITY,
+    j3.STATE,
+    j3.FS_OPEN_DAT,
+    j3.RX_OPEN_DAT,
+    j3.AREA_CODE,
+    j3.AREA_DESC,
+    j3.EMERG_MKT_IND,
+    j3.FS_BUD,
+    j3.FS_FCT,
+    j3.FS_FLASH,
+    j3.FS_LY,
+    j3.RX_BUD,
+    j3.RX_FCT,
+    j3.RX_FLASH,
+    j3.RX_LY,
+    j3.SC_90AS1_BUD,
+    j3.SC_90AS1_FCT,
+    j3.SC_90AS1_FLASH,
+    j3.SC_90AS1_LY,
+    j3.SC_90AS3_BUD,
+    j3.SC_90AS3_FCT,
+    j3.SC_90AS3_FLASH,
+    j3.SC_90AS3_LY,
+    j3.ZRWSTRTDATE,
+    j3.ZRWENDDATE,
+    j3.FS_COMP_WK,
+    j3.RX_COMP_WK,
+    p.LTEXT AS PROFIT_CENTER_DESCR,
+    j3.RX_DIVISION_CODE,
+    j3.RX_AREA_CODE,
+    j3.RX_REGION_CODE,
+    j3.RX_DISTRICT_CODE
+  FROM Topside_With_Retail_Calendar j3
+  LEFT JOIN PROFIT_CENTER_TEXT p
+    ON j3.PRCTR = p.PRCTR
+)
+
+SELECT
+  MANDT,
+  APPLICATION,
+  DESCRIPTION,
+  PRCTR,
+  S4_ACCOUNT,
+  SEGMENT,
+  TYPE,
+  WEEK_YEAR,
+  ZYEAR,
+  STRNUM,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  REGION_DESC,
+  REGION_CODE,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CITY,
+  STATE,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  EMERG_MKT_IND,
+  GREATEST(FS_COMP_WK, RX_COMP_WK) AS CAL_COMP_FLAG,
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  PROFIT_CENTER_DESCR,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  RIGHT(WEEK_YEAR, 2) AS CAL_WEEK_NUMBER,
+
+  SUM(FS_BUD) AS FS_BUD,
+  SUM(FS_FCT) AS FS_FCT,
+  SUM(FS_FLASH) AS FS_FLASH,
+  SUM(FS_LY) AS FS_LY,
+  SUM(RX_BUD) AS RX_BUD,
+  SUM(RX_FCT) AS RX_FCT,
+  SUM(RX_FLASH) AS RX_FLASH,
+  SUM(RX_LY) AS RX_LY,
+  SUM(SC_90AS1_BUD) AS SC_90AS1_BUD,
+  SUM(SC_90AS1_FCT) AS SC_90AS1_FCT,
+  SUM(SC_90AS1_FLASH) AS SC_90AS1_FLASH,
+  SUM(SC_90AS1_LY) AS SC_90AS1_LY,
+  SUM(SC_90AS3_BUD) AS SC_90AS3_BUD,
+  SUM(SC_90AS3_FCT) AS SC_90AS3_FCT,
+  SUM(SC_90AS3_FLASH) AS SC_90AS3_FLASH,
+  SUM(SC_90AS3_LY) AS SC_90AS3_LY,
+
+  CASE
+    WHEN SEGMENT IN ('CMX', 'MC') THEN 0
+    ELSE SUM(SC_90AS3_FLASH) +
+         CASE
+           WHEN S4_ACCOUNT = '804013' THEN SUM(SC_90AS1_FLASH) * 2
+           ELSE SUM(SC_90AS1_FLASH)
+         END
+  END AS CAL_SC_90AS3_FLASH,
+
+  CASE
+    WHEN SEGMENT IN ('CMX', 'MC') THEN 0
+    ELSE SUM(SC_90AS3_BUD) +
+         CASE
+           WHEN S4_ACCOUNT = '804013' THEN SUM(SC_90AS1_BUD) * 2
+           ELSE SUM(SC_90AS1_BUD)
+         END
+  END AS CAL_SC_90AS3_BUD,
+
+  CASE
+    WHEN SEGMENT IN ('CMX', 'MC') THEN 0
+    ELSE SUM(SC_90AS3_FCT) +
+         CASE
+           WHEN S4_ACCOUNT = '804013' THEN SUM(SC_90AS1_FCT) * 2
+           ELSE SUM(SC_90AS1_FCT)
+         END
+  END AS CAL_SC_90AS3_FCT,
+
+  CASE
+    WHEN SEGMENT IN ('CMX', 'MC') THEN 0
+    ELSE SUM(SC_90AS3_LY) +
+         CASE
+           WHEN S4_ACCOUNT = '804013' THEN SUM(SC_90AS1_LY) * 2
+           ELSE SUM(SC_90AS1_LY)
+         END
+  END AS CAL_SC_90AS3_LY
+
+FROM Topside_With_Profit_Center_Text
+GROUP BY
+  MANDT,
+  APPLICATION,
+  DESCRIPTION,
+  PRCTR,
+  S4_ACCOUNT,
+  SEGMENT,
+  TYPE,
+  WEEK_YEAR,
+  ZYEAR,
+  STRNUM,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  REGION_DESC,
+  REGION_CODE,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CITY,
+  STATE,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  AREA_CODE,
+  AREA_DESC,
+  EMERG_MKT_IND,
+  GREATEST(FS_COMP_WK, RX_COMP_WK),
+  ZRWSTRTDATE,
+  ZRWENDDATE,
+  PROFIT_CENTER_DESCR,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  RIGHT(WEEK_YEAR, 2);
+```
+
+CONVERSION_NOTES:
+- The source artifact is a HANA Calculation View XML, so the conversion was derived semantically from calculationView nodes, joins, mappings, filters, calculated attributes, logical model attributes, and measures.
+- Because dataCategory="CUBE" and outputViewType="Aggregation", the final SQL includes:
+  - GROUP BY for every non-measure logical output column
+  - SUM aggregation for every base measure
+  - Calculated measures applied after aggregation, per instruction
+- HANA scalar `MAX(FS_COMP_WK, RX_COMP_WK)` was converted to BigQuery `GREATEST(FS_COMP_WK, RX_COMP_WK)` because this is scalar, not aggregate, semantics.
+- HANA `RIGHTSTR(WEEK_YEAR,2)` was converted to BigQuery `RIGHT(WEEK_YEAR, 2)`.
+- HANA `IF(...)` was converted to `CASE WHEN ... THEN ... ELSE ... END`.
+- HANA `IN("SEGMENT",'CMX','MC')` was converted to `SEGMENT IN ('CMX', 'MC')`.
+- The final SQL uses explicit column selection rather than `SELECT *` to preserve the logical model output structure.
+- Generic intermediate join names were functionally renamed in the generated SQL:
+  - Join_1 -> Topside_With_Store_Attributes
+  - Join_2 -> Topside_With_Comp_Flag
+  - Join_3 -> Topside_With_Retail_Calendar
+  - Join_4 -> Topside_With_Profit_Center_Text
+- Existing meaningful names were preserved:
+  - TOPSIDE_ADJUSTMENTS
+  - STORE_ATTRIBUTES
+  - COMP_FLAG
+  - RETAIL_CALENDAR
+  - PROFIT_CENTER_TEXT
+- External calculation views were represented as BigQuery table/view placeholders under `PROJECT.DATASET...` because actual BigQuery physical mappings were not provided.
+- The input variables are represented as BigQuery query parameters:
+  - `@IP_WEEK_ENDING_FROM`
+  - `@IP_WEEK_ENDING_TO`
+  - `@IP_VERSION_COMP_FLAG`
+- NULL behavior of HANA scalar MAX with two arguments versus BigQuery GREATEST was not validated from the artifact and requires semantic validation.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.CV_BASE_TOPSIDE_ADJUSTMENTS_CAR`, `PROJECT.DATASET.CV_BASE_MD_SRPACT_S4`, `PROJECT.DATASET.CV_BASE_MD_COMPFL_S4`, `PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4`, and `PROJECT.DATASET.CV_BASE_MD_CEPCT_S4` are placeholders for the actual BigQuery mapped objects.
+- WEEK_YEAR and ZWEEK / ZZWEEK are already comparable without additional casting.
+- WEEK_YEAR is string-compatible for the `RIGHT(WEEK_YEAR, 2)` conversion.
+- FS_COMP_WK and RX_COMP_WK are string-compatible for the scalar `GREATEST` conversion.
+
+UNRESOLVED_ITEMS:
+- Internal logic of external source Calculation Views is unavailable:
+  - CV_BASE_TOPSIDE_ADJUSTMENTS_CAR
+  - CV_BASE_MD_SRPACT_S4
+  - CV_BASE_MD_COMPFL_S4
+  - CV_BASE_MD_RCALWEEK_S4
+  - CV_BASE_MD_CEPCT_S4
+- Actual BigQuery project, dataset, and object mappings are not provided.
+- Variable derivation function logic is unavailable:
+  - CVS_FRIP.Composite.Master::SFN_PRIOR_FISCAL_WEEK
+  - CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG
+- Exact datatype compatibility for:
+  - WEEK_YEAR
+  - ZWEEK
+  - ZZWEEK
+  - FS_COMP_WK
+  - RX_COMP_WK
+  is not provided in the artifact.
+- NULL semantics equivalence between HANA scalar `MAX(a,b)` and BigQuery `GREATEST(a,b)` requires validation.
+- Cardinality annotations such as `CN_1` were not translated into enforced BigQuery constraints because BigQuery SQL does not support equivalent join cardinality metadata in query text.
+
+CONFIDENCE:
+Medium

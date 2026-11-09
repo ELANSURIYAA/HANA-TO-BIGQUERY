@@ -1,0 +1,383 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_SRPACT_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_MD_SRPACT_S4
+- Projection node: Projection_1
+- Source table: SAP_S4.ZTSRP_ATTR_ACT
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target attribute mappings from SAP_S4.ZTSRP_ATTR_ACT through Projection_1:
+  - MANDT -> MANDT
+  - STRNUM -> STRNUM
+  - PRCTR -> PRCTR
+  - KOKRS -> KOKRS
+  - KOSTL -> KOSTL
+  - RX_OPEN_DAT -> RX_OPEN_DAT
+  - RX_CLOSE_DAT -> RX_CLOSE_DAT
+  - FS_OPEN_DAT -> FS_OPEN_DAT
+  - FS_CLOSE_DAT -> FS_CLOSE_DAT
+  - REP_MKT_CODE -> REP_MKT_CODE
+  - REP_MKT_DESC -> REP_MKT_DESC
+  - ADDRESS -> ADDRESS
+  - CITY -> CITY
+  - STATE -> STATE
+  - ZIPCODE -> ZIPCODE
+  - DIVISION_CODE -> DIVISION_CODE
+  - DIVISION_DESC -> DIVISION_DESC
+  - DIVISION_MGR -> DIVISION_MGR
+  - AREA_CODE -> AREA_CODE
+  - AREA_DESC -> AREA_DESC
+  - AREA_MGR -> AREA_MGR
+  - REGION_CODE -> REGION_CODE
+  - REGION_DESC -> REGION_DESC
+  - REGION_MGR -> REGION_MGR
+  - DISTRICT_CODE -> DISTRICT_CODE
+  - DISTRICT_DESC -> DISTRICT_DESC
+  - ZONE_CODE -> ZONE_CODE
+  - DISTRICT_MGR -> DISTRICT_MGR
+  - ZONE_DESC -> ZONE_DESC
+  - MAJOR_REGION_CODE -> MAJOR_REGION_CODE
+  - MAJOR_REGION -> MAJOR_REGION
+  - STORE_TYPE -> STORE_TYPE
+  - STORE_TYPE_DESC -> STORE_TYPE_DESC
+  - RX_STORE -> RX_STORE
+  - RX_STORE_DESC -> RX_STORE_DESC
+  - DISTRIBUTION_CNTR -> DISTRIBUTION_CNTR
+  - DISTRIBUTION_CNTR_DESC -> DISTRIBUTION_CNTR_DESC
+  - STORE_24_HR -> STORE_24_HR
+  - BUDGET_OPEN_DAT -> BUDGET_OPEN_DAT
+  - BUDGET_CLOSED_DAT -> BUDGET_CLOSED_DAT
+  - BUDGET_RELOC_DAT -> BUDGET_RELOC_DAT
+  - CONST_OPEN_DAT -> CONST_OPEN_DAT
+  - CONST_CLOSE_DAT -> CONST_CLOSE_DAT
+  - CONST_RELO_DAT -> CONST_RELO_DAT
+  - RELOCATION_DAT -> RELOCATION_DAT
+  - EMERG_MKT_IND -> EMERG_MKT_IND
+  - BUDGET_EMERG_MKT_IND -> BUDGET_EMERG_MKT_IND
+  - COMPANY_CODE -> COMPANY_CODE
+  - COMPANY_CODE_DESC -> COMPANY_CODE_DESC
+  - ORIGINAL_FS_OPEN_DAT -> ORIGINAL_FS_OPEN_DAT
+  - ORIGINAL_RX_OPEN_DAT -> ORIGINAL_RX_OPEN_DAT
+  - GROUP_ONE -> GROUP_ONE
+  - GROUP_TWO -> GROUP_TWO
+  - ARD_SORT_KEY -> ARD_SORT_KEY
+  - AREA_COST_CENTER -> AREA_COST_CENTER
+  - REGIION_COST_CENTER -> REGIION_COST_CENTER
+  - COUNTY_CODE -> COUNTY_CODE
+  - COUNTY_DESC -> COUNTY_DESC
+  - SQFT_BRACKET_DESC -> SQFT_BRACKET_DESC
+  - SQFT_SORT_KEY -> SQFT_SORT_KEY
+  - ACQUISITION_CODE -> ACQUISITION_CODE
+  - ACQUISITION_DESC -> ACQUISITION_DESC
+  - PHOTO_LAB_ADD_DAT -> PHOTO_LAB_ADD_DAT
+  - PHOTO_LAB_CLOSE_DAT -> PHOTO_LAB_CLOSE_DAT
+  - MIN_HRS_IND -> MIN_HRS_IND
+  - CREATEDBY -> CREATEDBY
+  - CREATED_ON -> CREATED_ON
+  - RX_DIVISION_CODE -> RX_DIVISION_CODE
+  - RX_AREA_CODE -> RX_AREA_CODE
+  - RX_REGION_CODE -> RX_REGION_CODE
+  - RX_DISTRICT_CODE -> RX_DISTRICT_CODE
+- Measures defined in logicalModel/baseMeasures with aggregationType="sum":
+  - RX_HRS_OPER
+  - FS_HRS_OPER
+  - RETAIL_SQFT_AMT
+  - TOTAL_SQFT_AMT
+- Explicit filter in projection:
+  - MANDT IN ('120', '200')
+- No calculated attributes
+- No calculated measures
+- No joins
+- No unions
+- No input parameters or placeholders defined in the provided XML
+
+SOURCE_LOGIC:
+- The source artifact is a SAP HANA Calculation View XML with root scenario id CV_BASE_MD_SRPACT_S4.
+- Root attributes:
+  - dataCategory="CUBE"
+  - outputViewType="Aggregation"
+- Because dataCategory is CUBE and outputViewType is Aggregation, the final output requires GROUP BY on all non-measure output columns and aggregation on all measure columns.
+- The view reads from a single source table: SAP_S4.ZTSRP_ATTR_ACT.
+- There is one projection node, Projection_1, which performs:
+  - direct passthrough mapping of selected source columns
+  - filter on MANDT with IN values 120 and 200
+- There are no joins, calculated columns, calculated attributes, unions, or procedural steps in the provided XML.
+- Final output structure is defined by logicalModel:
+  - Non-measure output attributes: 71 columns
+  - Measure output columns aggregated with SUM: RX_HRS_OPER, FS_HRS_OPER, RETAIL_SQFT_AMT, TOTAL_SQFT_AMT
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_ZTSRP_ATTR_ACT AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    KOKRS,
+    KOSTL,
+    RX_OPEN_DAT,
+    RX_CLOSE_DAT,
+    RX_HRS_OPER,
+    FS_OPEN_DAT,
+    FS_CLOSE_DAT,
+    FS_HRS_OPER,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    ADDRESS,
+    CITY,
+    STATE,
+    ZIPCODE,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    DIVISION_MGR,
+    AREA_CODE,
+    AREA_DESC,
+    AREA_MGR,
+    REGION_CODE,
+    REGION_DESC,
+    REGION_MGR,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZONE_CODE,
+    DISTRICT_MGR,
+    ZONE_DESC,
+    MAJOR_REGION_CODE,
+    MAJOR_REGION,
+    STORE_TYPE,
+    STORE_TYPE_DESC,
+    RX_STORE,
+    RX_STORE_DESC,
+    DISTRIBUTION_CNTR,
+    DISTRIBUTION_CNTR_DESC,
+    STORE_24_HR,
+    BUDGET_OPEN_DAT,
+    BUDGET_CLOSED_DAT,
+    BUDGET_RELOC_DAT,
+    CONST_OPEN_DAT,
+    CONST_CLOSE_DAT,
+    CONST_RELO_DAT,
+    RELOCATION_DAT,
+    EMERG_MKT_IND,
+    BUDGET_EMERG_MKT_IND,
+    COMPANY_CODE,
+    COMPANY_CODE_DESC,
+    ORIGINAL_FS_OPEN_DAT,
+    ORIGINAL_RX_OPEN_DAT,
+    GROUP_ONE,
+    GROUP_TWO,
+    ARD_SORT_KEY,
+    AREA_COST_CENTER,
+    REGIION_COST_CENTER,
+    COUNTY_CODE,
+    COUNTY_DESC,
+    RETAIL_SQFT_AMT,
+    TOTAL_SQFT_AMT,
+    SQFT_BRACKET_DESC,
+    SQFT_SORT_KEY,
+    ACQUISITION_CODE,
+    ACQUISITION_DESC,
+    PHOTO_LAB_ADD_DAT,
+    PHOTO_LAB_CLOSE_DAT,
+    MIN_HRS_IND,
+    CREATEDBY,
+    CREATED_ON,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  WHERE MANDT IN ('120', '200')
+)
+
+SELECT
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(RX_HRS_OPER) AS RX_HRS_OPER,
+  SUM(FS_HRS_OPER) AS FS_HRS_OPER,
+  SUM(RETAIL_SQFT_AMT) AS RETAIL_SQFT_AMT,
+  SUM(TOTAL_SQFT_AMT) AS TOTAL_SQFT_AMT
+FROM Filtered_ZTSRP_ATTR_ACT
+GROUP BY
+  MANDT,
+  STRNUM,
+  PRCTR,
+  KOKRS,
+  KOSTL,
+  RX_OPEN_DAT,
+  RX_CLOSE_DAT,
+  FS_OPEN_DAT,
+  FS_CLOSE_DAT,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  ADDRESS,
+  CITY,
+  STATE,
+  ZIPCODE,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  DIVISION_MGR,
+  AREA_CODE,
+  AREA_DESC,
+  AREA_MGR,
+  REGION_CODE,
+  REGION_DESC,
+  REGION_MGR,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZONE_CODE,
+  DISTRICT_MGR,
+  ZONE_DESC,
+  MAJOR_REGION_CODE,
+  MAJOR_REGION,
+  STORE_TYPE,
+  STORE_TYPE_DESC,
+  RX_STORE,
+  RX_STORE_DESC,
+  DISTRIBUTION_CNTR,
+  DISTRIBUTION_CNTR_DESC,
+  STORE_24_HR,
+  BUDGET_OPEN_DAT,
+  BUDGET_CLOSED_DAT,
+  BUDGET_RELOC_DAT,
+  CONST_OPEN_DAT,
+  CONST_CLOSE_DAT,
+  CONST_RELO_DAT,
+  RELOCATION_DAT,
+  EMERG_MKT_IND,
+  BUDGET_EMERG_MKT_IND,
+  COMPANY_CODE,
+  COMPANY_CODE_DESC,
+  ORIGINAL_FS_OPEN_DAT,
+  ORIGINAL_RX_OPEN_DAT,
+  GROUP_ONE,
+  GROUP_TWO,
+  ARD_SORT_KEY,
+  AREA_COST_CENTER,
+  REGIION_COST_CENTER,
+  COUNTY_CODE,
+  COUNTY_DESC,
+  SQFT_BRACKET_DESC,
+  SQFT_SORT_KEY,
+  ACQUISITION_CODE,
+  ACQUISITION_DESC,
+  PHOTO_LAB_ADD_DAT,
+  PHOTO_LAB_CLOSE_DAT,
+  MIN_HRS_IND,
+  CREATEDBY,
+  CREATED_ON,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The source is Calculation View XML, so the conversion was derived semantically from XML elements, not from SQL text.
+- The generic projection node name Projection_1 was not used as a CTE name in the output SQL. It was functionally renamed to Filtered_ZTSRP_ATTR_ACT because the node is a projection over ZTSRP_ATTR_ACT with an explicit MANDT filter. This rename is supported by the XML logic and does not change semantics.
+- Since the root XML specifies:
+  - dataCategory="CUBE"
+  - outputViewType="Aggregation"
+  the final BigQuery SQL was produced with:
+  - SUM() over the four measure columns
+  - GROUP BY over every non-measure output column
+- No joins were included because no joins are defined in the provided XML.
+- No calculated attributes or calculated measures were included because the XML defines none.
+- The source filter values were preserved as string literals:
+  - MANDT IN ('120', '200')
+  This avoids inventing datatype conversions for MANDT.
+- The source table was mapped to a placeholder BigQuery object:
+  - `PROJECT.DATASET.ZTSRP_ATTR_ACT`
+  because no actual BigQuery project/dataset mapping was provided.
+- Output columns were kept explicit rather than using SELECT * to preserve the Calculation View logical output structure exactly.
+- Output column count in final SQL:
+  - 71 non-measure attributes
+  - 4 measures
+  - Total = 75
+  This matches the logical model output definition.
+- The column name REGIION_COST_CENTER appears misspelled in the source XML and was preserved exactly as provided.
+- No HANA-specific functions required conversion in this artifact because the logic is limited to passthrough mappings, a filter, and measure aggregation.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.ZTSRP_ATTR_ACT` is a placeholder for the actual BigQuery table mapped from SAP_S4.ZTSRP_ATTR_ACT.
+- MANDT should be compared using the literal values as provided in the XML filter, preserved as strings to avoid unsupported datatype inference.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset mapping for SAP_S4.ZTSRP_ATTR_ACT is not provided.
+- Source column datatypes are not provided in the XML, so datatype compatibility for grouping and SUM aggregation should be validated in the target environment.
+- It is not possible from the provided XML alone to verify whether duplicate source rows are expected before aggregation; the SQL preserves the required CUBE/Aggregation semantics exactly as defined.
+
+CONFIDENCE:
+High
