@@ -1,0 +1,1921 @@
+-- ============================================================================================================================
+-- FLASH CONSOLIDATED BIGQUERY SQL
+-- Final Consumer : CV_COMP_FIN_FLASH_STATIC (xml_acc_cv_comp_fin_flash_static_tbl_wss_flash_sales)
+-- Procedure      : STP_WSS_FLASH_SALES  (INSERT…SELECT inlined; DML wrapper dropped)
+-- Intermediate   : CV_COMP_FIN_FLASH    (xml_acc_cv_comp_fin_flash)
+-- Runtime Parameters (supplied by caller):
+--   @ip_week_ending_from   STRING  YYYYMMDD  – prior-week start date (replaces V_WEEK_ENDING_FROM_DATE)
+--   @ip_week_ending_to     STRING  YYYYMMDD  – prior-week end date   (replaces V_WEEK_ENDING_TO_DATE)
+--   @ip_upd_timestamp_from NUMERIC           – update-timestamp lower bound (replaces V_UPDATE_TIMESTAMP_FROM)
+--   @ip_upd_timestamp_to   NUMERIC           – update-timestamp upper bound (replaces V_UPDATE_TIMESTAMP_TO)
+--   @ip_version            STRING            – comp-flag version (replaces SFN_ACTUALS_COMP_FLAG())
+-- ============================================================================================================================
+-- ISSUES TO FIX (non-blocking – see Description file for full details):
+--   1. FLASH_SALES_VT_CAR  : physical BigQuery table not found in Columns_Mapping_v3. Placeholder used.
+--   2. /POSDW/TLOGF        : physical BigQuery table not found in Columns_Mapping_v3. Placeholder used.
+--   3. /POSDW/TLOGF_X      : physical BigQuery table not found in Columns_Mapping_v3. Placeholder used.
+--   4. /POSDW/NAVIX        : physical BigQuery table not found in Columns_Mapping_v3. Placeholder used.
+--   5. ZTFIRP_FLASH_PRM    : physical BigQuery table not found in Columns_Mapping_v3. Placeholder used.
+--   6. HRYVALTO DATE cast  : hryvalto is DATE in BQ; filter '99991231' cast to DATE '9999-12-31'.
+--   7. SFN_* scalar functions unresolved – replaced with runtime parameters @ip_version,
+--      @ip_week_ending_from, @ip_week_ending_to.
+--   8. ZZ_UPD_TIMESTAMP datatype not confirmed in CSV for /POSDW/TLOGF* tables.
+--      Timestamp comparisons preserved as-is pending schema validation.
+-- ============================================================================================================================
+
+WITH
+
+-- =====================================================================
+-- CTE 1: FLASH_SALES_BASE
+-- Logic: Reads raw flash-sales data from the physical CAR table,
+--        applies the update-timestamp window filter from the procedure
+--        parameters, and computes the week-ending date from BUSINESSDAYDATE
+--        using HANA weekday semantics (Mon=0 … Sun=6).
+-- Source: FLASH_SALES_VT_CAR  (REQUIRES VALIDATION: table not in Columns_Mapping_v3)
+-- Filters: ZZ_UPD_TIMESTAMP BETWEEN @ip_upd_timestamp_from AND @ip_upd_timestamp_to
+--          RETAILSTOREID NOT BETWEEN '0000020000' AND '0000024999'
+--          BUSINESSDAYDATE BETWEEN @ip_week_ending_from AND @ip_week_ending_to
+-- Calculation: CAL_WEEK_ENDING_DATE – next Saturday relative to BUSINESSDAYDATE
+-- =====================================================================
+FLASH_SALES_BASE AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    FS_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAL_FS_UNITS,
+    EMP_REDUCTIONAMOUNT,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    -- Week-ending date: advance BUSINESSDAYDATE to the coming Saturday
+    -- HANA weekday: Mon=0 … Sun=6  →  BigQuery MOD(EXTRACT(DAYOFWEEK)+5,7)
+    REPLACE(
+      FORMAT_DATE(
+        '%Y%m%d',
+        DATE_ADD(
+          PARSE_DATE('%Y%m%d', BUSINESSDAYDATE),
+          INTERVAL (
+            5 - CASE
+                  WHEN MOD(EXTRACT(DAYOFWEEK FROM PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)) + 5, 7) = 6
+                  THEN -1
+                  ELSE MOD(EXTRACT(DAYOFWEEK FROM PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)) + 5, 7)
+                END
+          ) DAY
+        )
+      ),
+      '-', ''
+    ) AS CAL_WEEK_ENDING_DATE
+  FROM `PROJECT.DATASET.FLASH_SALES_VT_CAR`   -- REQUIRES VALIDATION: map to BQ_FULL_TABLE
+  WHERE ZZ_UPD_TIMESTAMP >= @ip_upd_timestamp_from
+    AND ZZ_UPD_TIMESTAMP <= @ip_upd_timestamp_to
+    AND (RETAILSTOREID < '0000020000' OR RETAILSTOREID > '0000024999')
+    AND BUSINESSDAYDATE >= @ip_week_ending_from
+    AND BUSINESSDAYDATE <= @ip_week_ending_to
+),
+
+-- =====================================================================
+-- CTE 2: RETAIL_CALENDAR
+-- Logic: Projects fiscal-week attributes from the retail-calendar master.
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek
+-- Filters: rclnt IN ('120','200')  (rclnt is STRING per Columns_Mapping_v3)
+-- =====================================================================
+RETAIL_CALENDAR AS (
+  SELECT
+    rclnt,
+    zzweek,
+    zryear,
+    zrperiod,
+    zryrp,
+    zrwenddate,
+    zrwstrtdate
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztfigl_rcalweek`
+  WHERE rclnt IN ('120', '200')
+),
+
+-- =====================================================================
+-- CTE 3: WEEK
+-- Logic: Left-joins flash-sales base to retail calendar on computed
+--        week-ending date = zrwenddate to enrich with fiscal-week attributes.
+-- Source: FLASH_SALES_BASE, RETAIL_CALENDAR
+-- Join: LEFT JOIN RETAIL_CALENDAR ON CAL_WEEK_ENDING_DATE = zrwenddate
+-- =====================================================================
+WEEK AS (
+  SELECT
+    rc.zzweek,
+    rc.zryear,
+    rc.zrperiod,
+    rc.zryrp,
+    rc.zrwenddate,
+    rc.zrwstrtdate,
+    f.MANDT,
+    f.BUSINESSDAYDATE,
+    f.FS_SALESAMOUNT,
+    f.REDUCTIONAMOUNT,
+    f.RX_SALESAMOUNT,
+    f.CAL_FS_UNITS,
+    f.EMP_REDUCTIONAMOUNT,
+    f.CAL_RX_CNT_GE84_NS,
+    f.CAL_RX_CNT_GE84_RE,
+    f.CAL_WEEK_ENDING_DATE,
+    f.CAL_RX_CNT_NS,
+    f.CAL_RX_CNT_RE,
+    f.RETAILSTOREID          AS RETAILSTOREID_CAR,
+    f.RX_UPD_TIMESTAMP,
+    f.FS_UPD_TIMESTAMP,
+    f.SCRIPTS_UPD_TIMESTAMP,
+    f.ZZ_UPD_TIMESTAMP,
+    f.TRANSCURRENCY,
+    f.CVD_AMOUNT,
+    f.CAL_CVD_UNITS
+  FROM FLASH_SALES_BASE f
+  LEFT JOIN RETAIL_CALENDAR rc
+    ON f.CAL_WEEK_ENDING_DATE = rc.zrwenddate
+),
+
+-- =====================================================================
+-- CTE 4: COMP_FLAG
+-- Logic: Reads comp-flag data filtered to the runtime version parameter.
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl
+-- Filters: comp_ver = @ip_version
+-- =====================================================================
+COMP_FLAG AS (
+  SELECT
+    mandt,
+    prctr,
+    strnum,
+    comp_ver,
+    fs_comp_wk,
+    rx_comp_wk,
+    zweek
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_compfl`
+  WHERE comp_ver = @ip_version
+),
+
+-- =====================================================================
+-- CTE 5: HIERARCHY
+-- Logic: Filters the profit-centre hierarchy to nodes whose parent
+--        matches *CORE_RET* and whose validity end date is 9999-12-31.
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node
+-- Filters: REGEXP_CONTAINS(parnode, r'.*CORE_RET.*')
+--          hryvalto = DATE '9999-12-31'  (hryvalto is DATE per Columns_Mapping_v3)
+-- =====================================================================
+HIERARCHY AS (
+  SELECT
+    mandt,
+    parnode,
+    hryvalto,
+    nodevalue
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_hrrp_node`
+  WHERE REGEXP_CONTAINS(parnode, r'.*CORE_RET.*')
+    AND hryvalto = DATE '9999-12-31'
+),
+
+-- =====================================================================
+-- CTE 6: STORE_ATTR
+-- Logic: Projects store-attribute master data for the main sales path.
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act
+-- =====================================================================
+STORE_ATTR AS (
+  SELECT
+    mandt,
+    strnum,
+    prctr,
+    emerg_mkt_ind,
+    rep_mkt_code,
+    rep_mkt_desc,
+    division_code,
+    division_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    area_code,
+    area_desc,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act`
+),
+
+-- =====================================================================
+-- CTE 7: Joined_Week_Store_Attributes
+-- Logic: Left-joins WEEK to STORE_ATTR on store number to enrich with
+--        store-dimension attributes.
+-- Source: WEEK, STORE_ATTR
+-- Join: LEFT JOIN STORE_ATTR ON RETAILSTOREID_CAR = strnum
+-- =====================================================================
+Joined_Week_Store_Attributes AS (
+  SELECT
+    sa.prctr,
+    sa.emerg_mkt_ind,
+    sa.rep_mkt_code,
+    sa.rep_mkt_desc,
+    sa.division_code,
+    sa.division_desc,
+    sa.region_code,
+    sa.region_desc,
+    sa.district_code,
+    sa.district_desc,
+    sa.city,
+    sa.state,
+    sa.fs_open_dat,
+    sa.rx_open_dat,
+    sa.area_code,
+    sa.area_desc,
+    sa.rx_division_code,
+    sa.rx_area_code,
+    sa.rx_region_code,
+    sa.rx_district_code,
+    w.CAL_RX_CNT_GE84_RE,
+    w.CAL_RX_CNT_GE84_NS,
+    w.EMP_REDUCTIONAMOUNT,
+    w.CAL_FS_UNITS,
+    w.RX_SALESAMOUNT,
+    w.REDUCTIONAMOUNT,
+    w.FS_SALESAMOUNT,
+    w.BUSINESSDAYDATE,
+    w.MANDT,
+    w.zzweek,
+    w.zryear,
+    w.zrperiod,
+    w.zryrp,
+    w.CAL_WEEK_ENDING_DATE,
+    w.RETAILSTOREID_CAR        AS RETAILSTOREID,
+    w.CAL_RX_CNT_NS,
+    w.CAL_RX_CNT_RE,
+    w.zrwenddate,
+    w.zrwstrtdate,
+    w.RX_UPD_TIMESTAMP,
+    w.FS_UPD_TIMESTAMP,
+    w.SCRIPTS_UPD_TIMESTAMP,
+    w.ZZ_UPD_TIMESTAMP,
+    w.TRANSCURRENCY,
+    w.CVD_AMOUNT,
+    w.CAL_CVD_UNITS
+  FROM WEEK w
+  LEFT JOIN STORE_ATTR sa
+    ON w.RETAILSTOREID_CAR = sa.strnum
+),
+
+-- =====================================================================
+-- CTE 8: Joined_Core_Retail_Hierarchy
+-- Logic: Inner-joins store-enriched data to the HIERARCHY CTE to keep
+--        only profit centres that belong to the CORE_RET hierarchy.
+-- Source: Joined_Week_Store_Attributes, HIERARCHY
+-- Join: INNER JOIN HIERARCHY ON prctr = nodevalue
+-- =====================================================================
+Joined_Core_Retail_Hierarchy AS (
+  SELECT
+    j.CAL_RX_CNT_GE84_RE,
+    j.CAL_RX_CNT_GE84_NS,
+    j.EMP_REDUCTIONAMOUNT,
+    j.CAL_FS_UNITS,
+    j.RX_SALESAMOUNT,
+    j.REDUCTIONAMOUNT,
+    j.FS_SALESAMOUNT,
+    j.BUSINESSDAYDATE,
+    j.MANDT,
+    j.zzweek,
+    j.zryear,
+    j.zrperiod,
+    j.zryrp,
+    j.CAL_WEEK_ENDING_DATE,
+    j.RETAILSTOREID,
+    j.CAL_RX_CNT_NS,
+    j.CAL_RX_CNT_RE,
+    j.zrwenddate,
+    j.zrwstrtdate,
+    j.prctr,
+    j.emerg_mkt_ind,
+    j.rep_mkt_code,
+    j.rep_mkt_desc,
+    j.division_code,
+    j.division_desc,
+    j.region_code,
+    j.region_desc,
+    j.district_code,
+    j.district_desc,
+    j.city,
+    j.state,
+    j.fs_open_dat,
+    j.rx_open_dat,
+    j.RX_UPD_TIMESTAMP,
+    j.FS_UPD_TIMESTAMP,
+    j.SCRIPTS_UPD_TIMESTAMP,
+    j.ZZ_UPD_TIMESTAMP,
+    j.TRANSCURRENCY,
+    j.area_code,
+    j.area_desc,
+    j.CVD_AMOUNT,
+    j.CAL_CVD_UNITS,
+    j.rx_division_code,
+    j.rx_area_code,
+    j.rx_region_code,
+    j.rx_district_code
+  FROM Joined_Week_Store_Attributes j
+  INNER JOIN HIERARCHY h
+    ON j.prctr = h.nodevalue
+),
+
+-- =====================================================================
+-- CTE 9: Joined_Comp_Flag_Data
+-- Logic: Left-joins hierarchy-filtered data to COMP_FLAG on profit centre
+--        and fiscal week to bring comp-store flags.
+-- Source: Joined_Core_Retail_Hierarchy, COMP_FLAG
+-- Join: LEFT JOIN COMP_FLAG ON prctr = prctr AND zzweek = zweek
+-- =====================================================================
+Joined_Comp_Flag_Data AS (
+  SELECT
+    j.CAL_RX_CNT_GE84_RE,
+    j.CAL_RX_CNT_GE84_NS,
+    j.EMP_REDUCTIONAMOUNT,
+    j.CAL_FS_UNITS,
+    j.RX_SALESAMOUNT,
+    j.REDUCTIONAMOUNT,
+    j.FS_SALESAMOUNT,
+    j.BUSINESSDAYDATE,
+    j.MANDT,
+    j.zzweek,
+    j.zryear,
+    j.zrperiod,
+    j.zryrp,
+    j.CAL_WEEK_ENDING_DATE,
+    j.RETAILSTOREID,
+    j.CAL_RX_CNT_NS,
+    j.CAL_RX_CNT_RE,
+    j.zrwenddate,
+    j.zrwstrtdate,
+    j.prctr,
+    j.emerg_mkt_ind,
+    j.rep_mkt_code,
+    j.rep_mkt_desc,
+    j.division_code,
+    j.division_desc,
+    j.region_code,
+    j.region_desc,
+    j.district_code,
+    j.district_desc,
+    j.city,
+    j.state,
+    j.fs_open_dat,
+    j.rx_open_dat,
+    j.RX_UPD_TIMESTAMP,
+    j.FS_UPD_TIMESTAMP,
+    j.SCRIPTS_UPD_TIMESTAMP,
+    j.ZZ_UPD_TIMESTAMP,
+    j.TRANSCURRENCY,
+    j.area_code,
+    j.area_desc,
+    cf.fs_comp_wk,
+    cf.rx_comp_wk,
+    j.CVD_AMOUNT,
+    j.CAL_CVD_UNITS,
+    j.rx_division_code,
+    j.rx_area_code,
+    j.rx_region_code,
+    j.rx_district_code
+  FROM Joined_Core_Retail_Hierarchy j
+  LEFT JOIN COMP_FLAG cf
+    ON j.prctr  = cf.prctr
+   AND j.zzweek = cf.zweek
+),
+
+-- =====================================================================
+-- CTE 10: NAVIX
+-- Logic: Projects the base retail-day grain keys from the NAVIX table.
+-- Source: /POSDW/NAVIX  (REQUIRES VALIDATION: table not in Columns_Mapping_v3)
+-- =====================================================================
+NAVIX AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE
+  FROM `PROJECT.DATASET.POSDW_NAVIX`   -- REQUIRES VALIDATION
+),
+
+-- =====================================================================
+-- CTE 11: NAVIX_2
+-- Logic: Projects NAVIX with CURRENCY for the scripts-to-currency join.
+-- Source: /POSDW/NAVIX  (REQUIRES VALIDATION)
+-- =====================================================================
+NAVIX_2 AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CURRENCY
+  FROM `PROJECT.DATASET.POSDW_NAVIX`   -- REQUIRES VALIDATION
+),
+
+-- =====================================================================
+-- CTE 12: FS_SALES
+-- Logic: Filters TLOGF to RECORDQUALIFIER = '5' (front-store sales rows).
+-- Source: /POSDW/TLOGF  (REQUIRES VALIDATION: table not in Columns_Mapping_v3)
+-- Filters: RECORDQUALIFIER = '5', NOT IN ('1107','1197','1020'),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '', ZZ_UPD_TIMESTAMP <> '0'
+-- =====================================================================
+FS_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    SALESAMOUNT        AS FS_SALESAMOUNT,
+    RETAILTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP   AS FS_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`   -- REQUIRES VALIDATION
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+    AND RECORDQUALIFIER = '5'
+),
+
+-- =====================================================================
+-- CTE 13: FS_DISCOUNT
+-- Logic: Filters TLOGF to RECORDQUALIFIER = '6' (front-store discount rows).
+-- Source: /POSDW/TLOGF  (REQUIRES VALIDATION)
+-- Filters: same base TLOGF filters + RECORDQUALIFIER = '6'
+-- =====================================================================
+FS_DISCOUNT AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    REDUCTIONAMOUNT,
+    RETAILTYPECODE,
+    DISCTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`   -- REQUIRES VALIDATION
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+    AND RECORDQUALIFIER = '6'
+),
+
+-- =====================================================================
+-- CTE 14: RX_SALES
+-- Logic: Filters TLOGF to RECORDQUALIFIER = '5' for RX sales rows.
+-- Source: /POSDW/TLOGF  (REQUIRES VALIDATION)
+-- =====================================================================
+RX_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    SALESAMOUNT        AS RX_SALESAMOUNT,
+    RETAILTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP   AS RX_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`   -- REQUIRES VALIDATION
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+    AND RECORDQUALIFIER = '5'
+),
+
+-- =====================================================================
+-- CTE 15: EMP_DISCOUNT_RAW
+-- Logic: Filters TLOGF to RECORDQUALIFIER = '6' for employee-discount rows.
+-- Source: /POSDW/TLOGF  (REQUIRES VALIDATION)
+-- =====================================================================
+EMP_DISCOUNT_RAW AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    REDUCTIONAMOUNT    AS EMP_REDUCTIONAMOUNT,
+    RETAILTYPECODE,
+    DISCTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`   -- REQUIRES VALIDATION
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+    AND RECORDQUALIFIER = '6'
+),
+
+-- =====================================================================
+-- CTE 16: SCRIPTS
+-- Logic: Filters TLOGF_X to RECORDQUALIFIER = '25', excludes workstation
+--        0000000000 and zero update timestamps.
+-- Source: /POSDW/TLOGF_X  (REQUIRES VALIDATION: table not in Columns_Mapping_v3)
+-- =====================================================================
+SCRIPTS AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_RX_CNT_NS,
+    ZZ_RX_CNT_REFILL,
+    ZZ_RX_CNT_GE84_NS,
+    ZZ_RX_CNT_GE84_RE,
+    ZZ_RX_MCRX_GE84_NS,
+    ZZ_RX_MCRX_GE84_RE,
+    ZZ_CUSTTYPE,
+    ZZ_UPD_TIMESTAMP,
+    WORKSTATIONID
+  FROM `PROJECT.DATASET.POSDW_TLOGF_X`   -- REQUIRES VALIDATION
+  WHERE RECORDQUALIFIER = '25'
+    AND WORKSTATIONID <> '0000000000'
+    AND ZZ_UPD_TIMESTAMP <> '0'
+),
+
+-- =====================================================================
+-- CTE 17: Joined_Scripts_With_Currency
+-- Logic: Inner-joins SCRIPTS to NAVIX_2 on grain keys to attach CURRENCY.
+-- Source: SCRIPTS, NAVIX_2
+-- Join: INNER JOIN NAVIX_2 ON MANDT, RETAILSTOREID, BUSINESSDAYDATE
+-- =====================================================================
+Joined_Scripts_With_Currency AS (
+  SELECT
+    s.MANDT,
+    s.RETAILSTOREID,
+    s.BUSINESSDAYDATE,
+    s.ZZ_RX_CNT_NS,
+    s.ZZ_RX_CNT_REFILL,
+    s.ZZ_RX_CNT_GE84_NS,
+    s.ZZ_RX_CNT_GE84_RE,
+    s.ZZ_RX_MCRX_GE84_NS,
+    s.ZZ_RX_MCRX_GE84_RE,
+    s.ZZ_CUSTTYPE,
+    n2.CURRENCY,
+    s.ZZ_UPD_TIMESTAMP,
+    s.WORKSTATIONID
+  FROM SCRIPTS s
+  INNER JOIN NAVIX_2 n2
+    ON s.MANDT          = n2.MANDT
+   AND s.RETAILSTOREID  = n2.RETAILSTOREID
+   AND s.BUSINESSDAYDATE= n2.BUSINESSDAYDATE
+),
+
+-- =====================================================================
+-- CTE 18: SCRIPT_KPIs
+-- Logic: Derives calculated KPI columns from scripts data:
+--        CAL_FS_UNITS, CAL_RX_CNT_GE84_NS/RE, CAL_RX_CNT_NS/RE,
+--        CAL_CVD_UNITS, SCRIPTS_UPD_TIMESTAMP.
+-- Source: Joined_Scripts_With_Currency
+-- Calculation: CASE-based derivations from ZZ_CUSTTYPE and WORKSTATIONID
+-- =====================================================================
+SCRIPT_KPIs AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_RX_CNT_NS,
+    ZZ_RX_CNT_REFILL,
+    ZZ_RX_CNT_GE84_NS,
+    ZZ_RX_CNT_GE84_RE,
+    ZZ_RX_MCRX_GE84_NS,
+    ZZ_RX_MCRX_GE84_RE,
+    ZZ_CUSTTYPE,
+    CURRENCY,
+    ZZ_UPD_TIMESTAMP   AS SCRIPTS_UPD_TIMESTAMP,
+    WORKSTATIONID,
+    CASE
+      WHEN ZZ_CUSTTYPE IN ('F', 'M', 'R') THEN 1
+      WHEN ZZ_CUSTTYPE IN ('X', 'Y', 'Z') THEN -1
+      ELSE 0
+    END AS CAL_FS_UNITS,
+    CASE
+      WHEN ZZ_RX_CNT_GE84_NS = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_GE84_NS AS INT64)
+    END AS CAL_RX_CNT_GE84_NS,
+    CASE
+      WHEN ZZ_RX_CNT_GE84_RE = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_GE84_RE AS INT64)
+    END AS CAL_RX_CNT_GE84_RE,
+    CASE
+      WHEN ZZ_RX_CNT_NS = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_NS AS INT64)
+    END AS CAL_RX_CNT_NS,
+    CASE
+      WHEN ZZ_RX_CNT_REFILL = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_REFILL AS INT64)
+    END AS CAL_RX_CNT_RE,
+    CASE
+      WHEN WORKSTATIONID = '0000000555' AND ZZ_CUSTTYPE = 'C' THEN 1
+      WHEN WORKSTATIONID = '0000000555' AND ZZ_CUSTTYPE = 'W' THEN -1
+      ELSE 0
+    END AS CAL_CVD_UNITS
+  FROM Joined_Scripts_With_Currency
+),
+
+-- =====================================================================
+-- CTE 19: COVID_SALES
+-- Logic: Reads COVID-related sales from TLOGF_COVID (ITEMID='A01-433556').
+-- Source: /POSDW/TLOGF  (CV_BASE_TLOGF_COVID variant; REQUIRES VALIDATION)
+-- Filters: RECORDQUALIFIER IN ('5','6'), TRANSTYPECODE NOT IN (...),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '',
+--          ZZ_UPD_TIMESTAMP <> '0', ITEMID = 'A01-433556'
+-- =====================================================================
+COVID_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    SALESAMOUNT        AS CVD_AMOUNT,
+    RETAILTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP   AS CVD_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`   -- REQUIRES VALIDATION (CV_BASE_TLOGF_COVID variant)
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+    AND ITEMID = 'A01-433556'
+),
+
+-- =====================================================================
+-- CTE 20: FS_RETAIL_TYPES
+-- Logic: Reads FS retail-type codes from the flash-parameters table.
+-- Source: ZTFIRP_FLASH_PRM  (REQUIRES VALIDATION: table not in Columns_Mapping_v3)
+-- Filters: PARAM_NAME = 'FS_RETAIL_TYPE_CODE'
+-- =====================================================================
+FS_RETAIL_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS LOW_CHAR
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`   -- REQUIRES VALIDATION
+  WHERE PARAM_NAME = 'FS_RETAIL_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 21: EMP_DISC_TYPES
+-- Logic: Reads employee-discount type codes from the flash-parameters table.
+-- Source: ZTFIRP_FLASH_PRM  (REQUIRES VALIDATION)
+-- Filters: PARAM_NAME = 'EMP_DISC_TYPE_CODE'
+-- =====================================================================
+EMP_DISC_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS LOW_CHAR
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`   -- REQUIRES VALIDATION
+  WHERE PARAM_NAME = 'EMP_DISC_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 22: RX_RETAIL_TYPES
+-- Logic: Reads RX retail-type codes from the flash-parameters table.
+-- Source: ZTFIRP_FLASH_PRM  (REQUIRES VALIDATION)
+-- Filters: PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+-- =====================================================================
+RX_RETAIL_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS LOW_CHAR
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`   -- REQUIRES VALIDATION
+  WHERE PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 23: FS_DISC_TYPES
+-- Logic: Reads FS discount-type codes from the flash-parameters table.
+-- Source: ZTFIRP_FLASH_PRM  (REQUIRES VALIDATION)
+-- Filters: PARAM_NAME = 'FS_DISC_TYPE_CODE'
+-- =====================================================================
+FS_DISC_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS LOW_CHAR
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`   -- REQUIRES VALIDATION
+  WHERE PARAM_NAME = 'FS_DISC_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 24: RX_RETAIL_TYPES_COVID
+-- Logic: Reads RX retail-type codes for COVID sales from the parameters table.
+-- Source: ZTFIRP_FLASH_PRM  (REQUIRES VALIDATION)
+-- Filters: PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+-- =====================================================================
+RX_RETAIL_TYPES_COVID AS (
+  SELECT
+    PARAM_VALUE_LOW AS LOW_CHAR
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`   -- REQUIRES VALIDATION
+  WHERE PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 25: Joined_FS_Sales_With_Retail_Types
+-- Logic: Inner-joins FS_SALES to FS_RETAIL_TYPES to keep only valid
+--        front-store retail-type codes.
+-- Source: FS_SALES, FS_RETAIL_TYPES
+-- Join: INNER JOIN FS_RETAIL_TYPES ON RETAILTYPECODE = LOW_CHAR
+-- =====================================================================
+Joined_FS_Sales_With_Retail_Types AS (
+  SELECT
+    f.MANDT,
+    f.RETAILSTOREID,
+    f.BUSINESSDAYDATE,
+    f.FS_SALESAMOUNT,
+    f.RETAILTYPECODE,
+    f.TRANSCURRENCY,
+    f.FS_UPD_TIMESTAMP
+  FROM FS_SALES f
+  INNER JOIN FS_RETAIL_TYPES t
+    ON f.RETAILTYPECODE = t.LOW_CHAR
+),
+
+-- =====================================================================
+-- CTE 26: Joined_Employee_Discount_With_Discount_Types
+-- Logic: Inner-joins EMP_DISCOUNT_RAW to EMP_DISC_TYPES to keep only
+--        valid employee-discount type codes.
+-- Source: EMP_DISCOUNT_RAW, EMP_DISC_TYPES
+-- Join: INNER JOIN EMP_DISC_TYPES ON DISCTYPECODE = LOW_CHAR
+-- =====================================================================
+Joined_Employee_Discount_With_Discount_Types AS (
+  SELECT
+    e.MANDT,
+    e.RETAILSTOREID,
+    e.BUSINESSDAYDATE,
+    e.EMP_REDUCTIONAMOUNT,
+    e.DISCTYPECODE,
+    e.TRANSCURRENCY,
+    e.ZZ_UPD_TIMESTAMP   AS EMP_DISC_UPD_TIMESTAMP
+  FROM EMP_DISCOUNT_RAW e
+  INNER JOIN EMP_DISC_TYPES t
+    ON e.DISCTYPECODE = t.LOW_CHAR
+),
+
+-- =====================================================================
+-- CTE 27: Joined_RX_Sales_With_Retail_Types
+-- Logic: Inner-joins RX_SALES to RX_RETAIL_TYPES to keep only valid
+--        RX retail-type codes.
+-- Source: RX_SALES, RX_RETAIL_TYPES
+-- Join: INNER JOIN RX_RETAIL_TYPES ON RETAILTYPECODE = LOW_CHAR
+-- =====================================================================
+Joined_RX_Sales_With_Retail_Types AS (
+  SELECT
+    r.MANDT,
+    r.RETAILSTOREID,
+    r.BUSINESSDAYDATE,
+    r.RX_SALESAMOUNT,
+    r.RETAILTYPECODE,
+    r.TRANSCURRENCY,
+    r.RX_UPD_TIMESTAMP
+  FROM RX_SALES r
+  INNER JOIN RX_RETAIL_TYPES t
+    ON r.RETAILTYPECODE = t.LOW_CHAR
+),
+
+-- =====================================================================
+-- CTE 28: Joined_FS_Discount_With_Discount_Types
+-- Logic: Inner-joins FS_DISCOUNT to FS_DISC_TYPES to keep only valid
+--        FS discount-type codes.
+-- Source: FS_DISCOUNT, FS_DISC_TYPES
+-- Join: INNER JOIN FS_DISC_TYPES ON DISCTYPECODE = LOW_CHAR
+-- =====================================================================
+Joined_FS_Discount_With_Discount_Types AS (
+  SELECT
+    f.MANDT,
+    f.RETAILSTOREID,
+    f.BUSINESSDAYDATE,
+    f.REDUCTIONAMOUNT,
+    f.DISCTYPECODE,
+    f.TRANSCURRENCY,
+    f.ZZ_UPD_TIMESTAMP   AS FS_DISC_UPD_TIMESTAMP
+  FROM FS_DISCOUNT f
+  INNER JOIN FS_DISC_TYPES t
+    ON f.DISCTYPECODE = t.LOW_CHAR
+),
+
+-- =====================================================================
+-- CTE 29: Joined_COVID_Sales_With_RX_Retail_Types
+-- Logic: Inner-joins COVID_SALES to RX_RETAIL_TYPES_COVID to keep only
+--        valid RX retail-type codes for COVID sales.
+-- Source: COVID_SALES, RX_RETAIL_TYPES_COVID
+-- Join: INNER JOIN RX_RETAIL_TYPES_COVID ON RETAILTYPECODE = LOW_CHAR
+-- =====================================================================
+Joined_COVID_Sales_With_RX_Retail_Types AS (
+  SELECT
+    c.MANDT,
+    c.RETAILSTOREID,
+    c.BUSINESSDAYDATE,
+    c.CVD_AMOUNT,
+    c.RETAILTYPECODE,
+    c.TRANSCURRENCY,
+    c.CVD_UPD_TIMESTAMP
+  FROM COVID_SALES c
+  INNER JOIN RX_RETAIL_TYPES_COVID t
+    ON c.RETAILTYPECODE = t.LOW_CHAR
+),
+
+-- =====================================================================
+-- CTE 30: Combined_Flash_Sales_Inputs
+-- Logic: Unions six branches (scripts KPIs, FS sales, employee discount,
+--        RX sales, FS discount, COVID sales) into a single row set.
+--        Non-applicable measures are set to NULL in each branch.
+-- Source: SCRIPT_KPIs, Joined_FS_Sales_With_Retail_Types,
+--         Joined_Employee_Discount_With_Discount_Types,
+--         Joined_RX_Sales_With_Retail_Types,
+--         Joined_FS_Discount_With_Discount_Types,
+--         Joined_COVID_Sales_With_RX_Retail_Types
+-- =====================================================================
+Combined_Flash_Sales_Inputs AS (
+  -- Branch 1: Script KPIs
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_RX_CNT_NS,
+    ZZ_RX_CNT_REFILL,
+    ZZ_RX_CNT_GE84_NS,
+    ZZ_RX_CNT_GE84_RE,
+    ZZ_RX_MCRX_GE84_NS,
+    ZZ_RX_MCRX_GE84_RE,
+    CAL_FS_UNITS,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAST(NULL AS NUMERIC)   AS FS_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS EMP_REDUCTIONAMOUNT,
+    CAST(NULL AS NUMERIC)   AS RX_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS REDUCTIONAMOUNT,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    CURRENCY                AS TRANSCURRENCY,
+    CAST(NULL AS NUMERIC)   AS FS_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS RX_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP   AS ZZ_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS CVD_AMOUNT,
+    CAL_CVD_UNITS
+  FROM SCRIPT_KPIs
+
+  UNION ALL
+
+  -- Branch 2: FS Sales
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64)     AS CAL_FS_UNITS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_RE,
+    FS_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS EMP_REDUCTIONAMOUNT,
+    CAST(NULL AS NUMERIC)   AS RX_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS REDUCTIONAMOUNT,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_RE,
+    TRANSCURRENCY,
+    FS_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS RX_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS SCRIPTS_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP        AS ZZ_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS CVD_AMOUNT,
+    CAST(NULL AS INT64)     AS CAL_CVD_UNITS
+  FROM Joined_FS_Sales_With_Retail_Types
+
+  UNION ALL
+
+  -- Branch 3: Employee Discount
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64)     AS CAL_FS_UNITS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_RE,
+    CAST(NULL AS NUMERIC)   AS FS_SALESAMOUNT,
+    EMP_REDUCTIONAMOUNT,
+    CAST(NULL AS NUMERIC)   AS RX_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS REDUCTIONAMOUNT,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_RE,
+    TRANSCURRENCY,
+    CAST(NULL AS NUMERIC)   AS FS_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS RX_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS SCRIPTS_UPD_TIMESTAMP,
+    EMP_DISC_UPD_TIMESTAMP  AS ZZ_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS CVD_AMOUNT,
+    CAST(NULL AS INT64)     AS CAL_CVD_UNITS
+  FROM Joined_Employee_Discount_With_Discount_Types
+
+  UNION ALL
+
+  -- Branch 4: RX Sales
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64)     AS CAL_FS_UNITS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_RE,
+    CAST(NULL AS NUMERIC)   AS FS_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS EMP_REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS REDUCTIONAMOUNT,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_RE,
+    TRANSCURRENCY,
+    CAST(NULL AS NUMERIC)   AS FS_UPD_TIMESTAMP,
+    RX_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS SCRIPTS_UPD_TIMESTAMP,
+    RX_UPD_TIMESTAMP        AS ZZ_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS CVD_AMOUNT,
+    CAST(NULL AS INT64)     AS CAL_CVD_UNITS
+  FROM Joined_RX_Sales_With_Retail_Types
+
+  UNION ALL
+
+  -- Branch 5: FS Discount
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64)     AS CAL_FS_UNITS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_RE,
+    CAST(NULL AS NUMERIC)   AS FS_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS EMP_REDUCTIONAMOUNT,
+    CAST(NULL AS NUMERIC)   AS RX_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_RE,
+    TRANSCURRENCY,
+    CAST(NULL AS NUMERIC)   AS FS_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS RX_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS SCRIPTS_UPD_TIMESTAMP,
+    FS_DISC_UPD_TIMESTAMP   AS ZZ_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS CVD_AMOUNT,
+    CAST(NULL AS INT64)     AS CAL_CVD_UNITS
+  FROM Joined_FS_Discount_With_Discount_Types
+
+  UNION ALL
+
+  -- Branch 6: COVID Sales
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING)    AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64)     AS CAL_FS_UNITS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_RE,
+    CAST(NULL AS NUMERIC)   AS FS_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS EMP_REDUCTIONAMOUNT,
+    CAST(NULL AS NUMERIC)   AS RX_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS REDUCTIONAMOUNT,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_RE,
+    TRANSCURRENCY,
+    CAST(NULL AS NUMERIC)   AS FS_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS RX_UPD_TIMESTAMP,
+    CAST(NULL AS NUMERIC)   AS SCRIPTS_UPD_TIMESTAMP,
+    CVD_UPD_TIMESTAMP       AS ZZ_UPD_TIMESTAMP,
+    CVD_AMOUNT,
+    CAST(NULL AS INT64)     AS CAL_CVD_UNITS
+  FROM Joined_COVID_Sales_With_RX_Retail_Types
+),
+
+-- =====================================================================
+-- CTE 31: COMBINE_DATA
+-- Logic: Aggregates the unioned flash-sales inputs by retail-day grain
+--        plus TRANSCURRENCY and ZZ_UPD_TIMESTAMP.
+-- Source: Combined_Flash_Sales_Inputs
+-- Aggregation: SUM for amounts/counts/units; MAX for timestamps;
+--              COUNT for raw RX counter fields
+-- =====================================================================
+COMBINE_DATA AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP,
+    SUM(FS_SALESAMOUNT)       AS FS_SALESAMOUNT,
+    SUM(REDUCTIONAMOUNT)      AS REDUCTIONAMOUNT,
+    SUM(RX_SALESAMOUNT)       AS RX_SALESAMOUNT,
+    COUNT(ZZ_RX_CNT_NS)       AS ZZ_RX_CNT_NS,
+    COUNT(ZZ_RX_CNT_REFILL)   AS ZZ_RX_CNT_REFILL,
+    COUNT(ZZ_RX_CNT_GE84_NS)  AS ZZ_RX_CNT_GE84_NS,
+    COUNT(ZZ_RX_CNT_GE84_RE)  AS ZZ_RX_CNT_GE84_RE,
+    COUNT(ZZ_RX_MCRX_GE84_NS) AS ZZ_RX_MCRX_GE84_NS,
+    COUNT(ZZ_RX_MCRX_GE84_RE) AS ZZ_RX_MCRX_GE84_RE,
+    SUM(CAL_FS_UNITS)         AS CAL_FS_UNITS,
+    SUM(EMP_REDUCTIONAMOUNT)  AS EMP_REDUCTIONAMOUNT,
+    SUM(CAL_RX_CNT_GE84_NS)   AS CAL_RX_CNT_GE84_NS,
+    SUM(CAL_RX_CNT_GE84_RE)   AS CAL_RX_CNT_GE84_RE,
+    SUM(CAL_RX_CNT_NS)        AS CAL_RX_CNT_NS,
+    SUM(CAL_RX_CNT_RE)        AS CAL_RX_CNT_RE,
+    MAX(FS_UPD_TIMESTAMP)     AS FS_UPD_TIMESTAMP,
+    MAX(RX_UPD_TIMESTAMP)     AS RX_UPD_TIMESTAMP,
+    MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+    SUM(CVD_AMOUNT)           AS CVD_AMOUNT,
+    SUM(CAL_CVD_UNITS)        AS CAL_CVD_UNITS
+  FROM Combined_Flash_Sales_Inputs
+  GROUP BY
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP
+),
+
+-- =====================================================================
+-- CTE 32: MERGED
+-- Logic: Inner-joins NAVIX to COMBINE_DATA on the retail-day grain keys
+--        to restrict to days that exist in the NAVIX transaction log.
+-- Source: NAVIX, COMBINE_DATA
+-- Join: INNER JOIN COMBINE_DATA ON MANDT, RETAILSTOREID, BUSINESSDAYDATE
+-- =====================================================================
+MERGED AS (
+  SELECT
+    n.MANDT,
+    n.RETAILSTOREID,
+    n.BUSINESSDAYDATE,
+    c.FS_SALESAMOUNT,
+    c.REDUCTIONAMOUNT,
+    c.RX_SALESAMOUNT,
+    c.CAL_FS_UNITS,
+    c.EMP_REDUCTIONAMOUNT,
+    c.CAL_RX_CNT_GE84_NS,
+    c.CAL_RX_CNT_GE84_RE,
+    c.CAL_RX_CNT_NS,
+    c.CAL_RX_CNT_RE,
+    c.TRANSCURRENCY,
+    c.RX_UPD_TIMESTAMP,
+    c.FS_UPD_TIMESTAMP,
+    c.SCRIPTS_UPD_TIMESTAMP,
+    c.ZZ_UPD_TIMESTAMP,
+    c.CVD_AMOUNT,
+    c.CAL_CVD_UNITS
+  FROM NAVIX n
+  INNER JOIN COMBINE_DATA c
+    ON n.MANDT          = c.MANDT
+   AND n.RETAILSTOREID  = c.RETAILSTOREID
+   AND n.BUSINESSDAYDATE= c.BUSINESSDAYDATE
+),
+
+-- =====================================================================
+-- CTE 33: FLASH
+-- Logic: Aggregates MERGED to the final CV_BASE_FIN_FLASH_SALES_CAR
+--        output grain (MANDT, RETAILSTOREID, BUSINESSDAYDATE,
+--        ZZ_UPD_TIMESTAMP, TRANSCURRENCY).
+-- Source: MERGED
+-- Aggregation: SUM for amounts/units; MAX for timestamps
+-- =====================================================================
+FLASH AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    SUM(FS_SALESAMOUNT)        AS FS_SALESAMOUNT,
+    SUM(REDUCTIONAMOUNT)       AS REDUCTIONAMOUNT,
+    SUM(RX_SALESAMOUNT)        AS RX_SALESAMOUNT,
+    SUM(CAL_FS_UNITS)          AS CAL_FS_UNITS,
+    SUM(EMP_REDUCTIONAMOUNT)   AS EMP_REDUCTIONAMOUNT,
+    SUM(CAL_RX_CNT_GE84_NS)    AS CAL_RX_CNT_GE84_NS,
+    SUM(CAL_RX_CNT_GE84_RE)    AS CAL_RX_CNT_GE84_RE,
+    SUM(CAL_RX_CNT_NS)         AS CAL_RX_CNT_NS,
+    SUM(CAL_RX_CNT_RE)         AS CAL_RX_CNT_RE,
+    MAX(RX_UPD_TIMESTAMP)      AS RX_UPD_TIMESTAMP,
+    MAX(FS_UPD_TIMESTAMP)      AS FS_UPD_TIMESTAMP,
+    MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+    SUM(CVD_AMOUNT)            AS CVD_AMOUNT,
+    SUM(CAL_CVD_UNITS)         AS CAL_CVD_UNITS,
+    -- Week-ending date computed from BUSINESSDAYDATE (same formula as FLASH_SALES_BASE)
+    REPLACE(
+      FORMAT_DATE(
+        '%Y%m%d',
+        DATE_ADD(
+          PARSE_DATE('%Y%m%d', BUSINESSDAYDATE),
+          INTERVAL (
+            5 - CASE
+                  WHEN MOD(EXTRACT(DAYOFWEEK FROM PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)) + 5, 7) = 6
+                  THEN -1
+                  ELSE MOD(EXTRACT(DAYOFWEEK FROM PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)) + 5, 7)
+                END
+          ) DAY
+        )
+      ),
+      '-', ''
+    ) AS CAL_WEEK_ENDING_DATE
+  FROM MERGED
+  GROUP BY
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY
+),
+
+-- =====================================================================
+-- CTE 34: WEEK_COMP
+-- Logic: Left-joins FLASH (CV_BASE_FIN_FLASH_SALES_CAR output) to the
+--        retail calendar on CAL_WEEK_ENDING_DATE = zrwenddate.
+-- Source: FLASH, RETAIL_CALENDAR
+-- Join: LEFT JOIN RETAIL_CALENDAR ON CAL_WEEK_ENDING_DATE = zrwenddate
+-- =====================================================================
+WEEK_COMP AS (
+  SELECT
+    rc.zzweek,
+    rc.zryear,
+    rc.zrperiod,
+    rc.zryrp,
+    rc.zrwenddate,
+    rc.zrwstrtdate,
+    f.MANDT,
+    f.BUSINESSDAYDATE,
+    f.FS_SALESAMOUNT,
+    f.REDUCTIONAMOUNT,
+    f.RX_SALESAMOUNT,
+    f.CAL_FS_UNITS,
+    f.EMP_REDUCTIONAMOUNT,
+    f.CAL_RX_CNT_GE84_NS,
+    f.CAL_RX_CNT_GE84_RE,
+    f.CAL_WEEK_ENDING_DATE,
+    f.CAL_RX_CNT_NS,
+    f.CAL_RX_CNT_RE,
+    f.RETAILSTOREID          AS RETAILSTOREID_CAR,
+    f.RX_UPD_TIMESTAMP,
+    f.FS_UPD_TIMESTAMP,
+    f.SCRIPTS_UPD_TIMESTAMP,
+    f.ZZ_UPD_TIMESTAMP,
+    f.TRANSCURRENCY,
+    f.CVD_AMOUNT,
+    f.CAL_CVD_UNITS
+  FROM FLASH f
+  LEFT JOIN RETAIL_CALENDAR rc
+    ON f.CAL_WEEK_ENDING_DATE = rc.zrwenddate
+),
+
+-- =====================================================================
+-- CTE 35: Joined_Week_Comp_Store_Attributes
+-- Logic: Left-joins WEEK_COMP to STORE_ATTR on store number.
+-- Source: WEEK_COMP, STORE_ATTR
+-- Join: LEFT JOIN STORE_ATTR ON RETAILSTOREID_CAR = strnum
+-- =====================================================================
+Joined_Week_Comp_Store_Attributes AS (
+  SELECT
+    sa.prctr,
+    sa.emerg_mkt_ind,
+    sa.rep_mkt_code,
+    sa.rep_mkt_desc,
+    sa.division_code,
+    sa.division_desc,
+    sa.region_code,
+    sa.region_desc,
+    sa.district_code,
+    sa.district_desc,
+    sa.city,
+    sa.state,
+    sa.fs_open_dat,
+    sa.rx_open_dat,
+    sa.area_code,
+    sa.area_desc,
+    sa.rx_division_code,
+    sa.rx_area_code,
+    sa.rx_region_code,
+    sa.rx_district_code,
+    w.CAL_RX_CNT_GE84_RE,
+    w.CAL_RX_CNT_GE84_NS,
+    w.EMP_REDUCTIONAMOUNT,
+    w.CAL_FS_UNITS,
+    w.RX_SALESAMOUNT,
+    w.REDUCTIONAMOUNT,
+    w.FS_SALESAMOUNT,
+    w.BUSINESSDAYDATE,
+    w.MANDT,
+    w.zzweek,
+    w.zryear,
+    w.zrperiod,
+    w.zryrp,
+    w.CAL_WEEK_ENDING_DATE,
+    w.RETAILSTOREID_CAR        AS RETAILSTOREID,
+    w.CAL_RX_CNT_NS,
+    w.CAL_RX_CNT_RE,
+    w.zrwenddate,
+    w.zrwstrtdate,
+    w.RX_UPD_TIMESTAMP,
+    w.FS_UPD_TIMESTAMP,
+    w.SCRIPTS_UPD_TIMESTAMP,
+    w.ZZ_UPD_TIMESTAMP,
+    w.TRANSCURRENCY,
+    w.CVD_AMOUNT,
+    w.CAL_CVD_UNITS
+  FROM WEEK_COMP w
+  LEFT JOIN STORE_ATTR sa
+    ON w.RETAILSTOREID_CAR = sa.strnum
+),
+
+-- =====================================================================
+-- CTE 36: Joined_Core_Retail_Hierarchy_Comp
+-- Logic: Inner-joins store-enriched data to HIERARCHY to keep only
+--        CORE_RET profit centres.
+-- Source: Joined_Week_Comp_Store_Attributes, HIERARCHY
+-- Join: INNER JOIN HIERARCHY ON prctr = nodevalue
+-- =====================================================================
+Joined_Core_Retail_Hierarchy_Comp AS (
+  SELECT
+    j.CAL_RX_CNT_GE84_RE,
+    j.CAL_RX_CNT_GE84_NS,
+    j.EMP_REDUCTIONAMOUNT,
+    j.CAL_FS_UNITS,
+    j.RX_SALESAMOUNT,
+    j.REDUCTIONAMOUNT,
+    j.FS_SALESAMOUNT,
+    j.BUSINESSDAYDATE,
+    j.MANDT,
+    j.zzweek,
+    j.zryear,
+    j.zrperiod,
+    j.zryrp,
+    j.CAL_WEEK_ENDING_DATE,
+    j.RETAILSTOREID,
+    j.CAL_RX_CNT_NS,
+    j.CAL_RX_CNT_RE,
+    j.zrwenddate,
+    j.zrwstrtdate,
+    j.prctr,
+    j.emerg_mkt_ind,
+    j.rep_mkt_code,
+    j.rep_mkt_desc,
+    j.division_code,
+    j.division_desc,
+    j.region_code,
+    j.region_desc,
+    j.district_code,
+    j.district_desc,
+    j.city,
+    j.state,
+    j.fs_open_dat,
+    j.rx_open_dat,
+    j.RX_UPD_TIMESTAMP,
+    j.FS_UPD_TIMESTAMP,
+    j.SCRIPTS_UPD_TIMESTAMP,
+    j.ZZ_UPD_TIMESTAMP,
+    j.TRANSCURRENCY,
+    j.area_code,
+    j.area_desc,
+    j.CVD_AMOUNT,
+    j.CAL_CVD_UNITS,
+    j.rx_division_code,
+    j.rx_area_code,
+    j.rx_region_code,
+    j.rx_district_code
+  FROM Joined_Week_Comp_Store_Attributes j
+  INNER JOIN HIERARCHY h
+    ON j.prctr = h.nodevalue
+),
+
+-- =====================================================================
+-- CTE 37: Joined_Comp_Flag_Data_Comp
+-- Logic: Left-joins hierarchy-filtered data to COMP_FLAG on prctr and
+--        fiscal week.
+-- Source: Joined_Core_Retail_Hierarchy_Comp, COMP_FLAG
+-- Join: LEFT JOIN COMP_FLAG ON prctr = prctr AND zzweek = zweek
+-- =====================================================================
+Joined_Comp_Flag_Data_Comp AS (
+  SELECT
+    j.CAL_RX_CNT_GE84_RE,
+    j.CAL_RX_CNT_GE84_NS,
+    j.EMP_REDUCTIONAMOUNT,
+    j.CAL_FS_UNITS,
+    j.RX_SALESAMOUNT,
+    j.REDUCTIONAMOUNT,
+    j.FS_SALESAMOUNT,
+    j.BUSINESSDAYDATE,
+    j.MANDT,
+    j.zzweek,
+    j.zryear,
+    j.zrperiod,
+    j.zryrp,
+    j.CAL_WEEK_ENDING_DATE,
+    j.RETAILSTOREID,
+    j.CAL_RX_CNT_NS,
+    j.CAL_RX_CNT_RE,
+    j.zrwenddate,
+    j.zrwstrtdate,
+    j.prctr,
+    j.emerg_mkt_ind,
+    j.rep_mkt_code,
+    j.rep_mkt_desc,
+    j.division_code,
+    j.division_desc,
+    j.region_code,
+    j.region_desc,
+    j.district_code,
+    j.district_desc,
+    j.city,
+    j.state,
+    j.fs_open_dat,
+    j.rx_open_dat,
+    j.RX_UPD_TIMESTAMP,
+    j.FS_UPD_TIMESTAMP,
+    j.SCRIPTS_UPD_TIMESTAMP,
+    j.ZZ_UPD_TIMESTAMP,
+    j.TRANSCURRENCY,
+    j.area_code,
+    j.area_desc,
+    cf.fs_comp_wk,
+    cf.rx_comp_wk,
+    j.CVD_AMOUNT,
+    j.CAL_CVD_UNITS,
+    j.rx_division_code,
+    j.rx_area_code,
+    j.rx_region_code,
+    j.rx_district_code
+  FROM Joined_Core_Retail_Hierarchy_Comp j
+  LEFT JOIN COMP_FLAG cf
+    ON j.prctr  = cf.prctr
+   AND j.zzweek = cf.zweek
+),
+
+-- =====================================================================
+-- CTE 38: CALCULATIONS
+-- Logic: Derives CAL_SCRIPTS_90AS3, CAL_COMP_FLAG, and CAL_WEEK_NUMBER
+--        from the comp-flag-enriched data.
+-- Source: Joined_Comp_Flag_Data_Comp
+-- Calculation:
+--   CAL_SCRIPTS_90AS3 = CAL_RX_CNT_NS + CAL_RX_CNT_RE
+--                       + (CAL_RX_CNT_GE84_NS + CAL_RX_CNT_GE84_RE) * 2
+--   CAL_COMP_FLAG     = GREATEST(fs_comp_wk, rx_comp_wk) or '0' if NULL
+--   CAL_WEEK_NUMBER   = RIGHT(zzweek, 2)
+-- =====================================================================
+CALCULATIONS AS (
+  SELECT
+    CAL_RX_CNT_RE,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_RX_CNT_GE84_NS,
+    EMP_REDUCTIONAMOUNT,
+    CAL_FS_UNITS,
+    RX_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    FS_SALESAMOUNT,
+    rep_mkt_desc,
+    rep_mkt_code,
+    emerg_mkt_ind,
+    rx_comp_wk,
+    fs_comp_wk,
+    CAL_WEEK_ENDING_DATE,
+    zryrp,
+    zrperiod,
+    zryear,
+    zzweek,
+    BUSINESSDAYDATE,
+    prctr,
+    RETAILSTOREID,
+    MANDT,
+    division_code,
+    division_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    zrwenddate,
+    zrwstrtdate,
+    city,
+    state,
+    fs_open_dat,
+    rx_open_dat,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    area_code,
+    area_desc,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    CAL_RX_CNT_NS + CAL_RX_CNT_RE
+      + (CAL_RX_CNT_GE84_NS + CAL_RX_CNT_GE84_RE) * 2   AS CAL_SCRIPTS_90AS3,
+    CASE
+      WHEN GREATEST(fs_comp_wk, rx_comp_wk) IS NULL THEN '0'
+      ELSE GREATEST(fs_comp_wk, rx_comp_wk)
+    END                                                    AS CAL_COMP_FLAG,
+    RIGHT(zzweek, 2)                                       AS CAL_WEEK_NUMBER
+  FROM Joined_Comp_Flag_Data_Comp
+),
+
+-- =====================================================================
+-- CTE 39: EMPLOYEE_DISCOUNT
+-- Logic: Aggregates employee-discount rows by dimensional grain and
+--        derives CAL_PRCTR (synthetic profit centre for comp/non-comp).
+-- Source: CALCULATIONS
+-- Aggregation: SUM(EMP_REDUCTIONAMOUNT), MAX(RX/FS/SCRIPTS_UPD_TIMESTAMP)
+-- Calculation: CAL_PRCTR from CAL_COMP_FLAG
+-- =====================================================================
+EMPLOYEE_DISCOUNT AS (
+  SELECT
+    SUM(EMP_REDUCTIONAMOUNT)    AS EMP_REDUCTIONAMOUNT,
+    zryrp,
+    zrperiod,
+    zryear,
+    zzweek,
+    BUSINESSDAYDATE,
+    CAL_WEEK_ENDING_DATE,
+    CAL_COMP_FLAG,
+    CAL_WEEK_NUMBER,
+    MANDT,
+    zrwenddate,
+    zrwstrtdate,
+    city,
+    state,
+    district_code,
+    district_desc,
+    region_code,
+    region_desc,
+    rx_comp_wk,
+    fs_comp_wk,
+    fs_open_dat,
+    rx_open_dat,
+    prctr                       AS PRCTR_ORG,
+    MAX(RX_UPD_TIMESTAMP)       AS RX_UPD_TIMESTAMP,
+    MAX(FS_UPD_TIMESTAMP)       AS FS_UPD_TIMESTAMP,
+    MAX(SCRIPTS_UPD_TIMESTAMP)  AS SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    area_code,
+    area_desc,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code,
+    CASE
+      WHEN CAL_COMP_FLAG = '1' THEN '0000562075'
+      WHEN CAL_COMP_FLAG = '0' THEN '0000562076'
+      ELSE NULL
+    END                         AS CAL_PRCTR
+  FROM CALCULATIONS
+  GROUP BY
+    zryrp,
+    zrperiod,
+    zryear,
+    zzweek,
+    BUSINESSDAYDATE,
+    CAL_WEEK_ENDING_DATE,
+    CAL_COMP_FLAG,
+    CAL_WEEK_NUMBER,
+    MANDT,
+    zrwenddate,
+    zrwstrtdate,
+    city,
+    state,
+    district_code,
+    district_desc,
+    region_code,
+    region_desc,
+    rx_comp_wk,
+    fs_comp_wk,
+    fs_open_dat,
+    rx_open_dat,
+    prctr,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    area_code,
+    area_desc,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+),
+
+-- =====================================================================
+-- CTE 40: COMP_NONCOMP_STORE_ATTR
+-- Logic: Filters store attributes to the two synthetic profit centres
+--        used for employee-discount rows.
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act
+-- Filters: prctr IN ('0000562075','0000562076')
+-- =====================================================================
+COMP_NONCOMP_STORE_ATTR AS (
+  SELECT
+    mandt,
+    strnum,
+    prctr,
+    emerg_mkt_ind,
+    rep_mkt_code,
+    rep_mkt_desc,
+    division_code,
+    division_desc,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    city,
+    state,
+    area_code,
+    area_desc,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_ztsrp_attr_act`
+  WHERE prctr IN ('0000562075', '0000562076')
+),
+
+-- =====================================================================
+-- CTE 41: Joined_Employee_Discount_Store_Attributes
+-- Logic: Left-joins EMPLOYEE_DISCOUNT to COMP_NONCOMP_STORE_ATTR on
+--        CAL_PRCTR = prctr to enrich employee-discount rows with store
+--        dimension attributes.
+-- Source: EMPLOYEE_DISCOUNT, COMP_NONCOMP_STORE_ATTR
+-- Join: LEFT JOIN COMP_NONCOMP_STORE_ATTR ON CAL_PRCTR = prctr
+-- =====================================================================
+Joined_Employee_Discount_Store_Attributes AS (
+  SELECT
+    ed.MANDT,
+    ed.CAL_PRCTR                AS prctr,
+    ed.BUSINESSDAYDATE,
+    ed.zzweek,
+    ed.zryear,
+    ed.zrperiod,
+    ed.zryrp,
+    ed.zrwenddate,
+    ed.zrwstrtdate,
+    ed.CAL_WEEK_NUMBER,
+    ed.EMP_REDUCTIONAMOUNT,
+    sa.emerg_mkt_ind,
+    sa.rep_mkt_code,
+    sa.rep_mkt_desc,
+    sa.division_code,
+    sa.division_desc,
+    sa.region_code,
+    sa.region_desc,
+    sa.district_code,
+    sa.district_desc,
+    sa.city,
+    sa.state,
+    ed.CAL_COMP_FLAG,
+    ed.rx_comp_wk,
+    ed.fs_comp_wk,
+    sa.strnum,
+    ed.CAL_WEEK_ENDING_DATE,
+    ed.fs_open_dat,
+    ed.rx_open_dat,
+    ed.RX_UPD_TIMESTAMP,
+    ed.FS_UPD_TIMESTAMP,
+    ed.SCRIPTS_UPD_TIMESTAMP,
+    ed.ZZ_UPD_TIMESTAMP,
+    ed.TRANSCURRENCY,
+    sa.area_code,
+    sa.area_desc,
+    sa.rx_division_code,
+    sa.rx_area_code,
+    sa.rx_region_code,
+    sa.rx_district_code
+  FROM EMPLOYEE_DISCOUNT ed
+  LEFT JOIN COMP_NONCOMP_STORE_ATTR sa
+    ON ed.CAL_PRCTR = sa.prctr
+),
+
+-- =====================================================================
+-- CTE 42: Combined_Flash_And_Employee_Discount
+-- Logic: Unions sales rows (EMP_REDUCTIONAMOUNT nulled) with employee-
+--        discount rows (all sales/script/CVD measures nulled).
+-- Source: CALCULATIONS, Joined_Employee_Discount_Store_Attributes
+-- =====================================================================
+Combined_Flash_And_Employee_Discount AS (
+  -- Branch 1: Sales rows
+  SELECT
+    RETAILSTOREID,
+    CAL_WEEK_ENDING_DATE,
+    fs_comp_wk,
+    rx_comp_wk,
+    emerg_mkt_ind,
+    rep_mkt_code,
+    rep_mkt_desc,
+    CAL_COMP_FLAG,
+    division_code,
+    division_desc,
+    FS_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAL_FS_UNITS,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_SCRIPTS_90AS3,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    MANDT,
+    prctr,
+    BUSINESSDAYDATE,
+    zzweek,
+    zryear,
+    zrperiod,
+    zryrp,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    zrwenddate,
+    zrwstrtdate,
+    CAL_WEEK_NUMBER,
+    city,
+    state,
+    CAST(NULL AS NUMERIC)   AS EMP_REDUCTIONAMOUNT,
+    fs_open_dat,
+    rx_open_dat,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    area_code,
+    area_desc,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+  FROM CALCULATIONS
+
+  UNION ALL
+
+  -- Branch 2: Employee-discount rows
+  SELECT
+    strnum                  AS RETAILSTOREID,
+    CAL_WEEK_ENDING_DATE,
+    fs_comp_wk,
+    rx_comp_wk,
+    emerg_mkt_ind,
+    rep_mkt_code,
+    rep_mkt_desc,
+    CAL_COMP_FLAG,
+    division_code,
+    division_desc,
+    CAST(NULL AS NUMERIC)   AS FS_SALESAMOUNT,
+    CAST(NULL AS NUMERIC)   AS REDUCTIONAMOUNT,
+    CAST(NULL AS NUMERIC)   AS RX_SALESAMOUNT,
+    CAST(NULL AS INT64)     AS CAL_FS_UNITS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_GE84_RE,
+    CAST(NULL AS INT64)     AS CAL_SCRIPTS_90AS3,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_NS,
+    CAST(NULL AS INT64)     AS CAL_RX_CNT_RE,
+    MANDT,
+    prctr,
+    BUSINESSDAYDATE,
+    zzweek,
+    zryear,
+    zrperiod,
+    zryrp,
+    region_code,
+    region_desc,
+    district_code,
+    district_desc,
+    zrwenddate,
+    zrwstrtdate,
+    CAL_WEEK_NUMBER,
+    city,
+    state,
+    EMP_REDUCTIONAMOUNT,
+    fs_open_dat,
+    rx_open_dat,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    area_code,
+    area_desc,
+    CAST(NULL AS NUMERIC)   AS CVD_AMOUNT,
+    CAST(NULL AS INT64)     AS CAL_CVD_UNITS,
+    rx_division_code,
+    rx_area_code,
+    rx_region_code,
+    rx_district_code
+  FROM Joined_Employee_Discount_Store_Attributes
+),
+
+-- =====================================================================
+-- CTE 43: PROFIT_CENTER_TEXT
+-- Logic: Projects profit-centre long text from CEPCT master.
+-- Source: edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct
+-- =====================================================================
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    mandt,
+    prctr,
+    ltext                   AS profit_center_text
+  FROM `edp-qa-finstorage.edp_saps4_shared_cnsv.v_cepct`
+),
+
+-- =====================================================================
+-- CTE 44: Join_5
+-- Logic: Left-joins the unioned flash+employee-discount data to
+--        PROFIT_CENTER_TEXT on prctr to attach the profit-centre
+--        description.
+-- Source: Combined_Flash_And_Employee_Discount, PROFIT_CENTER_TEXT
+-- Join: LEFT JOIN PROFIT_CENTER_TEXT ON prctr = prctr
+-- =====================================================================
+Join_5 AS (
+  SELECT
+    u.MANDT,
+    u.RETAILSTOREID,
+    u.prctr,
+    u.BUSINESSDAYDATE,
+    u.zzweek,
+    u.zryear,
+    u.zrperiod,
+    u.zryrp,
+    u.CAL_WEEK_ENDING_DATE,
+    u.fs_comp_wk,
+    u.rx_comp_wk,
+    u.emerg_mkt_ind,
+    u.rep_mkt_code,
+    u.rep_mkt_desc,
+    u.CAL_COMP_FLAG,
+    u.division_code,
+    u.division_desc,
+    u.region_code,
+    u.region_desc,
+    u.district_code,
+    u.district_desc,
+    u.zrwenddate,
+    u.zrwstrtdate,
+    u.CAL_WEEK_NUMBER,
+    u.city,
+    u.state,
+    u.FS_SALESAMOUNT,
+    u.REDUCTIONAMOUNT,
+    u.RX_SALESAMOUNT,
+    u.CAL_FS_UNITS,
+    u.CAL_RX_CNT_GE84_NS,
+    u.CAL_RX_CNT_GE84_RE,
+    u.CAL_SCRIPTS_90AS3,
+    u.CAL_RX_CNT_NS,
+    u.CAL_RX_CNT_RE,
+    u.EMP_REDUCTIONAMOUNT,
+    pct.profit_center_text,
+    u.fs_open_dat,
+    u.rx_open_dat,
+    u.RX_UPD_TIMESTAMP,
+    u.FS_UPD_TIMESTAMP,
+    u.SCRIPTS_UPD_TIMESTAMP,
+    u.ZZ_UPD_TIMESTAMP,
+    u.TRANSCURRENCY,
+    u.area_code,
+    u.area_desc,
+    u.CVD_AMOUNT,
+    u.CAL_CVD_UNITS,
+    u.rx_division_code,
+    u.rx_area_code,
+    u.rx_region_code,
+    u.rx_district_code
+  FROM Combined_Flash_And_Employee_Discount u
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON u.prctr = pct.prctr
+)
+
+-- =====================================================================
+-- FINAL SELECT
+-- Logic: Final aggregated output matching CV_COMP_FIN_FLASH_STATIC
+--        logical model (CV_COMP_FIN_FLASH output + SNAPSHOT_TIMESTAMP
+--        and CREATED_BY from the procedure INSERT, dropped as audit-only).
+--        Columns mapped to BQ names per Columns_Mapping_v3 where available.
+-- Source: Join_5
+-- Aggregation: SUM for amounts/units; MAX for timestamps
+-- Group By: all 38 non-measure logical-model attributes
+-- =====================================================================
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  prctr,
+  BUSINESSDAYDATE,
+  zzweek,
+  zryear,
+  zrperiod,
+  zryrp,
+  CAL_WEEK_ENDING_DATE,
+  fs_comp_wk,
+  rx_comp_wk,
+  emerg_mkt_ind,
+  rep_mkt_code,
+  rep_mkt_desc,
+  CAL_COMP_FLAG,
+  division_code,
+  division_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  zrwenddate,
+  zrwstrtdate,
+  CAL_WEEK_NUMBER,
+  city,
+  state,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  ZZ_UPD_TIMESTAMP,
+  TRANSCURRENCY,
+  area_code,
+  area_desc,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code,
+  SUM(FS_SALESAMOUNT)        AS FS_SALESAMOUNT,
+  SUM(REDUCTIONAMOUNT)       AS REDUCTIONAMOUNT,
+  SUM(RX_SALESAMOUNT)        AS RX_SALESAMOUNT,
+  SUM(CAL_FS_UNITS)          AS CAL_FS_UNITS,
+  SUM(CAL_RX_CNT_GE84_NS)    AS CAL_RX_CNT_GE84_NS,
+  SUM(CAL_RX_CNT_GE84_RE)    AS CAL_RX_CNT_GE84_RE,
+  SUM(CAL_SCRIPTS_90AS3)     AS CAL_SCRIPTS_90AS3,
+  SUM(CAL_RX_CNT_NS)         AS CAL_RX_CNT_NS,
+  SUM(CAL_RX_CNT_RE)         AS CAL_RX_CNT_RE,
+  SUM(EMP_REDUCTIONAMOUNT)   AS EMP_REDUCTIONAMOUNT,
+  MAX(RX_UPD_TIMESTAMP)      AS RX_UPD_TIMESTAMP,
+  MAX(FS_UPD_TIMESTAMP)      AS FS_UPD_TIMESTAMP,
+  MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+  SUM(CVD_AMOUNT)            AS CVD_AMOUNT,
+  SUM(CAL_CVD_UNITS)         AS CAL_CVD_UNITS
+FROM Join_5
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  prctr,
+  BUSINESSDAYDATE,
+  zzweek,
+  zryear,
+  zrperiod,
+  zryrp,
+  CAL_WEEK_ENDING_DATE,
+  fs_comp_wk,
+  rx_comp_wk,
+  emerg_mkt_ind,
+  rep_mkt_code,
+  rep_mkt_desc,
+  CAL_COMP_FLAG,
+  division_code,
+  division_desc,
+  region_code,
+  region_desc,
+  district_code,
+  district_desc,
+  zrwenddate,
+  zrwstrtdate,
+  CAL_WEEK_NUMBER,
+  city,
+  state,
+  profit_center_text,
+  fs_open_dat,
+  rx_open_dat,
+  ZZ_UPD_TIMESTAMP,
+  TRANSCURRENCY,
+  area_code,
+  area_desc,
+  rx_division_code,
+  rx_area_code,
+  rx_region_code,
+  rx_district_code;
