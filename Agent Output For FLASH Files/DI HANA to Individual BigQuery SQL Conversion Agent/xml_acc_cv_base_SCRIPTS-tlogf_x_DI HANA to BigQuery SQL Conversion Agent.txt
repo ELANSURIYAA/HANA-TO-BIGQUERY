@@ -1,0 +1,122 @@
+SOURCE_ARTIFACT:
+CV_BASE_TLOGF_X
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_TLOGF_X
+- Source table: `SAPABAP1./POSDW/TLOGF_X`
+- Projection node: `Projection_1`
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from `SAPABAP1./POSDW/TLOGF_X` through `Projection_1` to final output:
+  - `MANDT` -> `MANDT`
+  - `RETAILSTOREID` -> `RETAILSTOREID`
+  - `BUSINESSDAYDATE` -> `BUSINESSDAYDATE`
+  - `RECORDQUALIFIER` -> `RECORDQUALIFIER`
+  - `WORKSTATIONID` -> `WORKSTATIONID`
+  - `ARCHIVED` -> `ARCHIVED`
+  - `ZZ_UPD_TIMESTAMP` -> `ZZ_UPD_TIMESTAMP`
+  - `ZZ_CUSTTYPE` -> `ZZ_CUSTTYPE`
+  - `ZZ_RX_CNT_NS` -> `ZZ_RX_CNT_NS`
+  - `ZZ_RX_CNT_REFILL` -> `ZZ_RX_CNT_REFILL`
+  - `ZZ_RX_CNT_GE84_NS` -> `ZZ_RX_CNT_GE84_NS`
+  - `ZZ_RX_CNT_GE84_RE` -> `ZZ_RX_CNT_GE84_RE`
+  - `ZZ_RX_MCRX_GE84_NS` -> `ZZ_RX_MCRX_GE84_NS`
+  - `ZZ_RX_MCRX_GE84_RE` -> `ZZ_RX_MCRX_GE84_RE`
+- Filters explicitly defined in the projection:
+  - `RECORDQUALIFIER` include single value `25`
+  - `WORKSTATIONID` exclude single value `0000000000`
+  - `ZZ_UPD_TIMESTAMP` exclude single value `0`
+- No calculated columns identified
+- No joins identified
+- No measures identified
+- No parameters or placeholders identified
+
+SOURCE_LOGIC:
+- The source artifact is a SAP HANA Calculation View XML.
+- Root element attributes:
+  - `dataCategory="DIMENSION"`
+  - `outputViewType="Projection"`
+- Because the root XML specifies `dataCategory="DIMENSION"` and `outputViewType="Projection"`, the final output is row-level output and does NOT require GROUP BY and aggregation.
+- The logic consists of a single projection node over base table `SAPABAP1./POSDW/TLOGF_X`.
+- The projection passes through 14 attributes unchanged from source to output.
+- The projection applies three filters:
+  - keep only rows where `RECORDQUALIFIER = 25`
+  - exclude rows where `WORKSTATIONID = '0000000000'`
+  - exclude rows where `ZZ_UPD_TIMESTAMP = 0`
+- There are no joins, unions, aggregations, calculated attributes, input parameters, variables, placeholders, or procedural steps explicitly present in the XML.
+- The logical model output contains exactly 14 attributes, and no measures.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_TLOGF_X AS (
+  SELECT
+    `MANDT`,
+    `RETAILSTOREID`,
+    `BUSINESSDAYDATE`,
+    `RECORDQUALIFIER`,
+    `WORKSTATIONID`,
+    `ARCHIVED`,
+    `ZZ_UPD_TIMESTAMP`,
+    `ZZ_CUSTTYPE`,
+    `ZZ_RX_CNT_NS`,
+    `ZZ_RX_CNT_REFILL`,
+    `ZZ_RX_CNT_GE84_NS`,
+    `ZZ_RX_CNT_GE84_RE`,
+    `ZZ_RX_MCRX_GE84_NS`,
+    `ZZ_RX_MCRX_GE84_RE`
+  FROM `PROJECT.DATASET./POSDW/TLOGF_X`
+  WHERE `RECORDQUALIFIER` = 25
+    AND `WORKSTATIONID` != '0000000000'
+    AND `ZZ_UPD_TIMESTAMP` != 0
+)
+
+SELECT
+  `MANDT`,
+  `RETAILSTOREID`,
+  `BUSINESSDAYDATE`,
+  `RECORDQUALIFIER`,
+  `WORKSTATIONID`,
+  `ARCHIVED`,
+  `ZZ_UPD_TIMESTAMP`,
+  `ZZ_CUSTTYPE`,
+  `ZZ_RX_CNT_NS`,
+  `ZZ_RX_CNT_REFILL`,
+  `ZZ_RX_CNT_GE84_NS`,
+  `ZZ_RX_CNT_GE84_RE`,
+  `ZZ_RX_MCRX_GE84_NS`,
+  `ZZ_RX_MCRX_GE84_RE`
+FROM Filtered_TLOGF_X
+```
+
+CONVERSION_NOTES:
+- The source is Calculation View XML, so the conversion was derived semantically from XML elements rather than from SQL text.
+- The generic projection node name `Projection_1` was not used as a generated CTE name in the final SQL. A functional intermediate CTE name, `Filtered_TLOGF_X`, was used because the node is a projection with explicit filtering over `/POSDW/TLOGF_X`.
+- No aggregation was added because the XML explicitly defines:
+  - `dataCategory="DIMENSION"`
+  - `outputViewType="Projection"`
+- The final SQL preserves the explicitly defined output structure with exactly 14 output columns, matching the 14 attributes in the logical model.
+- Source schema/object `SAPABAP1./POSDW/TLOGF_X` was converted to a BigQuery placeholder object name `PROJECT.DATASET./POSDW/TLOGF_X` because actual BigQuery project/dataset/table mapping was not provided.
+- BigQuery object naming for a physical table containing `/` may require a different target naming convention in the actual migration implementation. The SQL preserves the source object identity as closely as possible using a placeholder path.
+- The filter values were preserved as written:
+  - `25` kept numeric-style
+  - `'0000000000'` kept string-style
+  - `0` kept numeric-style
+- No casts were introduced because datatype metadata is not provided in the XML and the instructions prohibit unsupported datatype inference.
+- If BigQuery target column datatypes differ from the assumed literal forms used in filters, those comparisons require validation.
+
+ASSUMPTIONS:
+- `RECORDQUALIFIER` is compatible with comparison to numeric literal `25`.
+- `WORKSTATIONID` is string-compatible and should be compared to `'0000000000'`.
+- `ZZ_UPD_TIMESTAMP` is compatible with comparison to numeric literal `0`.
+- The physical BigQuery mapping for source table `SAPABAP1./POSDW/TLOGF_X` will be supplied separately.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and physical table name for source object `SAPABAP1./POSDW/TLOGF_X`.
+- BigQuery-compliant physical naming for a source object whose SAP name contains `/`.
+- Source datatypes are not provided in the XML, so datatype compatibility of filter literals requires validation.
+
+CONFIDENCE:
+Medium

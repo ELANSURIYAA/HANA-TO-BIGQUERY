@@ -1,0 +1,115 @@
+SOURCE_ARTIFACT:
+CV_BASE_MD_RCALWEEK_S4
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- SAP HANA Calculation View: CV_BASE_MD_RCALWEEK_S4
+- Source base table: SAP_S4.ZTFIGL_RCALWEEK
+- Projection node: Projection_1
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- RCLNT -> RCLNT
+  - Filter on projection node: IN ('120', '200') as values shown in XML
+- ZZWEEK -> ZZWEEK
+- ZCALYRP -> ZCALYRP
+- ZRYEAR -> ZRYEAR
+- ZRPERIOD -> ZRPERIOD
+- ZRYRP -> ZRYRP
+- ZRYRQTR -> ZRYRQTR
+- ZRWSTRTDATE -> ZRWSTRTDATE
+- ZRWENDDATE -> ZRWENDDATE
+
+Final logical model output attributes:
+1. RCLNT
+2. ZZWEEK
+3. ZCALYRP
+4. ZRYEAR
+5. ZRPERIOD
+6. ZRYRP
+7. ZRYRQTR
+8. ZRWSTRTDATE
+9. ZRWENDDATE
+
+Calculated columns:
+- None defined
+
+Measures:
+- None defined
+
+Parameters / placeholders / variables:
+- None defined in the provided XML
+
+SOURCE_LOGIC:
+The artifact is a SAP HANA Calculation View XML. The root element indicates:
+- dataCategory="DIMENSION"
+- outputViewType="Projection"
+
+Because the view is a DIMENSION with outputViewType="Projection", the final output is row-level and does not require GROUP BY and aggregation.
+
+Identified logic:
+- Single data source: SAP_S4.ZTFIGL_RCALWEEK
+- Single projection node: Projection_1
+- No joins
+- No unions
+- No aggregations
+- No calculated attributes
+- No input parameters or placeholders
+- Output consists of 9 explicitly mapped columns from the source table
+- Filter applied in Projection_1:
+  - RCLNT IN ('120', '200') based on the XML list filter values 120 and 200
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_RCALWEEK AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZCALYRP,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    ZRYRQTR,
+    ZRWSTRTDATE,
+    ZRWENDDATE
+  FROM `PROJECT.DATASET.ZTFIGL_RCALWEEK`
+  WHERE RCLNT IN ('120', '200')
+)
+
+SELECT
+  RCLNT,
+  ZZWEEK,
+  ZCALYRP,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  ZRYRQTR,
+  ZRWSTRTDATE,
+  ZRWENDDATE
+FROM Filtered_RCALWEEK;
+```
+
+CONVERSION_NOTES:
+- The source artifact is a Calculation View XML, so the conversion was derived from XML semantics rather than SQL text.
+- The source contains one generic projection node named Projection_1. Per the naming rule, the generated intermediate CTE was given a functional name: Filtered_RCALWEEK.
+- No existing meaningful business-defined CTE names were present that needed preservation.
+- The final output column count is 9, matching the 9 attributes defined in the logical model.
+- The source filter is defined as a list-value filter on RCLNT with operands 120 and 200.
+- The XML does not provide datatype metadata for RCLNT in the supplied artifact. To preserve literal semantics as shown in the source XML and avoid unsupported datatype inference, the filter values were kept as string literals: '120', '200'.
+- No HANA-specific functions required conversion.
+- No aggregation was added because:
+  - dataCategory = DIMENSION
+  - outputViewType = Projection
+- The physical BigQuery source object was represented as `PROJECT.DATASET.ZTFIGL_RCALWEEK` because no BigQuery project/dataset mapping was provided.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.ZTFIGL_RCALWEEK` is a placeholder for the actual BigQuery table mapped from SAP_S4.ZTFIGL_RCALWEEK.
+- RCLNT is string-compatible in the target BigQuery table, because the XML provides filter operand values but does not provide datatype metadata.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset name for source table SAP_S4.ZTFIGL_RCALWEEK.
+- Datatype of RCLNT is not provided in the XML, so validation is required to confirm whether the filter values should remain as strings or be represented differently in the physical target schema.
+
+CONFIDENCE:
+Medium

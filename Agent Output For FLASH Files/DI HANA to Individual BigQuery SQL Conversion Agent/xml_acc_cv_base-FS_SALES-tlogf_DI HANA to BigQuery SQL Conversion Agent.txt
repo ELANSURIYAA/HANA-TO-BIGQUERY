@@ -1,0 +1,152 @@
+SOURCE_ARTIFACT:
+CV_BASE_TLOGF
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- SAP HANA Calculation View: CV_BASE_TLOGF
+- Source table: SAPABAP1./POSDW/TLOGF
+- Data source alias: _POSDW_TLOGF
+- Projection node: Projection_1
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from SAPABAP1./POSDW/TLOGF through Projection_1:
+  - MANDT -> MANDT
+  - RETAILSTOREID -> RETAILSTOREID
+  - BUSINESSDAYDATE -> BUSINESSDAYDATE
+  - RECORDQUALIFIER -> RECORDQUALIFIER
+  - TRANSTYPECODE -> TRANSTYPECODE
+  - WORKSTATIONID -> WORKSTATIONID
+  - SALESAMOUNT -> SALESAMOUNT
+  - REDUCTIONAMOUNT -> REDUCTIONAMOUNT
+  - ARCHIVED -> ARCHIVED
+  - RETAILTYPECODE -> RETAILTYPECODE
+  - ZZ_UPD_TIMESTAMP -> ZZ_UPD_TIMESTAMP
+  - DISCTYPECODE -> DISCTYPECODE
+  - TRANSCURRENCY -> TRANSCURRENCY
+- Projection filters explicitly defined in XML:
+  - RECORDQUALIFIER included IN ('5','6') or datatype-equivalent values 5, 6
+  - TRANSTYPECODE excluded IN ('1107','1197','1020') or datatype-equivalent values
+  - WORKSTATIONID excluded = '0000000000'
+  - ARCHIVED included = ''
+  - ZZ_UPD_TIMESTAMP excluded = '0'
+- Logical model output attributes:
+  - MANDT
+  - RETAILSTOREID
+  - BUSINESSDAYDATE
+  - RECORDQUALIFIER
+  - TRANSTYPECODE
+  - WORKSTATIONID
+  - ARCHIVED
+  - RETAILTYPECODE
+  - ZZ_UPD_TIMESTAMP
+  - DISCTYPECODE
+  - TRANSCURRENCY
+- Logical model base measures:
+  - SALESAMOUNT with aggregationType="sum"
+  - REDUCTIONAMOUNT with aggregationType="sum"
+- Calculated attributes: none
+- Calculated measures: none
+- Parameters/placeholders/variables: none explicitly defined in the XML
+
+SOURCE_LOGIC:
+- The artifact is a SAP HANA Calculation View XML with a single Projection node over one base table.
+- Root element values:
+  - dataCategory="CUBE"
+  - outputViewType="Aggregation"
+- Because the view is a CUBE with Aggregation output, the final result requires GROUP BY on all non-measure output columns and aggregation of measure columns using SUM().
+- Source data is read from SAPABAP1./POSDW/TLOGF.
+- Projection_1 passes through 13 columns from the source table with no calculated columns and no joins.
+- Filters applied in Projection_1:
+  - RECORDQUALIFIER must be in values 5 and 6.
+  - TRANSTYPECODE must not be in values 1107, 1197, 1020.
+  - WORKSTATIONID must not equal 0000000000.
+  - ARCHIVED must equal empty string.
+  - ZZ_UPD_TIMESTAMP must not equal 0.
+- Final output structure from the logical model contains 11 non-measure attributes and 2 measures.
+- There are no joins, unions, parameters, placeholders, or procedural steps in the provided artifact.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_TLOGF AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    RECORDQUALIFIER,
+    TRANSTYPECODE,
+    WORKSTATIONID,
+    SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    ARCHIVED,
+    RETAILTYPECODE,
+    ZZ_UPD_TIMESTAMP,
+    DISCTYPECODE,
+    TRANSCURRENCY
+  FROM `PROJECT.DATASET.TABLE`
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+)
+
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  RECORDQUALIFIER,
+  TRANSTYPECODE,
+  WORKSTATIONID,
+  ARCHIVED,
+  RETAILTYPECODE,
+  ZZ_UPD_TIMESTAMP,
+  DISCTYPECODE,
+  TRANSCURRENCY,
+  SUM(SALESAMOUNT) AS SALESAMOUNT,
+  SUM(REDUCTIONAMOUNT) AS REDUCTIONAMOUNT
+FROM Filtered_TLOGF
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  RECORDQUALIFIER,
+  TRANSTYPECODE,
+  WORKSTATIONID,
+  ARCHIVED,
+  RETAILTYPECODE,
+  ZZ_UPD_TIMESTAMP,
+  DISCTYPECODE,
+  TRANSCURRENCY
+```
+
+CONVERSION_NOTES:
+- The source artifact is Calculation View XML, so the conversion was derived from XML semantics rather than SQL text.
+- The generic intermediate node name Projection_1 was renamed to Filtered_TLOGF because the node is a projection over /POSDW/TLOGF with explicit row filters. This is an allowed rename of a generic projection CTE.
+- The source table SAPABAP1./POSDW/TLOGF was mapped to the placeholder BigQuery object `PROJECT.DATASET.TABLE` because no actual BigQuery project/dataset/table mapping was provided.
+- The final SQL includes explicit GROUP BY and SUM aggregation because the XML root specifies:
+  - dataCategory="CUBE"
+  - outputViewType="Aggregation"
+- Output column count validation:
+  - Attributes in logical model: 11
+  - Measures in logical model: 2
+  - Final SELECT columns: 13
+  - Counts match.
+- No calculated columns, joins, unions, placeholders, parameters, restricted measures, or calculated measures were present in the provided XML.
+- Filter literal datatypes are not explicitly defined in the XML. To avoid inventing datatypes or forcing casts, the filter values were preserved as string literals exactly as expressed in the XML value attributes.
+- If source columns such as RECORDQUALIFIER, TRANSTYPECODE, or ZZ_UPD_TIMESTAMP are numeric in BigQuery, the literals may need datatype validation. Per instruction, no CAST or SAFE_CAST was introduced.
+- BigQuery Standard SQL uses `<>` for inequality; this preserves the intended exclusion filters.
+- The final SQL exposes only the logical model output attributes plus measures, not any extra intermediate columns.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.TABLE` is the BigQuery mapping placeholder for SAPABAP1./POSDW/TLOGF.
+- Filter literals were preserved as strings because the XML does not provide source datatypes.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table name corresponding to SAPABAP1./POSDW/TLOGF.
+- Source datatypes for RECORDQUALIFIER, TRANSTYPECODE, WORKSTATIONID, ARCHIVED, and ZZ_UPD_TIMESTAMP are not provided in the XML, so literal datatype compatibility in BigQuery requires validation.
+- Quoted identifier handling for the original SAP source object name /POSDW/TLOGF is unresolved at the physical mapping level because the target BigQuery object name was not supplied.
+
+CONFIDENCE:
+Medium

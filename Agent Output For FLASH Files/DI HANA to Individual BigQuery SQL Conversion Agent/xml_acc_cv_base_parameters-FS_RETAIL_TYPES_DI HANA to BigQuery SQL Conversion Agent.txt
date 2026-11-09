@@ -1,0 +1,77 @@
+SOURCE_ARTIFACT:
+CV_BASE_PARAMETERS
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_PARAMETERS
+- Source table: SAPABAP1.ZTFIRP_FLASH_PRM
+- Projection node: Projection_1
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Output column MANDT <- source column ZTFIRP_FLASH_PRM.MANDT
+- Output column PARAM_NAME <- source column ZTFIRP_FLASH_PRM.PARAM_NAME
+- Output column LOW_CHAR <- source column ZTFIRP_FLASH_PRM.PARAM_VALUE_LOW
+- Output column HIGH_CHAR <- source column ZTFIRP_FLASH_PRM.PARAM_VALUE_HIGH
+- No calculated columns defined
+- No measures defined
+- No filters defined
+- No joins defined
+- No parameters or placeholders defined in the provided XML
+
+SOURCE_LOGIC:
+The artifact is a SAP HANA Calculation View XML with root element Calculation:scenario. The root attributes specify dataCategory="DIMENSION" and outputViewType="Projection". Therefore, this is a row-level projection view and does not require GROUP BY and aggregation in the final output.
+
+The logic explicitly present in the XML is:
+- One source data object: SAPABAP1.ZTFIRP_FLASH_PRM
+- One projection node: Projection_1
+- The projection exposes four output attributes:
+  - MANDT
+  - PARAM_NAME
+  - LOW_CHAR
+  - HIGH_CHAR
+- Column mappings in the projection are:
+  - MANDT from MANDT
+  - PARAM_NAME from PARAM_NAME
+  - LOW_CHAR from PARAM_VALUE_LOW
+  - HIGH_CHAR from PARAM_VALUE_HIGH
+- The logical model output is exactly these four attributes
+- No filters, joins, unions, aggregations, calculated attributes, calculated measures, variables, or placeholders are defined in the provided artifact
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Projection_1 AS (
+  SELECT
+    MANDT AS MANDT,
+    PARAM_NAME AS PARAM_NAME,
+    PARAM_VALUE_LOW AS LOW_CHAR,
+    PARAM_VALUE_HIGH AS HIGH_CHAR
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`
+)
+SELECT
+  MANDT,
+  PARAM_NAME,
+  LOW_CHAR,
+  HIGH_CHAR
+FROM Projection_1;
+```
+
+CONVERSION_NOTES:
+- The source artifact is a Calculation View XML, so the conversion was derived from XML semantics rather than from HANA SQL text.
+- dataCategory="DIMENSION" and outputViewType="Projection" indicate row-level output. No aggregation was added.
+- Only one generic intermediate node exists: Projection_1. Although generic projection names may be renamed when a reliable functional name can be established, the XML does not provide stronger business semantics beyond a direct projection from the parameters table. To avoid inventing meaning, the original node name Projection_1 was preserved.
+- The final SQL uses explicit column projection rather than SELECT * because the Calculation View explicitly defines the output columns and mappings.
+- The BigQuery table reference uses the placeholder `PROJECT.DATASET.ZTFIRP_FLASH_PRM` because no target BigQuery project or dataset mapping was provided.
+- No datatype conversions were introduced because the XML does not provide sufficient datatype detail and no conversion is required by the explicit logic shown.
+- No parameters, placeholders, filters, joins, calculations, or external dependencies are present in the provided XML beyond the base table reference.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.ZTFIRP_FLASH_PRM` is a placeholder for the actual BigQuery table corresponding to SAPABAP1.ZTFIRP_FLASH_PRM.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset mapping for source table SAPABAP1.ZTFIRP_FLASH_PRM is not provided.
+- Source column datatypes are not specified in the provided XML.
+
+CONFIDENCE:
+High

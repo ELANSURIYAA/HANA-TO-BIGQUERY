@@ -1,0 +1,157 @@
+SOURCE_ARTIFACT:
+CV_BASE_TLOGF_COVID
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Source table: `SAPABAP1./POSDW/TLOGF`
+- Calculation View: `CV_BASE_TLOGF_COVID`
+- Projection node: `Projection_1`
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from `SAPABAP1./POSDW/TLOGF` through `Projection_1`:
+  - `MANDT` -> `MANDT`
+  - `RETAILSTOREID` -> `RETAILSTOREID`
+  - `BUSINESSDAYDATE` -> `BUSINESSDAYDATE`
+  - `RECORDQUALIFIER` -> `RECORDQUALIFIER`
+  - `TRANSTYPECODE` -> `TRANSTYPECODE`
+  - `WORKSTATIONID` -> `WORKSTATIONID`
+  - `SALESAMOUNT` -> `SALESAMOUNT`
+  - `ARCHIVED` -> `ARCHIVED`
+  - `RETAILTYPECODE` -> `RETAILTYPECODE`
+  - `ZZ_UPD_TIMESTAMP` -> `ZZ_UPD_TIMESTAMP`
+  - `DISCTYPECODE` -> `DISCTYPECODE`
+  - `TRANSCURRENCY` -> `TRANSCURRENCY`
+  - `ITEMID` -> `ITEMID`
+- Output attributes defined in logical model:
+  - `MANDT`
+  - `RETAILSTOREID`
+  - `BUSINESSDAYDATE`
+  - `RECORDQUALIFIER`
+  - `TRANSTYPECODE`
+  - `WORKSTATIONID`
+  - `ARCHIVED`
+  - `RETAILTYPECODE`
+  - `ZZ_UPD_TIMESTAMP`
+  - `DISCTYPECODE`
+  - `TRANSCURRENCY`
+- Output measure defined in logical model:
+  - `SALESAMOUNT` with `aggregationType="sum"`
+- Filters defined in projection:
+  - `RECORDQUALIFIER` included in (`5`, `6`)
+  - `TRANSTYPECODE` excluded from (`1107`, `1197`, `1020`)
+  - `WORKSTATIONID` not equal to `0000000000`
+  - `ARCHIVED` equal to empty string `''`
+  - `ZZ_UPD_TIMESTAMP` not equal to `0`
+  - `ITEMID` equal to `A01-433556`
+- `ITEMID` is used as a filter only and is not part of the logical model output.
+- No calculated columns, joins, unions, parameters, variables, or placeholders are explicitly defined in the provided XML.
+
+SOURCE_LOGIC:
+The source artifact is a SAP HANA Calculation View XML with root element `Calculation:scenario`. The root attributes specify:
+- `dataCategory="CUBE"`
+- `outputViewType="Aggregation"`
+
+Therefore, the final output requires GROUP BY and aggregation.
+
+The view reads from a single base table `SAPABAP1./POSDW/TLOGF` through one projection node. The projection passes through mapped columns and applies row filters:
+- include only `RECORDQUALIFIER` values `5` and `6`
+- exclude `TRANSTYPECODE` values `1107`, `1197`, and `1020`
+- exclude `WORKSTATIONID = '0000000000'`
+- include only `ARCHIVED = ''`
+- exclude `ZZ_UPD_TIMESTAMP = '0'`
+- include only `ITEMID = 'A01-433556'`
+
+There are no joins, no calculated attributes, no calculated measures, no unions, and no parameters/placeholders in the provided XML.
+
+The logical model exposes 11 non-measure output attributes and 1 measure:
+- Non-measure output attributes: `MANDT`, `RETAILSTOREID`, `BUSINESSDAYDATE`, `RECORDQUALIFIER`, `TRANSTYPECODE`, `WORKSTATIONID`, `ARCHIVED`, `RETAILTYPECODE`, `ZZ_UPD_TIMESTAMP`, `DISCTYPECODE`, `TRANSCURRENCY`
+- Measure: `SALESAMOUNT` aggregated by `SUM`
+
+Accordingly, the final BigQuery SQL must group by the 11 non-measure output columns and aggregate `SALESAMOUNT` with `SUM()`.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_TLOGF_COVID AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    RECORDQUALIFIER,
+    TRANSTYPECODE,
+    WORKSTATIONID,
+    SALESAMOUNT,
+    ARCHIVED,
+    RETAILTYPECODE,
+    ZZ_UPD_TIMESTAMP,
+    DISCTYPECODE,
+    TRANSCURRENCY
+  FROM `PROJECT.DATASET.TABLE`
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID != '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP != '0'
+    AND ITEMID = 'A01-433556'
+)
+
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  RECORDQUALIFIER,
+  TRANSTYPECODE,
+  WORKSTATIONID,
+  ARCHIVED,
+  RETAILTYPECODE,
+  ZZ_UPD_TIMESTAMP,
+  DISCTYPECODE,
+  TRANSCURRENCY,
+  SUM(SALESAMOUNT) AS SALESAMOUNT
+FROM Filtered_TLOGF_COVID
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  RECORDQUALIFIER,
+  TRANSTYPECODE,
+  WORKSTATIONID,
+  ARCHIVED,
+  RETAILTYPECODE,
+  ZZ_UPD_TIMESTAMP,
+  DISCTYPECODE,
+  TRANSCURRENCY
+```
+
+CONVERSION_NOTES:
+- The artifact was interpreted semantically as a Calculation View XML, not as ordinary SQL.
+- The source has one generic projection node `Projection_1`. Per the naming rule, this generic intermediate operation name was replaced in the generated SQL with the functional CTE name `Filtered_TLOGF_COVID`, because its purpose is reliably established from the XML as a filtered projection of `/POSDW/TLOGF`.
+- The final output preserves the logical model exactly:
+  - 11 output attributes
+  - 1 output measure
+- Because `dataCategory="CUBE"` and `outputViewType="Aggregation"`, the final query uses:
+  - `SUM(SALESAMOUNT)` for the measure
+  - `GROUP BY` on every non-measure output column
+- `ITEMID` is intentionally not projected in the final output because it is not part of the logical model output; it is only used as a filter in the projection.
+- No joins were generated because none are present in the XML.
+- No calculated columns or calculated measures were generated because none are present in the XML.
+- No HANA-specific functions required conversion in this artifact.
+- The BigQuery source object is represented as ``PROJECT.DATASET.TABLE`` because no BigQuery project/dataset/table mapping was provided.
+- Filter literal datatypes are not explicitly provided in the XML. To preserve source value semantics without inventing datatypes, the filter values were kept as quoted literals in the SQL. This requires datatype validation against the actual BigQuery source schema.
+
+ASSUMPTIONS:
+- `SAPABAP1./POSDW/TLOGF` will be mapped to the BigQuery source object ``PROJECT.DATASET.TABLE``.
+- The filtered columns (`RECORDQUALIFIER`, `TRANSTYPECODE`, `WORKSTATIONID`, `ARCHIVED`, `ZZ_UPD_TIMESTAMP`, `ITEMID`) are string-compatible in the target BigQuery table, since the XML does not provide datatypes.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery mapping for source table `SAPABAP1./POSDW/TLOGF` is not provided; ``PROJECT.DATASET.TABLE`` is a placeholder.
+- Source column datatypes are not provided in the XML, so the literal typing of:
+  - `RECORDQUALIFIER IN ('5', '6')`
+  - `TRANSTYPECODE NOT IN ('1107', '1197', '1020')`
+  - `ZZ_UPD_TIMESTAMP != '0'`
+  requires validation against the real schema.
+- Quoted identifier handling for the original HANA table name `/POSDW/TLOGF` in BigQuery is unresolved because the target physical table naming convention is not provided.
+
+CONFIDENCE:
+Medium

@@ -1,0 +1,108 @@
+SOURCE_ARTIFACT:
+CV_BASE_NAVIX
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_NAVIX
+- Source table: SAPABAP1./POSDW/NAVIX
+- Projection node: Projection_1
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Projection_1.MANDT <- _POSDW_NAVIX.MANDT
+- Projection_1.RETAILSTOREID <- _POSDW_NAVIX.RETAILSTOREID
+- Projection_1.BUSINESSDAYDATE <- _POSDW_NAVIX.BUSINESSDAYDATE
+- Projection_1.CURRENCY <- _POSDW_NAVIX.CURRENCY
+
+Logical model output attributes:
+- MANDT
+- RETAILSTOREID
+- BUSINESSDAYDATE
+- CURRENCY
+
+Calculated columns:
+- None explicitly defined
+
+Measures:
+- None
+
+Parameters / variables / placeholders:
+- None explicitly defined
+
+Aliases:
+- Data source alias: _POSDW_NAVIX
+
+SOURCE_LOGIC:
+This artifact is a SAP HANA Calculation View XML with root scenario id CV_BASE_NAVIX.
+
+Root attributes relevant to execution:
+- dataCategory="DIMENSION"
+- outputViewType="Projection"
+
+Because dataCategory is DIMENSION and outputViewType is Projection, the final output is row-level output and does not require GROUP BY and aggregation.
+
+Transformation logic explicitly present in the XML:
+- Single source data source: SAPABAP1./POSDW/NAVIX
+- One projection node: Projection_1
+- Projection_1 selects only four columns from the source table:
+  - MANDT
+  - RETAILSTOREID
+  - BUSINESSDAYDATE
+  - CURRENCY
+- Each output column is a direct 1:1 source-to-target mapping from the source table
+- No filters are defined
+- No joins are defined
+- No calculated attributes are defined
+- No aggregations or measures are defined
+- No unions are defined
+- No parameters, variables, or placeholders are defined
+- Final logical model output contains exactly 4 attributes:
+  - MANDT
+  - RETAILSTOREID
+  - BUSINESSDAYDATE
+  - CURRENCY
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Projected_NAVIX AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CURRENCY
+  FROM `PROJECT.DATASET._POSDW_NAVIX`
+)
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  CURRENCY
+FROM Projected_NAVIX
+```
+
+CONVERSION_NOTES:
+- The source artifact is a Calculation View XML, so it was interpreted semantically rather than as SQL text.
+- The generic intermediate node name Projection_1 was renamed in the BigQuery SQL to Projected_NAVIX because it is a generic projection node and its purpose can be reliably established from the XML: projecting columns from /POSDW/NAVIX.
+- No other names required renaming.
+- The final SQL uses explicit column selection to preserve the defined logical model output and avoid exposing unspecified source columns.
+- No BigQuery aggregation was added because the XML specifies:
+  - dataCategory = DIMENSION
+  - outputViewType = Projection
+- No filters, joins, calculations, parameters, placeholders, or datatype conversions were introduced because none are explicitly present in the source XML.
+- The HANA physical source object is SAPABAP1./POSDW/NAVIX, but an actual BigQuery project.dataset.table mapping is not provided in the artifact. A placeholder table reference was therefore used.
+- Output column count validation:
+  - Logical model attributes: 4
+  - Measures: 0
+  - Final SQL output columns: 4
+  - Counts match.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET._POSDW_NAVIX` is a placeholder for the actual BigQuery table that represents SAPABAP1./POSDW/NAVIX.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and table mapping for SAPABAP1./POSDW/NAVIX is not provided in the source artifact.
+- Source datatypes for MANDT, RETAILSTOREID, BUSINESSDAYDATE, and CURRENCY are not provided in the XML.
+
+CONFIDENCE:
+High

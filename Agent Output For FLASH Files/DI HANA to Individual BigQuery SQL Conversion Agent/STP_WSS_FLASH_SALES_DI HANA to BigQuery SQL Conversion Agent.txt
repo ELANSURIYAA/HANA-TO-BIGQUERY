@@ -1,0 +1,317 @@
+SOURCE_ARTIFACT:
+"CVS_FRIP"."CVS_FRIP.Procedure.FI::STP_WSS_FLASH_SALES"
+
+SOURCE_TYPE:
+HANA SQLScript Procedure
+
+SOURCE_OBJECTS:
+- Source calculation view: `"_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FIN_FLASH"`
+- Target table: `"CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES"`
+- HANA system object used for scalar select: `DUMMY`
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Procedure variables:
+  - `V_CURRENT_DATE` = `TO_DATE(CURRENT_DATE)`
+  - `V_ADJ` = `WEEKDAY(V_CURRENT_DATE)`
+  - `V_WEEK_ENDING_FROM_DATE` = `REPLACE(ADD_DAYS(V_CURRENT_DATE,-8-V_ADJ),'-','')`
+  - `V_WEEK_ENDING_TO_DATE` = `REPLACE(ADD_DAYS(V_CURRENT_DATE,-2-V_ADJ),'-','')`
+  - `V_UPDATE_TIMESTAMP_FROM` = `TO_DECIMAL(REPLACE(TO_CHAR(ADD_DAYS(V_CURRENT_DATE,-9-V_ADJ)),'-','') || '091401')`
+  - `V_UPDATE_TIMESTAMP_TO` = `TO_DECIMAL(REPLACE(TO_CHAR(V_CURRENT_DATE),'-','') || '230000')`
+- Placeholders passed to source calculation view:
+  - `$$IP_WEEK_ENDING_TO$$` => `V_WEEK_ENDING_TO_DATE`
+  - `$$IP_WEEK_ENDING_FROM$$` => `V_WEEK_ENDING_FROM_DATE`
+  - `$$IP_UPD_TIMESTAMP_FROM$$` => `V_UPDATE_TIMESTAMP_FROM`
+  - `$$IP_UPD_TIMESTAMP_TO$$` => `V_UPDATE_TIMESTAMP_TO`
+- Insert target column mappings from source view:
+  - `MANDT` <- `MANDT`
+  - `RETAILSTOREID` <- `RETAILSTOREID`
+  - `PRCTR` <- `PRCTR`
+  - `BUSINESSDAYDATE` <- `BUSINESSDAYDATE`
+  - `ZZWEEK` <- `ZZWEEK`
+  - `ZRYEAR` <- `ZRYEAR`
+  - `ZRPERIOD` <- `ZRPERIOD`
+  - `ZRYRP` <- `ZRYRP`
+  - `CAL_WEEK_ENDING_DATE` <- `CAL_WEEK_ENDING_DATE`
+  - `FS_COMP_WK` <- `FS_COMP_WK`
+  - `RX_COMP_WK` <- `RX_COMP_WK`
+  - `EMERG_MKT_IND` <- `EMERG_MKT_IND`
+  - `REP_MKT_CODE` <- `REP_MKT_CODE`
+  - `REP_MKT_DESC` <- `REP_MKT_DESC`
+  - `CAL_COMP_FLAG` <- `CAL_COMP_FLAG`
+  - `DIVISION_CODE` <- `DIVISION_CODE`
+  - `DIVISION_DESC` <- `DIVISION_DESC`
+  - `REGION_CODE` <- `REGION_CODE`
+  - `REGION_DESC` <- `REGION_DESC`
+  - `DISTRICT_CODE` <- `DISTRICT_CODE`
+  - `DISTRICT_DESC` <- `DISTRICT_DESC`
+  - `RX_DIVISION_CODE` <- `RX_DIVISION_CODE`
+  - `RX_AREA_CODE` <- `RX_AREA_CODE`
+  - `RX_REGION_CODE` <- `RX_REGION_CODE`
+  - `RX_DISTRICT_CODE` <- `RX_DISTRICT_CODE`
+  - `ZRWENDDATE` <- `ZRWENDDATE`
+  - `ZRWSTRTDATE` <- `ZRWSTRTDATE`
+  - `CAL_WEEK_NUMBER` <- `CAL_WEEK_NUMBER`
+  - `CITY` <- `CITY`
+  - `STATE` <- `STATE`
+  - `FS_SALESAMOUNT` <- `FS_SALESAMOUNT`
+  - `REDUCTIONAMOUNT` <- `REDUCTIONAMOUNT`
+  - `RX_SALESAMOUNT` <- `RX_SALESAMOUNT`
+  - `CAL_FS_UNITS` <- `CAL_FS_UNITS`
+  - `CAL_RX_CNT_GE84_NS` <- `CAL_RX_CNT_GE84_NS`
+  - `CAL_RX_CNT_GE84_RE` <- `CAL_RX_CNT_GE84_RE`
+  - `CAL_SCRIPTS_90AS3` <- `CAL_SCRIPTS_90AS3`
+  - `CAL_RX_CNT_NS` <- `CAL_RX_CNT_NS`
+  - `CAL_RX_CNT_RE` <- `CAL_RX_CNT_RE`
+  - `EMP_REDUCTIONAMOUNT` <- `EMP_REDUCTIONAMOUNT`
+  - `PROFIT_CENTER_TEXT` <- `PROFIT_CENTER_TEXT`
+  - `FS_OPEN_DAT` <- `FS_OPEN_DAT`
+  - `RX_OPEN_DAT` <- `RX_OPEN_DAT`
+  - `RX_UPD_TIMESTAMP` <- `RX_UPD_TIMESTAMP`
+  - `FS_UPD_TIMESTAMP` <- `FS_UPD_TIMESTAMP`
+  - `SCRIPTS_UPD_TIMESTAMP` <- `SCRIPTS_UPD_TIMESTAMP`
+  - `ZZ_UPD_TIMESTAMP` <- `ZZ_UPD_TIMESTAMP`
+  - `SNAPSHOT_TIMESTAMP` <- `CURRENT_TIMESTAMP`
+  - `CREATED_BY` <- `SESSION_USER`
+  - `TRANSCURRENCY` <- `TRANSCURRENCY`
+  - `AREA_CODE` <- `AREA_CODE`
+  - `AREA_DESC` <- `AREA_DESC`
+  - `CVD_AMOUNT` <- `CVD_AMOUNT`
+  - `CAL_CVD_UNITS` <- `CAL_CVD_UNITS`
+
+SOURCE_LOGIC:
+- This is a HANA SQLScript stored procedure that performs a weekly snapshot load.
+- Procedural steps identified:
+  1. Declare date and numeric/string variables.
+  2. Compute `V_ADJ` using HANA `WEEKDAY(V_CURRENT_DATE)`, where HANA weekday numbering is Monday=0 through Sunday=6.
+  3. Compute prior-week boundary strings:
+     - `V_WEEK_ENDING_FROM_DATE` = current date minus `(8 + weekday)` days, formatted as `YYYYMMDD`
+     - `V_WEEK_ENDING_TO_DATE` = current date minus `(2 + weekday)` days, formatted as `YYYYMMDD`
+  4. Compute wide update timestamp boundaries as decimal-like `YYYYMMDDHHMMSS` values:
+     - from: prior date minus `(9 + weekday)` days with suffix `091401`
+     - to: current date with suffix `230000`
+  5. Delete all rows from the target table.
+  6. Insert into the target table from calculation view `CV_COMP_FIN_FLASH`, passing the four placeholders above.
+  7. Add audit metadata during insert:
+     - `SNAPSHOT_TIMESTAMP` = current timestamp
+     - `CREATED_BY` = session user
+  8. Return a final log-style `SELECT` with computed date/timestamp variables.
+- No joins, filters, or aggregations are explicitly visible in this artifact outside the external calculation view call.
+- The internal logic of `CV_COMP_FIN_FLASH` is not available in the provided artifact, so its internal filters, joins, calculations, and use of placeholders are unresolved external dependencies.
+- This is not Calculation View XML, so `dataCategory` and `outputViewType` are not applicable.
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+-- BigQuery Standard SQL script
+-- Replace PROJECT.DATASET.TBL_WSS_FLASH_SALES and PROJECT.DATASET.CV_COMP_FIN_FLASH
+-- with the actual BigQuery target/source objects.
+
+DECLARE V_CURRENT_DATE DATE DEFAULT CURRENT_DATE();
+DECLARE V_ADJ INT64;
+DECLARE V_WEEK_ENDING_FROM_DATE STRING;
+DECLARE V_WEEK_ENDING_TO_DATE STRING;
+DECLARE V_UPDATE_TIMESTAMP_FROM NUMERIC;
+DECLARE V_UPDATE_TIMESTAMP_TO NUMERIC;
+
+-- Preserve HANA WEEKDAY semantics: Monday=0 ... Sunday=6
+SET V_ADJ = MOD(EXTRACT(DAYOFWEEK FROM V_CURRENT_DATE) + 5, 7);
+
+SET V_WEEK_ENDING_FROM_DATE = REPLACE(
+  CAST(DATE_SUB(V_CURRENT_DATE, INTERVAL (8 + V_ADJ) DAY) AS STRING),
+  '-',
+  ''
+);
+
+SET V_WEEK_ENDING_TO_DATE = REPLACE(
+  CAST(DATE_SUB(V_CURRENT_DATE, INTERVAL (2 + V_ADJ) DAY) AS STRING),
+  '-',
+  ''
+);
+
+SET V_UPDATE_TIMESTAMP_FROM = CAST(
+  CONCAT(
+    REPLACE(
+      CAST(DATE_SUB(V_CURRENT_DATE, INTERVAL (9 + V_ADJ) DAY) AS STRING),
+      '-',
+      ''
+    ),
+    '091401'
+  ) AS NUMERIC
+);
+
+SET V_UPDATE_TIMESTAMP_TO = CAST(
+  CONCAT(
+    REPLACE(CAST(V_CURRENT_DATE AS STRING), '-', ''),
+    '230000'
+  ) AS NUMERIC
+);
+
+DELETE FROM `PROJECT.DATASET.TBL_WSS_FLASH_SALES`
+WHERE TRUE;
+
+INSERT INTO `PROJECT.DATASET.TBL_WSS_FLASH_SALES` (
+  MANDT,
+  RETAILSTOREID,
+  PRCTR,
+  BUSINESSDAYDATE,
+  ZZWEEK,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  CAL_WEEK_ENDING_DATE,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CAL_COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FS_SALESAMOUNT,
+  REDUCTIONAMOUNT,
+  RX_SALESAMOUNT,
+  CAL_FS_UNITS,
+  CAL_RX_CNT_GE84_NS,
+  CAL_RX_CNT_GE84_RE,
+  CAL_SCRIPTS_90AS3,
+  CAL_RX_CNT_NS,
+  CAL_RX_CNT_RE,
+  EMP_REDUCTIONAMOUNT,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  RX_UPD_TIMESTAMP,
+  FS_UPD_TIMESTAMP,
+  SCRIPTS_UPD_TIMESTAMP,
+  ZZ_UPD_TIMESTAMP,
+  SNAPSHOT_TIMESTAMP,
+  CREATED_BY,
+  TRANSCURRENCY,
+  AREA_CODE,
+  AREA_DESC,
+  CVD_AMOUNT,
+  CAL_CVD_UNITS
+)
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  PRCTR,
+  BUSINESSDAYDATE,
+  ZZWEEK,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  CAL_WEEK_ENDING_DATE,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CAL_COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  FS_SALESAMOUNT,
+  REDUCTIONAMOUNT,
+  RX_SALESAMOUNT,
+  CAL_FS_UNITS,
+  CAL_RX_CNT_GE84_NS,
+  CAL_RX_CNT_GE84_RE,
+  CAL_SCRIPTS_90AS3,
+  CAL_RX_CNT_NS,
+  CAL_RX_CNT_RE,
+  EMP_REDUCTIONAMOUNT,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  RX_UPD_TIMESTAMP,
+  FS_UPD_TIMESTAMP,
+  SCRIPTS_UPD_TIMESTAMP,
+  ZZ_UPD_TIMESTAMP,
+  CURRENT_TIMESTAMP() AS SNAPSHOT_TIMESTAMP,
+  SESSION_USER() AS CREATED_BY,
+  TRANSCURRENCY,
+  AREA_CODE,
+  AREA_DESC,
+  CVD_AMOUNT,
+  CAL_CVD_UNITS
+FROM `PROJECT.DATASET.CV_COMP_FIN_FLASH`;
+-- UNRESOLVED: HANA calculation view placeholders
+--   $$IP_WEEK_ENDING_TO$$   => V_WEEK_ENDING_TO_DATE
+--   $$IP_WEEK_ENDING_FROM$$ => V_WEEK_ENDING_FROM_DATE
+--   $$IP_UPD_TIMESTAMP_FROM$$ => V_UPDATE_TIMESTAMP_FROM
+--   $$IP_UPD_TIMESTAMP_TO$$   => V_UPDATE_TIMESTAMP_TO
+-- The internal use of these parameters inside CV_COMP_FIN_FLASH is not available
+-- in the provided source artifact, so no equivalent BigQuery filter logic can be
+-- safely generated here.
+
+SELECT
+  V_WEEK_ENDING_TO_DATE AS `Week Ending Date`,
+  V_WEEK_ENDING_FROM_DATE AS `Week Starting Date`,
+  V_UPDATE_TIMESTAMP_FROM AS `Update Date From`,
+  V_UPDATE_TIMESTAMP_TO AS `Update Date To`;
+```
+
+CONVERSION_NOTES:
+- Artifact type is a SQLScript procedure, so the BigQuery output is a multi-statement script rather than a single query.
+- `TO_DATE(CURRENT_DATE)` was converted to `CURRENT_DATE()`.
+- HANA `WEEKDAY()` semantics were preserved explicitly:
+  - HANA: Monday=0 ... Sunday=6
+  - BigQuery `EXTRACT(DAYOFWEEK)` returns Sunday=1 ... Saturday=7
+  - Conversion used: `MOD(EXTRACT(DAYOFWEEK FROM V_CURRENT_DATE) + 5, 7)`
+- `ADD_DAYS(date, n)` was converted to `DATE_SUB(... INTERVAL ... DAY)` using positive offsets because the HANA code always subtracts days.
+- HANA `REPLACE(TO_CHAR(date),'-','')` was represented as `REPLACE(CAST(date AS STRING), '-', '')` to preserve `YYYY-MM-DD` to `YYYYMMDD` behavior.
+- HANA string concatenation `||` was converted to `CONCAT(...)`.
+- HANA `TO_DECIMAL(...)` for timestamp-like numeric construction was converted to `CAST(... AS NUMERIC)`.
+- The HANA source calls a calculation view with placeholders. Because the definition of `CV_COMP_FIN_FLASH` is not provided, its internal parameter behavior cannot be reconstructed safely. Therefore:
+  - The source object is represented as a BigQuery table/view reference.
+  - The placeholder mappings are preserved in comments and documented as unresolved.
+  - No inferred `WHERE` clause was added.
+- `SESSION_USER` was mapped to BigQuery `SESSION_USER()`. Exact semantic equivalence should be validated in the execution environment.
+- HANA `DELETE FROM target;` was converted to `DELETE FROM target WHERE TRUE;`, which preserves full-table delete behavior in BigQuery DML syntax.
+- No CTE renaming was needed because no intermediate CTEs were introduced.
+- No aggregation or GROUP BY logic exists in the provided artifact itself.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.TBL_WSS_FLASH_SALES` is the BigQuery mapping for `"CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES"`.
+- `PROJECT.DATASET.CV_COMP_FIN_FLASH` is the BigQuery mapping for `"_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FIN_FLASH"`.
+
+UNRESOLVED_ITEMS:
+- The actual BigQuery project/dataset/table mapping for both source and target objects is not provided.
+- The internal definition of `CV_COMP_FIN_FLASH` is not available, so:
+  - internal filters
+  - joins
+  - calculations
+  - output datatypes
+  - exact placeholder behavior
+  cannot be converted or validated.
+- The HANA placeholder invocation syntax has no direct standalone BigQuery equivalent without knowing how the external calculation view consumes those parameters.
+- Datatype compatibility for the target columns in BigQuery is not provided and must be validated against the actual target schema.
+- Exact semantic equivalence of HANA `SESSION_USER` versus BigQuery `SESSION_USER()` should be validated.
+
+CONFIDENCE:
+Medium

@@ -1,0 +1,968 @@
+SOURCE_ARTIFACT:
+CV_COMP_FIN_FLASH
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_COMP_FIN_FLASH
+- Source Calculation Views:
+  - CV_BASE_FIN_FLASH_SALES_CAR
+  - CV_BASE_MD_RCALWEEK_S4
+  - CV_BASE_MD_COMPFL_S4
+  - CV_BASE_MD_HRRP_NODE_S4
+  - CV_BASE_MD_SRPACT_S4
+  - COMP_NONCOMP_STORE_ATTR$$$$CV_BASE_MD_SRPACT_S4$$
+  - CV_BASE_MD_CEPCT_S4
+- Referenced scalar functions for variable derivation:
+  - CVS_FRIP.Composite.Master::SFN_ACTUALS_COMP_FLAG
+  - CVS_FRIP.Composite.Master::SFN_CURRENT_WEEK_START_DATE
+  - CVS_FRIP.Composite.Master::SFN_CURRENT_WEEK_END_DATE
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Input parameters / variables:
+  - IP_VERSION (NVARCHAR(10), derived by SFN_ACTUALS_COMP_FLAG)
+  - IP_WEEK_ENDING_FROM (NVARCHAR(8), mandatory, derived by SFN_CURRENT_WEEK_START_DATE)
+  - IP_WEEK_ENDING_TO (NVARCHAR(8), mandatory, derived by SFN_CURRENT_WEEK_END_DATE)
+  - IP_UPD_TIMESTAMP_FROM (NVARCHAR, default '19000101000000')
+  - IP_UPD_TIMESTAMP_TO (NVARCHAR, default '99991231125959')
+- Variable mappings to source CV_BASE_FIN_FLASH_SALES_CAR:
+  - IP_UPD_TIMESTAMP_FROM -> target variable IP_UPD_TIMESTAMP_FROM
+  - IP_UPD_TIMESTAMP_TO -> target variable IP_UPD_TIMESTAMP_TO
+- FLASH:
+  - RETAILSTOREID_CAR <- RETAILSTOREID
+  - CAL_WEEK_ENDING_DATE = REPLACE(TO_CHAR(add_days(TO_DATE(BUSINESSDAYDATE),5-replace(weekday(TO_DATE(BUSINESSDAYDATE)),6,-1))),'-','')
+- WEEK:
+  - Left join FLASH to RETAIL_CALENDAR on CAL_WEEK_ENDING_DATE = ZRWENDDATE
+- COMP_FLAG:
+  - Filter COMP_VER = $$IP_VERSION$$
+  - ZZWEEK in downstream join comes from ZWEEK
+- HIERARCHY:
+  - NODEVALUE used as join key to PRCTR
+  - Filter: match(PARNODE,'*CORE_RET*') and HRYVALTO = '99991231'
+- Join_6:
+  - RETAILSTOREID from WEEK.RETAILSTOREID_CAR joined to STORE_ATTR.STRNUM
+- Join_3:
+  - Inner join HIERARCHY.NODEVALUE to Join_6.PRCTR
+- COMP_FLG:
+  - Left join Join_3 to COMP_FLAG on:
+    - PRCTR = PRCTR
+    - ZZWEEK = ZWEEK
+- CALCULATIONS:
+  - CAL_SCRIPTS_90AS3 = CAL_RX_CNT_NS + CAL_RX_CNT_RE + (CAL_RX_CNT_GE84_NS + CAL_RX_CNT_GE84_RE) * 2
+  - CAL_COMP_FLAG = IF(ISNULL(MAX(FS_COMP_WK,RX_COMP_WK)),'0',MAX(FS_COMP_WK,RX_COMP_WK))
+  - CAL_WEEK_NUMBER = RIGHTSTR(ZZWEEK,2)
+- EMPLOYEE_DISCOUNT aggregation:
+  - EMP_REDUCTIONAMOUNT aggregated SUM
+  - RX_UPD_TIMESTAMP aggregated MAX
+  - FS_UPD_TIMESTAMP aggregated MAX
+  - SCRIPTS_UPD_TIMESTAMP aggregated MAX
+  - CAL_PRCTR = CASE(CAL_COMP_FLAG,'1','0000562075','0','0000562076',string(null))
+  - PRCTR_ORG <- PRCTR
+- COMP_NONCOMP_STORE_ATTR:
+  - Filter PRCTR IN ('0000562075','0000562076')
+- Join_4:
+  - Left join EMPLOYEE_DISCOUNT to COMP_NONCOMP_STORE_ATTR on CAL_PRCTR = PRCTR
+  - STRNUM mapped as RETAILSTOREID for employee-discount side of union
+- Union_1:
+  - Branch 1 from CALCULATIONS:
+    - EMP_REDUCTIONAMOUNT = NULL constant
+  - Branch 2 from Join_4:
+    - FS_SALESAMOUNT, REDUCTIONAMOUNT, RX_SALESAMOUNT, CAL_FS_UNITS, CAL_RX_CNT_GE84_NS, CAL_RX_CNT_GE84_RE, CAL_SCRIPTS_90AS3, CAL_RX_CNT_NS, CAL_RX_CNT_RE, CVD_AMOUNT, CAL_CVD_UNITS = NULL constants
+- PROFIT_CENTER_TEXT:
+  - PROFIT_CENTER_TEXT <- LTEXT
+- Final Join_5:
+  - Left join Union_1 to PROFIT_CENTER_TEXT on PRCTR
+- Final logical model attributes:
+  - MANDT, RETAILSTOREID, PRCTR, BUSINESSDAYDATE, ZZWEEK, ZRYEAR, ZRPERIOD, ZRYRP, CAL_WEEK_ENDING_DATE, FS_COMP_WK, RX_COMP_WK, EMERG_MKT_IND, REP_MKT_CODE, REP_MKT_DESC, CAL_COMP_FLAG, DIVISION_CODE, DIVISION_DESC, REGION_CODE, REGION_DESC, DISTRICT_CODE, DISTRICT_DESC, ZRWENDDATE, ZRWSTRTDATE, CAL_WEEK_NUMBER, CITY, STATE, PROFIT_CENTER_TEXT, FS_OPEN_DAT, RX_OPEN_DAT, ZZ_UPD_TIMESTAMP, TRANSCURRENCY, AREA_CODE, AREA_DESC, RX_DIVISION_CODE, RX_AREA_CODE, RX_REGION_CODE, RX_DISTRICT_CODE
+- Final measures and aggregation:
+  - SUM: FS_SALESAMOUNT, REDUCTIONAMOUNT, RX_SALESAMOUNT, CAL_FS_UNITS, CAL_RX_CNT_GE84_NS, CAL_RX_CNT_GE84_RE, CAL_SCRIPTS_90AS3, CAL_RX_CNT_NS, CAL_RX_CNT_RE, EMP_REDUCTIONAMOUNT, CVD_AMOUNT, CAL_CVD_UNITS
+  - MAX: RX_UPD_TIMESTAMP, FS_UPD_TIMESTAMP, SCRIPTS_UPD_TIMESTAMP
+
+SOURCE_LOGIC:
+This is a SAP HANA Calculation View XML artifact. The root Calculation:scenario has:
+- dataCategory="CUBE"
+- outputViewType="Aggregation"
+
+Therefore the final output is aggregated and requires GROUP BY plus measure aggregation.
+
+The view:
+1. Reads flash sales data from CV_BASE_FIN_FLASH_SALES_CAR.
+2. Filters out store IDs between '0000020000' and '0000024999' inclusive, keeping only store IDs less than '0000020000' or greater than '0000024999'.
+3. Filters BUSINESSDAYDATE between IP_WEEK_ENDING_FROM and IP_WEEK_ENDING_TO.
+4. Computes a week-ending date from BUSINESSDAYDATE using HANA date/weekday logic.
+5. Left joins to retail calendar on computed week-ending date = ZRWENDDATE to enrich with week/year/period attributes.
+6. Joins store attributes by store number.
+7. Inner joins hierarchy data to keep only PRCTR values whose hierarchy parent matches *CORE_RET* and HRYVALTO='99991231'.
+8. Left joins comp flag data filtered by IP_VERSION on PRCTR and retail week.
+9. Computes:
+   - CAL_SCRIPTS_90AS3
+   - CAL_COMP_FLAG from FS_COMP_WK and RX_COMP_WK
+   - CAL_WEEK_NUMBER from last 2 chars of ZZWEEK
+10. Builds an employee discount aggregate grouped by dimensional columns and computes synthetic PRCTR values:
+   - CAL_COMP_FLAG='1' -> '0000562075'
+   - CAL_COMP_FLAG='0' -> '0000562076'
+11. Joins employee discount aggregates to a filtered store-attribute set limited to PRCTR in ('0000562075','0000562076').
+12. Unions:
+   - sales rows from CALCULATIONS with EMP_REDUCTIONAMOUNT nulled
+   - employee-discount rows from Join_4 with sales/script/cvd measures nulled
+13. Left joins profit center text by PRCTR.
+14. Final output is aggregated per logical model:
+   - all logical-model attributes grouped
+   - measures aggregated per logical-model aggregationType
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH
+FLASH AS (
+  SELECT
+    MANDT,
+    BUSINESSDAYDATE,
+    FS_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAL_FS_UNITS,
+    EMP_REDUCTIONAMOUNT,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    RETAILSTOREID AS RETAILSTOREID_CAR,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    REPLACE(
+      FORMAT_DATE(
+        '%Y%m%d',
+        DATE_ADD(
+          PARSE_DATE('%Y%m%d', BUSINESSDAYDATE),
+          INTERVAL (
+            5 - CASE
+              WHEN MOD(EXTRACT(DAYOFWEEK FROM PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)) + 5, 7) = 6 THEN -1
+              ELSE MOD(EXTRACT(DAYOFWEEK FROM PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)) + 5, 7)
+            END
+          ) DAY
+        )
+      ),
+      '-',
+      ''
+    ) AS CAL_WEEK_ENDING_DATE
+  FROM `PROJECT.DATASET.CV_BASE_FIN_FLASH_SALES_CAR`
+  WHERE
+    (RETAILSTOREID < '0000020000' OR RETAILSTOREID > '0000024999')
+    AND BUSINESSDAYDATE >= @IP_WEEK_ENDING_FROM
+    AND BUSINESSDAYDATE <= @IP_WEEK_ENDING_TO
+),
+
+RETAIL_CALENDAR AS (
+  SELECT
+    RCLNT,
+    ZZWEEK,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    ZRWENDDATE,
+    ZRWSTRTDATE
+  FROM `PROJECT.DATASET.CV_BASE_MD_RCALWEEK_S4`
+),
+
+WEEK AS (
+  SELECT
+    rc.ZZWEEK,
+    rc.ZRYEAR,
+    rc.ZRPERIOD,
+    rc.ZRYRP,
+    rc.ZRWENDDATE,
+    rc.ZRWSTRTDATE,
+    f.MANDT,
+    f.BUSINESSDAYDATE,
+    f.FS_SALESAMOUNT,
+    f.REDUCTIONAMOUNT,
+    f.RX_SALESAMOUNT,
+    f.CAL_FS_UNITS,
+    f.EMP_REDUCTIONAMOUNT,
+    f.CAL_RX_CNT_GE84_NS,
+    f.CAL_RX_CNT_GE84_RE,
+    f.CAL_WEEK_ENDING_DATE,
+    f.CAL_RX_CNT_NS,
+    f.CAL_RX_CNT_RE,
+    f.RETAILSTOREID_CAR,
+    f.RX_UPD_TIMESTAMP,
+    f.FS_UPD_TIMESTAMP,
+    f.SCRIPTS_UPD_TIMESTAMP,
+    f.ZZ_UPD_TIMESTAMP,
+    f.TRANSCURRENCY,
+    f.CVD_AMOUNT,
+    f.CAL_CVD_UNITS
+  FROM FLASH f
+  LEFT JOIN RETAIL_CALENDAR rc
+    ON f.CAL_WEEK_ENDING_DATE = rc.ZRWENDDATE
+),
+
+COMP_FLAG AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    STRNUM,
+    COMP_VER,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    ZWEEK
+  FROM `PROJECT.DATASET.CV_BASE_MD_COMPFL_S4`
+  WHERE COMP_VER = @IP_VERSION
+),
+
+HIERARCHY AS (
+  SELECT
+    PARNODE,
+    HRYVALTO,
+    MANDT,
+    NODEVALUE
+  FROM `PROJECT.DATASET.CV_BASE_MD_HRRP_NODE_S4`
+  WHERE
+    REGEXP_CONTAINS(PARNODE, r'.*CORE_RET.*')
+    AND HRYVALTO = '99991231'
+),
+
+STORE_ATTR AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    AREA_CODE,
+    AREA_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.CV_BASE_MD_SRPACT_S4`
+),
+
+Joined_Week_Store_Attributes AS (
+  SELECT
+    sa.PRCTR,
+    sa.EMERG_MKT_IND,
+    sa.REP_MKT_CODE,
+    sa.REP_MKT_DESC,
+    sa.DIVISION_CODE,
+    sa.DIVISION_DESC,
+    sa.REGION_CODE,
+    sa.REGION_DESC,
+    sa.DISTRICT_CODE,
+    sa.DISTRICT_DESC,
+    sa.CITY,
+    sa.STATE,
+    sa.FS_OPEN_DAT,
+    sa.RX_OPEN_DAT,
+    w.CAL_RX_CNT_GE84_RE,
+    w.CAL_RX_CNT_GE84_NS,
+    w.EMP_REDUCTIONAMOUNT,
+    w.CAL_FS_UNITS,
+    w.RX_SALESAMOUNT,
+    w.REDUCTIONAMOUNT,
+    w.FS_SALESAMOUNT,
+    w.BUSINESSDAYDATE,
+    w.MANDT,
+    w.ZZWEEK,
+    w.ZRYEAR,
+    w.ZRPERIOD,
+    w.ZRYRP,
+    w.CAL_WEEK_ENDING_DATE,
+    w.RETAILSTOREID_CAR AS RETAILSTOREID,
+    w.CAL_RX_CNT_NS,
+    w.CAL_RX_CNT_RE,
+    w.ZRWENDDATE,
+    w.ZRWSTRTDATE,
+    w.RX_UPD_TIMESTAMP,
+    w.FS_UPD_TIMESTAMP,
+    w.SCRIPTS_UPD_TIMESTAMP,
+    w.ZZ_UPD_TIMESTAMP,
+    w.TRANSCURRENCY,
+    sa.AREA_CODE,
+    sa.AREA_DESC,
+    w.CVD_AMOUNT,
+    w.CAL_CVD_UNITS,
+    sa.RX_DIVISION_CODE,
+    sa.RX_AREA_CODE,
+    sa.RX_REGION_CODE,
+    sa.RX_DISTRICT_CODE
+  FROM WEEK w
+  LEFT JOIN STORE_ATTR sa
+    ON w.RETAILSTOREID_CAR = sa.STRNUM
+),
+
+Joined_Core_Retail_Hierarchy AS (
+  SELECT
+    j.CAL_RX_CNT_GE84_RE,
+    j.CAL_RX_CNT_GE84_NS,
+    j.EMP_REDUCTIONAMOUNT,
+    j.CAL_FS_UNITS,
+    j.RX_SALESAMOUNT,
+    j.REDUCTIONAMOUNT,
+    j.FS_SALESAMOUNT,
+    j.BUSINESSDAYDATE,
+    j.MANDT,
+    j.ZZWEEK,
+    j.ZRYEAR,
+    j.ZRPERIOD,
+    j.ZRYRP,
+    j.CAL_WEEK_ENDING_DATE,
+    j.RETAILSTOREID,
+    j.CAL_RX_CNT_NS,
+    j.CAL_RX_CNT_RE,
+    j.ZRWENDDATE,
+    j.ZRWSTRTDATE,
+    j.PRCTR,
+    j.EMERG_MKT_IND,
+    j.REP_MKT_CODE,
+    j.REP_MKT_DESC,
+    j.DIVISION_CODE,
+    j.DIVISION_DESC,
+    j.REGION_CODE,
+    j.REGION_DESC,
+    j.DISTRICT_CODE,
+    j.DISTRICT_DESC,
+    j.CITY,
+    j.STATE,
+    j.FS_OPEN_DAT,
+    j.RX_OPEN_DAT,
+    j.RX_UPD_TIMESTAMP,
+    j.FS_UPD_TIMESTAMP,
+    j.SCRIPTS_UPD_TIMESTAMP,
+    j.ZZ_UPD_TIMESTAMP,
+    j.TRANSCURRENCY,
+    j.AREA_CODE,
+    j.AREA_DESC,
+    j.CVD_AMOUNT,
+    j.CAL_CVD_UNITS,
+    j.RX_DIVISION_CODE,
+    j.RX_AREA_CODE,
+    j.RX_REGION_CODE,
+    j.RX_DISTRICT_CODE,
+    h.NODEVALUE AS `JOIN$NODEVALUE$PRCTR`
+  FROM Joined_Week_Store_Attributes j
+  INNER JOIN HIERARCHY h
+    ON j.PRCTR = h.NODEVALUE
+),
+
+Joined_Comp_Flag_Data AS (
+  SELECT
+    j.CAL_RX_CNT_GE84_RE,
+    j.CAL_RX_CNT_GE84_NS,
+    j.EMP_REDUCTIONAMOUNT,
+    j.CAL_FS_UNITS,
+    j.RX_SALESAMOUNT,
+    j.REDUCTIONAMOUNT,
+    j.FS_SALESAMOUNT,
+    j.BUSINESSDAYDATE,
+    j.MANDT,
+    j.ZZWEEK,
+    j.ZRYEAR,
+    j.ZRPERIOD,
+    j.ZRYRP,
+    j.CAL_WEEK_ENDING_DATE,
+    j.RETAILSTOREID,
+    j.CAL_RX_CNT_NS,
+    j.CAL_RX_CNT_RE,
+    j.ZRWENDDATE,
+    j.ZRWSTRTDATE,
+    j.PRCTR,
+    j.EMERG_MKT_IND,
+    j.REP_MKT_CODE,
+    j.REP_MKT_DESC,
+    j.DIVISION_CODE,
+    j.DIVISION_DESC,
+    j.REGION_CODE,
+    j.REGION_DESC,
+    j.DISTRICT_CODE,
+    j.DISTRICT_DESC,
+    j.CITY,
+    j.STATE,
+    j.FS_OPEN_DAT,
+    j.RX_OPEN_DAT,
+    j.RX_UPD_TIMESTAMP,
+    j.FS_UPD_TIMESTAMP,
+    j.SCRIPTS_UPD_TIMESTAMP,
+    j.ZZ_UPD_TIMESTAMP,
+    j.TRANSCURRENCY,
+    j.AREA_CODE,
+    j.AREA_DESC,
+    cf.FS_COMP_WK,
+    cf.RX_COMP_WK,
+    j.CVD_AMOUNT,
+    j.CAL_CVD_UNITS,
+    j.RX_DIVISION_CODE,
+    j.RX_AREA_CODE,
+    j.RX_REGION_CODE,
+    j.RX_DISTRICT_CODE
+  FROM Joined_Core_Retail_Hierarchy j
+  LEFT JOIN COMP_FLAG cf
+    ON j.PRCTR = cf.PRCTR
+   AND j.ZZWEEK = cf.ZWEEK
+),
+
+CALCULATIONS AS (
+  SELECT
+    CAL_RX_CNT_RE,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_RX_CNT_GE84_NS,
+    EMP_REDUCTIONAMOUNT,
+    CAL_FS_UNITS,
+    RX_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    FS_SALESAMOUNT,
+    REP_MKT_DESC,
+    REP_MKT_CODE,
+    EMERG_MKT_IND,
+    RX_COMP_WK,
+    FS_COMP_WK,
+    CAL_WEEK_ENDING_DATE,
+    ZRYRP,
+    ZRPERIOD,
+    ZRYEAR,
+    ZZWEEK,
+    BUSINESSDAYDATE,
+    PRCTR,
+    RETAILSTOREID,
+    MANDT,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    CITY,
+    STATE,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    AREA_CODE,
+    AREA_DESC,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    CAL_RX_CNT_NS + CAL_RX_CNT_RE + (CAL_RX_CNT_GE84_NS + CAL_RX_CNT_GE84_RE) * 2 AS CAL_SCRIPTS_90AS3,
+    CASE
+      WHEN GREATEST(FS_COMP_WK, RX_COMP_WK) IS NULL THEN '0'
+      ELSE GREATEST(FS_COMP_WK, RX_COMP_WK)
+    END AS CAL_COMP_FLAG,
+    RIGHT(ZZWEEK, 2) AS CAL_WEEK_NUMBER
+  FROM Joined_Comp_Flag_Data
+),
+
+EMPLOYEE_DISCOUNT AS (
+  SELECT
+    SUM(EMP_REDUCTIONAMOUNT) AS EMP_REDUCTIONAMOUNT,
+    ZRYRP,
+    ZRPERIOD,
+    ZRYEAR,
+    ZZWEEK,
+    BUSINESSDAYDATE,
+    CAL_WEEK_ENDING_DATE,
+    CAL_COMP_FLAG,
+    CAL_WEEK_NUMBER,
+    MANDT,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    CITY,
+    STATE,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    RX_COMP_WK,
+    FS_COMP_WK,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    PRCTR AS PRCTR_ORG,
+    MAX(RX_UPD_TIMESTAMP) AS RX_UPD_TIMESTAMP,
+    MAX(FS_UPD_TIMESTAMP) AS FS_UPD_TIMESTAMP,
+    MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    AREA_CODE,
+    AREA_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE,
+    CASE
+      WHEN CAL_COMP_FLAG = '1' THEN '0000562075'
+      WHEN CAL_COMP_FLAG = '0' THEN '0000562076'
+      ELSE NULL
+    END AS CAL_PRCTR
+  FROM CALCULATIONS
+  GROUP BY
+    ZRYRP,
+    ZRPERIOD,
+    ZRYEAR,
+    ZZWEEK,
+    BUSINESSDAYDATE,
+    CAL_WEEK_ENDING_DATE,
+    CAL_COMP_FLAG,
+    CAL_WEEK_NUMBER,
+    MANDT,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    CITY,
+    STATE,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    RX_COMP_WK,
+    FS_COMP_WK,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    PRCTR,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    AREA_CODE,
+    AREA_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+),
+
+COMP_NONCOMP_STORE_ATTR AS (
+  SELECT
+    MANDT,
+    STRNUM,
+    PRCTR,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    CITY,
+    STATE,
+    AREA_CODE,
+    AREA_DESC,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.CV_BASE_MD_SRPACT_S4`
+  WHERE PRCTR IN ('0000562075', '0000562076')
+),
+
+Joined_Employee_Discount_Store_Attributes AS (
+  SELECT
+    ed.MANDT,
+    ed.CAL_PRCTR AS PRCTR,
+    ed.BUSINESSDAYDATE,
+    ed.ZZWEEK,
+    ed.ZRYEAR,
+    ed.ZRPERIOD,
+    ed.ZRYRP,
+    ed.ZRWENDDATE,
+    ed.ZRWSTRTDATE,
+    ed.CAL_WEEK_NUMBER,
+    ed.EMP_REDUCTIONAMOUNT,
+    sa.EMERG_MKT_IND,
+    sa.REP_MKT_CODE,
+    sa.REP_MKT_DESC,
+    sa.DIVISION_CODE,
+    sa.DIVISION_DESC,
+    sa.REGION_CODE,
+    sa.REGION_DESC,
+    sa.DISTRICT_CODE,
+    sa.DISTRICT_DESC,
+    sa.CITY,
+    sa.STATE,
+    ed.CAL_COMP_FLAG,
+    ed.RX_COMP_WK,
+    ed.FS_COMP_WK,
+    sa.STRNUM,
+    ed.CAL_WEEK_ENDING_DATE,
+    ed.FS_OPEN_DAT,
+    ed.RX_OPEN_DAT,
+    ed.RX_UPD_TIMESTAMP,
+    ed.FS_UPD_TIMESTAMP,
+    ed.SCRIPTS_UPD_TIMESTAMP,
+    ed.ZZ_UPD_TIMESTAMP,
+    ed.TRANSCURRENCY,
+    sa.AREA_CODE,
+    sa.AREA_DESC,
+    sa.RX_DIVISION_CODE,
+    sa.RX_AREA_CODE,
+    sa.RX_REGION_CODE,
+    sa.RX_DISTRICT_CODE
+  FROM EMPLOYEE_DISCOUNT ed
+  LEFT JOIN COMP_NONCOMP_STORE_ATTR sa
+    ON ed.CAL_PRCTR = sa.PRCTR
+),
+
+Combined_Flash_And_Employee_Discount AS (
+  SELECT
+    RETAILSTOREID,
+    CAL_WEEK_ENDING_DATE,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CAL_COMP_FLAG,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    FS_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAL_FS_UNITS,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_SCRIPTS_90AS3,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    MANDT,
+    PRCTR,
+    BUSINESSDAYDATE,
+    ZZWEEK,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    NULL AS EMP_REDUCTIONAMOUNT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    AREA_CODE,
+    AREA_DESC,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM CALCULATIONS
+
+  UNION ALL
+
+  SELECT
+    STRNUM AS RETAILSTOREID,
+    CAL_WEEK_ENDING_DATE,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CAL_COMP_FLAG,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    NULL AS FS_SALESAMOUNT,
+    NULL AS REDUCTIONAMOUNT,
+    NULL AS RX_SALESAMOUNT,
+    NULL AS CAL_FS_UNITS,
+    NULL AS CAL_RX_CNT_GE84_NS,
+    NULL AS CAL_RX_CNT_GE84_RE,
+    NULL AS CAL_SCRIPTS_90AS3,
+    NULL AS CAL_RX_CNT_NS,
+    NULL AS CAL_RX_CNT_RE,
+    MANDT,
+    PRCTR,
+    BUSINESSDAYDATE,
+    ZZWEEK,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    EMP_REDUCTIONAMOUNT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    AREA_CODE,
+    AREA_DESC,
+    NULL AS CVD_AMOUNT,
+    NULL AS CAL_CVD_UNITS,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM Joined_Employee_Discount_Store_Attributes
+),
+
+PROFIT_CENTER_TEXT AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    LTEXT AS PROFIT_CENTER_TEXT
+  FROM `PROJECT.DATASET.CV_BASE_MD_CEPCT_S4`
+),
+
+Join_5 AS (
+  SELECT
+    u.MANDT,
+    u.RETAILSTOREID,
+    u.PRCTR,
+    u.BUSINESSDAYDATE,
+    u.ZZWEEK,
+    u.ZRYEAR,
+    u.ZRPERIOD,
+    u.ZRYRP,
+    u.CAL_WEEK_ENDING_DATE,
+    u.FS_COMP_WK,
+    u.RX_COMP_WK,
+    u.EMERG_MKT_IND,
+    u.REP_MKT_CODE,
+    u.REP_MKT_DESC,
+    u.CAL_COMP_FLAG,
+    u.DIVISION_CODE,
+    u.DIVISION_DESC,
+    u.REGION_CODE,
+    u.REGION_DESC,
+    u.DISTRICT_CODE,
+    u.DISTRICT_DESC,
+    u.ZRWENDDATE,
+    u.ZRWSTRTDATE,
+    u.CAL_WEEK_NUMBER,
+    u.CITY,
+    u.STATE,
+    u.FS_SALESAMOUNT,
+    u.REDUCTIONAMOUNT,
+    u.RX_SALESAMOUNT,
+    u.CAL_FS_UNITS,
+    u.CAL_RX_CNT_GE84_NS,
+    u.CAL_RX_CNT_GE84_RE,
+    u.CAL_SCRIPTS_90AS3,
+    u.CAL_RX_CNT_NS,
+    u.CAL_RX_CNT_RE,
+    u.EMP_REDUCTIONAMOUNT,
+    pct.PROFIT_CENTER_TEXT,
+    u.FS_OPEN_DAT,
+    u.RX_OPEN_DAT,
+    u.RX_UPD_TIMESTAMP,
+    u.FS_UPD_TIMESTAMP,
+    u.SCRIPTS_UPD_TIMESTAMP,
+    u.ZZ_UPD_TIMESTAMP,
+    u.TRANSCURRENCY,
+    u.AREA_CODE,
+    u.AREA_DESC,
+    u.CVD_AMOUNT,
+    u.CAL_CVD_UNITS,
+    u.RX_DIVISION_CODE,
+    u.RX_AREA_CODE,
+    u.RX_REGION_CODE,
+    u.RX_DISTRICT_CODE
+  FROM Combined_Flash_And_Employee_Discount u
+  LEFT JOIN PROFIT_CENTER_TEXT pct
+    ON u.PRCTR = pct.PRCTR
+)
+
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  PRCTR,
+  BUSINESSDAYDATE,
+  ZZWEEK,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  CAL_WEEK_ENDING_DATE,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CAL_COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  ZZ_UPD_TIMESTAMP,
+  TRANSCURRENCY,
+  AREA_CODE,
+  AREA_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE,
+  SUM(FS_SALESAMOUNT) AS FS_SALESAMOUNT,
+  SUM(REDUCTIONAMOUNT) AS REDUCTIONAMOUNT,
+  SUM(RX_SALESAMOUNT) AS RX_SALESAMOUNT,
+  SUM(CAL_FS_UNITS) AS CAL_FS_UNITS,
+  SUM(CAL_RX_CNT_GE84_NS) AS CAL_RX_CNT_GE84_NS,
+  SUM(CAL_RX_CNT_GE84_RE) AS CAL_RX_CNT_GE84_RE,
+  SUM(CAL_SCRIPTS_90AS3) AS CAL_SCRIPTS_90AS3,
+  SUM(CAL_RX_CNT_NS) AS CAL_RX_CNT_NS,
+  SUM(CAL_RX_CNT_RE) AS CAL_RX_CNT_RE,
+  SUM(EMP_REDUCTIONAMOUNT) AS EMP_REDUCTIONAMOUNT,
+  MAX(RX_UPD_TIMESTAMP) AS RX_UPD_TIMESTAMP,
+  MAX(FS_UPD_TIMESTAMP) AS FS_UPD_TIMESTAMP,
+  MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+  SUM(CVD_AMOUNT) AS CVD_AMOUNT,
+  SUM(CAL_CVD_UNITS) AS CAL_CVD_UNITS
+FROM Join_5
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  PRCTR,
+  BUSINESSDAYDATE,
+  ZZWEEK,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  CAL_WEEK_ENDING_DATE,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CAL_COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  ZZ_UPD_TIMESTAMP,
+  TRANSCURRENCY,
+  AREA_CODE,
+  AREA_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE;
+```
+
+CONVERSION_NOTES:
+- Artifact interpreted semantically as SAP HANA Calculation View XML, not as plain SQL.
+- Final output aggregation was added because:
+  - dataCategory="CUBE"
+  - outputViewType="Aggregation"
+  - logicalModel defines dimensions and measures with aggregation types.
+- Generic CTE renaming:
+  - Join_6 -> Joined_Week_Store_Attributes
+  - Join_3 -> Joined_Core_Retail_Hierarchy
+  - COMP_FLG -> Joined_Comp_Flag_Data
+  - Join_4 -> Joined_Employee_Discount_Store_Attributes
+  - Union_1 -> Combined_Flash_And_Employee_Discount
+  - Existing meaningful names such as FLASH, WEEK, COMP_FLAG, HIERARCHY, STORE_ATTR, CALCULATIONS, EMPLOYEE_DISCOUNT, PROFIT_CENTER_TEXT, Join_5 were preserved.
+- HANA function conversions:
+  - TO_DATE(BUSINESSDAYDATE) interpreted as PARSE_DATE('%Y%m%d', BUSINESSDAYDATE)
+  - add_days(...) -> DATE_ADD(..., INTERVAL n DAY)
+  - TO_CHAR(date) with dash removal -> FORMAT_DATE('%Y%m%d', date)
+  - RIGHTSTR(x,2) -> RIGHT(x,2)
+  - HANA scalar MAX(a,b) in CAL_COMP_FLAG converted to GREATEST(a,b), not aggregate MAX()
+  - HANA ISNULL(expr) -> expr IS NULL
+- HANA WEEKDAY conversion:
+  - HANA WEEKDAY numbering appears assumed as Monday=0 ... Sunday=6.
+  - BigQuery EXTRACT(DAYOFWEEK) returns Sunday=1 ... Saturday=7.
+  - Converted with MOD(EXTRACT(DAYOFWEEK FROM date) + 5, 7) to emulate HANA numbering.
+  - The original nested replace(weekday(...),6,-1) behavior was preserved via CASE logic.
+- HANA MATCH conversion:
+  - match(PARNODE,'*CORE_RET*') represented as REGEXP_CONTAINS(PARNODE, r'.*CORE_RET.*')
+  - Exact HANA MATCH wildcard semantics should be validated.
+- Null constant mappings in union branches were preserved as NULL.
+- External Calculation Views were treated as BigQuery source placeholders:
+  - `PROJECT.DATASET.<object>`
+- Parameters represented as BigQuery query parameters:
+  - @IP_VERSION
+  - @IP_WEEK_ENDING_FROM
+  - @IP_WEEK_ENDING_TO
+- Variables IP_UPD_TIMESTAMP_FROM and IP_UPD_TIMESTAMP_TO are mapped into external source CV_BASE_FIN_FLASH_SALES_CAR, but their internal use is not visible in this artifact; therefore they are not materialized as explicit filters in the generated SQL.
+- ZZ_UPD_TIMESTAMP remains grouped as an attribute because the logical model defines it as an attribute, not as a measure, despite upstream nodes also carrying timestamp max logic for other update columns.
+- Final output column set follows logicalModel:
+  - 38 attributes
+  - 14 measures
+- No SAFE_CAST, SAFE_DIVIDE, COALESCE, or IFNULL were introduced.
+
+ASSUMPTIONS:
+- BUSINESSDAYDATE is string-compatible with format YYYYMMDD for date parsing.
+- HANA WEEKDAY semantics are Monday=0 through Sunday=6.
+- HANA MATCH('*CORE_RET*') can be acceptably represented by a regex contains search for CORE_RET.
+- Source BigQuery objects corresponding to the HANA Calculation Views exist and expose the referenced columns with compatible names.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project/dataset/table/view mappings for:
+  - CV_BASE_FIN_FLASH_SALES_CAR
+  - CV_BASE_MD_RCALWEEK_S4
+  - CV_BASE_MD_COMPFL_S4
+  - CV_BASE_MD_HRRP_NODE_S4
+  - CV_BASE_MD_SRPACT_S4
+  - CV_BASE_MD_CEPCT_S4
+- Internal logic of external Calculation Views is unavailable and was not inferred.
+- Internal usage of parameters IP_UPD_TIMESTAMP_FROM and IP_UPD_TIMESTAMP_TO inside CV_BASE_FIN_FLASH_SALES_CAR is unresolved.
+- Scalar function derivations are unresolved:
+  - SFN_ACTUALS_COMP_FLAG
+  - SFN_CURRENT_WEEK_START_DATE
+  - SFN_CURRENT_WEEK_END_DATE
+- Exact NULL semantics of HANA scalar MAX(a,b) vs BigQuery GREATEST(a,b) require validation.
+- Exact HANA MATCH semantics vs REGEXP_CONTAINS require validation.
+- Datatypes of source columns are not fully specified in this artifact and should be validated in BigQuery.
+
+CONFIDENCE:
+Medium

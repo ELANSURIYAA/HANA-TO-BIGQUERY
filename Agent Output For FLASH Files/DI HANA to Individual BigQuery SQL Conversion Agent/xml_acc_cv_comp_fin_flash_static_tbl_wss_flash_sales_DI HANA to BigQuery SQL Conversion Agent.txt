@@ -1,0 +1,349 @@
+SOURCE_ARTIFACT:
+CV_COMP_FIN_FLASH_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_COMP_FIN_FLASH_STATIC
+- Source data source id: TBL_WSS_FLASH_SALES
+- Source external object: CVS_FRIP.Table::TBL_WSS_FLASH_SALES
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct projection/source-to-target mappings from CVS_FRIP.Table::TBL_WSS_FLASH_SALES:
+  - MANDT -> MANDT
+  - RETAILSTOREID -> RETAILSTOREID
+  - PRCTR -> PRCTR
+  - BUSINESSDAYDATE -> BUSINESSDAYDATE
+  - ZZWEEK -> ZZWEEK
+  - ZRYEAR -> ZRYEAR
+  - ZRPERIOD -> ZRPERIOD
+  - ZRYRP -> ZRYRP
+  - CAL_WEEK_ENDING_DATE -> CAL_WEEK_ENDING_DATE
+  - FS_COMP_WK -> FS_COMP_WK
+  - RX_COMP_WK -> RX_COMP_WK
+  - EMERG_MKT_IND -> EMERG_MKT_IND
+  - REP_MKT_CODE -> REP_MKT_CODE
+  - REP_MKT_DESC -> REP_MKT_DESC
+  - CAL_COMP_FLAG -> CAL_COMP_FLAG
+  - DIVISION_CODE -> DIVISION_CODE
+  - DIVISION_DESC -> DIVISION_DESC
+  - REGION_CODE -> REGION_CODE
+  - REGION_DESC -> REGION_DESC
+  - DISTRICT_CODE -> DISTRICT_CODE
+  - DISTRICT_DESC -> DISTRICT_DESC
+  - ZRWENDDATE -> ZRWENDDATE
+  - ZRWSTRTDATE -> ZRWSTRTDATE
+  - CAL_WEEK_NUMBER -> CAL_WEEK_NUMBER
+  - CITY -> CITY
+  - STATE -> STATE
+  - FS_SALESAMOUNT -> FS_SALESAMOUNT
+  - REDUCTIONAMOUNT -> REDUCTIONAMOUNT
+  - RX_SALESAMOUNT -> RX_SALESAMOUNT
+  - CAL_FS_UNITS -> CAL_FS_UNITS
+  - CAL_RX_CNT_GE84_NS -> CAL_RX_CNT_GE84_NS
+  - CAL_RX_CNT_GE84_RE -> CAL_RX_CNT_GE84_RE
+  - CAL_SCRIPTS_90AS3 -> CAL_SCRIPTS_90AS3
+  - CAL_RX_CNT_NS -> CAL_RX_CNT_NS
+  - CAL_RX_CNT_RE -> CAL_RX_CNT_RE
+  - EMP_REDUCTIONAMOUNT -> EMP_REDUCTIONAMOUNT
+  - PROFIT_CENTER_TEXT -> PROFIT_CENTER_TEXT
+  - FS_OPEN_DAT -> FS_OPEN_DAT
+  - RX_OPEN_DAT -> RX_OPEN_DAT
+  - RX_UPD_TIMESTAMP -> RX_UPD_TIMESTAMP
+  - FS_UPD_TIMESTAMP -> FS_UPD_TIMESTAMP
+  - SCRIPTS_UPD_TIMESTAMP -> SCRIPTS_UPD_TIMESTAMP
+  - ZZ_UPD_TIMESTAMP -> ZZ_UPD_TIMESTAMP
+  - SNAPSHOT_TIMESTAMP -> SNAPSHOT_TIMESTAMP
+  - CREATED_BY -> CREATED_BY
+  - TRANSCURRENCY -> TRANSCURRENCY
+  - AREA_CODE -> AREA_CODE
+  - AREA_DESC -> AREA_DESC
+  - CVD_AMOUNT -> CVD_AMOUNT
+  - CAL_CVD_UNITS -> CAL_CVD_UNITS
+  - RX_DIVISION_CODE -> RX_DIVISION_CODE
+  - RX_AREA_CODE -> RX_AREA_CODE
+  - RX_REGION_CODE -> RX_REGION_CODE
+  - RX_DISTRICT_CODE -> RX_DISTRICT_CODE
+- Logical model output attributes:
+  - MANDT
+  - RETAILSTOREID
+  - PRCTR
+  - BUSINESSDAYDATE
+  - ZZWEEK
+  - ZRYEAR
+  - ZRPERIOD
+  - ZRYRP
+  - CAL_WEEK_ENDING_DATE
+  - FS_COMP_WK
+  - RX_COMP_WK
+  - EMERG_MKT_IND
+  - REP_MKT_CODE
+  - REP_MKT_DESC
+  - CAL_COMP_FLAG
+  - DIVISION_CODE
+  - DIVISION_DESC
+  - REGION_CODE
+  - REGION_DESC
+  - DISTRICT_CODE
+  - DISTRICT_DESC
+  - ZRWENDDATE
+  - ZRWSTRTDATE
+  - CAL_WEEK_NUMBER
+  - CITY
+  - STATE
+  - PROFIT_CENTER_TEXT
+  - FS_OPEN_DAT
+  - RX_OPEN_DAT
+  - ZZ_UPD_TIMESTAMP
+  - SNAPSHOT_TIMESTAMP
+  - CREATED_BY
+  - TRANSCURRENCY
+  - AREA_CODE
+  - AREA_DESC
+  - RX_DIVISION_CODE
+  - RX_AREA_CODE
+  - RX_REGION_CODE
+  - RX_DISTRICT_CODE
+- Logical model output measures and aggregations:
+  - SUM(FS_SALESAMOUNT)
+  - SUM(REDUCTIONAMOUNT)
+  - SUM(RX_SALESAMOUNT)
+  - SUM(CAL_FS_UNITS)
+  - SUM(CAL_RX_CNT_GE84_NS)
+  - SUM(CAL_RX_CNT_GE84_RE)
+  - SUM(CAL_SCRIPTS_90AS3)
+  - SUM(CAL_RX_CNT_NS)
+  - SUM(CAL_RX_CNT_RE)
+  - SUM(EMP_REDUCTIONAMOUNT)
+  - MAX(RX_UPD_TIMESTAMP)
+  - MAX(FS_UPD_TIMESTAMP)
+  - MAX(SCRIPTS_UPD_TIMESTAMP)
+  - SUM(CVD_AMOUNT)
+  - SUM(CAL_CVD_UNITS)
+- Calculated attributes: none defined
+- Calculated measures: none defined
+- Filters: none defined
+- Joins: none defined
+- Parameters/placeholders/variables: none defined in the provided XML
+
+SOURCE_LOGIC:
+- The source artifact is a SAP HANA Calculation View XML for CV_COMP_FIN_FLASH_STATIC.
+- Root element attributes indicate:
+  - dataCategory="CUBE"
+  - outputViewType="Aggregation"
+- Therefore, the final output requires GROUP BY on every non-measure output column and aggregation on every measure according to the logical model.
+- The view contains a single ProjectionView node named Projection_1.
+- Projection_1 reads from one external source object only: CVS_FRIP.Table::TBL_WSS_FLASH_SALES.
+- All output columns are direct 1:1 mappings from the source object; there are no calculated columns, joins, unions, filters, variables, or parameters present in the provided XML.
+- The logical model defines:
+  - 40 non-measure output attributes
+  - 15 measures with explicit aggregation rules
+- Because this is a CUBE/Aggregation view, the BigQuery equivalent must aggregate:
+  - SUM on additive numeric measures
+  - MAX on timestamp-like update measures
+- Since no additional transformation nodes exist beyond the projection, the business logic is effectively:
+  - read rows from the source table/view
+  - project the specified columns
+  - aggregate by all non-measure attributes
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Projected_WSS_FLASH_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    PRCTR,
+    BUSINESSDAYDATE,
+    ZZWEEK,
+    ZRYEAR,
+    ZRPERIOD,
+    ZRYRP,
+    CAL_WEEK_ENDING_DATE,
+    FS_COMP_WK,
+    RX_COMP_WK,
+    EMERG_MKT_IND,
+    REP_MKT_CODE,
+    REP_MKT_DESC,
+    CAL_COMP_FLAG,
+    DIVISION_CODE,
+    DIVISION_DESC,
+    REGION_CODE,
+    REGION_DESC,
+    DISTRICT_CODE,
+    DISTRICT_DESC,
+    ZRWENDDATE,
+    ZRWSTRTDATE,
+    CAL_WEEK_NUMBER,
+    CITY,
+    STATE,
+    FS_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAL_FS_UNITS,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_SCRIPTS_90AS3,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    EMP_REDUCTIONAMOUNT,
+    PROFIT_CENTER_TEXT,
+    FS_OPEN_DAT,
+    RX_OPEN_DAT,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    SNAPSHOT_TIMESTAMP,
+    CREATED_BY,
+    TRANSCURRENCY,
+    AREA_CODE,
+    AREA_DESC,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS,
+    RX_DIVISION_CODE,
+    RX_AREA_CODE,
+    RX_REGION_CODE,
+    RX_DISTRICT_CODE
+  FROM `PROJECT.DATASET.TBL_WSS_FLASH_SALES`
+)
+
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  PRCTR,
+  BUSINESSDAYDATE,
+  ZZWEEK,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  CAL_WEEK_ENDING_DATE,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CAL_COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  SUM(FS_SALESAMOUNT) AS FS_SALESAMOUNT,
+  SUM(REDUCTIONAMOUNT) AS REDUCTIONAMOUNT,
+  SUM(RX_SALESAMOUNT) AS RX_SALESAMOUNT,
+  SUM(CAL_FS_UNITS) AS CAL_FS_UNITS,
+  SUM(CAL_RX_CNT_GE84_NS) AS CAL_RX_CNT_GE84_NS,
+  SUM(CAL_RX_CNT_GE84_RE) AS CAL_RX_CNT_GE84_RE,
+  SUM(CAL_SCRIPTS_90AS3) AS CAL_SCRIPTS_90AS3,
+  SUM(CAL_RX_CNT_NS) AS CAL_RX_CNT_NS,
+  SUM(CAL_RX_CNT_RE) AS CAL_RX_CNT_RE,
+  SUM(EMP_REDUCTIONAMOUNT) AS EMP_REDUCTIONAMOUNT,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  MAX(RX_UPD_TIMESTAMP) AS RX_UPD_TIMESTAMP,
+  MAX(FS_UPD_TIMESTAMP) AS FS_UPD_TIMESTAMP,
+  MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+  ZZ_UPD_TIMESTAMP,
+  SNAPSHOT_TIMESTAMP,
+  CREATED_BY,
+  TRANSCURRENCY,
+  AREA_CODE,
+  AREA_DESC,
+  SUM(CVD_AMOUNT) AS CVD_AMOUNT,
+  SUM(CAL_CVD_UNITS) AS CAL_CVD_UNITS,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+FROM Projected_WSS_FLASH_SALES
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  PRCTR,
+  BUSINESSDAYDATE,
+  ZZWEEK,
+  ZRYEAR,
+  ZRPERIOD,
+  ZRYRP,
+  CAL_WEEK_ENDING_DATE,
+  FS_COMP_WK,
+  RX_COMP_WK,
+  EMERG_MKT_IND,
+  REP_MKT_CODE,
+  REP_MKT_DESC,
+  CAL_COMP_FLAG,
+  DIVISION_CODE,
+  DIVISION_DESC,
+  REGION_CODE,
+  REGION_DESC,
+  DISTRICT_CODE,
+  DISTRICT_DESC,
+  ZRWENDDATE,
+  ZRWSTRTDATE,
+  CAL_WEEK_NUMBER,
+  CITY,
+  STATE,
+  PROFIT_CENTER_TEXT,
+  FS_OPEN_DAT,
+  RX_OPEN_DAT,
+  ZZ_UPD_TIMESTAMP,
+  SNAPSHOT_TIMESTAMP,
+  CREATED_BY,
+  TRANSCURRENCY,
+  AREA_CODE,
+  AREA_DESC,
+  RX_DIVISION_CODE,
+  RX_AREA_CODE,
+  RX_REGION_CODE,
+  RX_DISTRICT_CODE
+```
+
+CONVERSION_NOTES:
+- The source is Calculation View XML, not SQL text, so the conversion was based on semantic interpretation of:
+  - dataSources
+  - calculationViews
+  - mapping elements
+  - logicalModel attributes
+  - baseMeasures aggregationType
+- Because the root has dataCategory="CUBE" and outputViewType="Aggregation", aggregation was mandatory in the final BigQuery SQL.
+- Projection_1 is a generic intermediate node name. Per the naming rule, it was renamed in the converted SQL to:
+  - Projected_WSS_FLASH_SALES
+  This was possible because the node is a simple projection of TBL_WSS_FLASH_SALES.
+- No joins, filters, unions, calculated attributes, or calculated measures are present in the provided XML.
+- The external HANA source object CVS_FRIP.Table::TBL_WSS_FLASH_SALES was mapped to a placeholder BigQuery object:
+  - `PROJECT.DATASET.TBL_WSS_FLASH_SALES`
+  because no actual BigQuery project/dataset/table mapping was provided.
+- The final SQL exposes exactly the logical model outputs:
+  - 40 attributes
+  - 15 measures
+  - total output columns = 55
+- MAX was preserved for:
+  - RX_UPD_TIMESTAMP
+  - FS_UPD_TIMESTAMP
+  - SCRIPTS_UPD_TIMESTAMP
+- SUM was preserved for all other measures defined with aggregationType="sum".
+- No datatype casts were introduced because the XML does not provide sufficient datatype metadata and the instructions prohibit inventing datatype conversions.
+- ZZ_UPD_TIMESTAMP and SNAPSHOT_TIMESTAMP are modeled as attributes, not measures, in the logical model, so they are grouped rather than aggregated.
+- This matches the logical model exactly even if those columns may look timestamp-like by name.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.TBL_WSS_FLASH_SALES` is a placeholder for the actual BigQuery mapping of CVS_FRIP.Table::TBL_WSS_FLASH_SALES.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project, dataset, and physical object mapping for CVS_FRIP.Table::TBL_WSS_FLASH_SALES is not provided.
+- Source column datatypes are not provided in the XML, so datatype compatibility in BigQuery must be validated, especially for:
+  - SUM measure columns
+  - MAX timestamp/update columns
+  - grouped timestamp/date-like attributes such as ZZ_UPD_TIMESTAMP and SNAPSHOT_TIMESTAMP
+- Because the external object definition is not included, only the logic explicitly present in this Calculation View XML has been converted.
+
+CONFIDENCE:
+Medium

@@ -1,0 +1,115 @@
+SOURCE_ARTIFACT:
+CV_BASE_TLOGF_X
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- SAP HANA Calculation View: CV_BASE_TLOGF_X
+- Source table: `SAPABAP1`."/POSDW/TLOGF_X"
+- Projection node: `Projection_1`
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from `SAPABAP1`."/POSDW/TLOGF_X" to output:
+  - `MANDT` -> `MANDT`
+  - `RETAILSTOREID` -> `RETAILSTOREID`
+  - `BUSINESSDAYDATE` -> `BUSINESSDAYDATE`
+  - `RECORDQUALIFIER` -> `RECORDQUALIFIER`
+  - `WORKSTATIONID` -> `WORKSTATIONID`
+  - `ARCHIVED` -> `ARCHIVED`
+  - `ZZ_UPD_TIMESTAMP` -> `ZZ_UPD_TIMESTAMP`
+  - `ZZ_CUSTTYPE` -> `ZZ_CUSTTYPE`
+  - `ZZ_RX_CNT_NS` -> `ZZ_RX_CNT_NS`
+  - `ZZ_RX_CNT_REFILL` -> `ZZ_RX_CNT_REFILL`
+  - `ZZ_RX_CNT_GE84_NS` -> `ZZ_RX_CNT_GE84_NS`
+  - `ZZ_RX_CNT_GE84_RE` -> `ZZ_RX_CNT_GE84_RE`
+  - `ZZ_RX_MCRX_GE84_NS` -> `ZZ_RX_MCRX_GE84_NS`
+  - `ZZ_RX_MCRX_GE84_RE` -> `ZZ_RX_MCRX_GE84_RE`
+- Filters defined in projection:
+  - `RECORDQUALIFIER` including `"25"` -> keep rows where `RECORDQUALIFIER = '25'` semantics
+  - `WORKSTATIONID` excluding `"0000000000"` -> keep rows where `WORKSTATIONID <> '0000000000'` semantics
+  - `ZZ_UPD_TIMESTAMP` excluding `"0"` -> keep rows where `ZZ_UPD_TIMESTAMP <> '0'` semantics
+- No calculated columns
+- No joins
+- No aggregations
+- No parameters/placeholders/variables present in the XML
+
+SOURCE_LOGIC:
+The source artifact is a SAP HANA Calculation View XML with root element `Calculation:scenario`. The root attributes specify:
+- `dataCategory="DIMENSION"`
+- `outputViewType="Projection"`
+
+Because the view is a DIMENSION / Projection view, the final output is row-level and does not require GROUP BY and aggregation.
+
+Logical behavior identified:
+- Read from base table `SAPABAP1`."/POSDW/TLOGF_X"
+- Apply a single projection node (`Projection_1`)
+- Pass through 14 columns unchanged
+- Apply three filters in the projection:
+  - include only rows where `RECORDQUALIFIER` equals `25`
+  - exclude rows where `WORKSTATIONID` equals `0000000000`
+  - exclude rows where `ZZ_UPD_TIMESTAMP` equals `0`
+- Output exactly the 14 attributes defined in the logical model
+- No joins, no unions, no calculated attributes, no measures, no aggregation nodes, and no procedural logic are present
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_TLOGF_X AS (
+  SELECT
+    `MANDT`,
+    `RETAILSTOREID`,
+    `BUSINESSDAYDATE`,
+    `RECORDQUALIFIER`,
+    `WORKSTATIONID`,
+    `ARCHIVED`,
+    `ZZ_UPD_TIMESTAMP`,
+    `ZZ_CUSTTYPE`,
+    `ZZ_RX_CNT_NS`,
+    `ZZ_RX_CNT_REFILL`,
+    `ZZ_RX_CNT_GE84_NS`,
+    `ZZ_RX_CNT_GE84_RE`,
+    `ZZ_RX_MCRX_GE84_NS`,
+    `ZZ_RX_MCRX_GE84_RE`
+  FROM `PROJECT.DATASET._POSDW_TLOGF_X`
+  WHERE `RECORDQUALIFIER` = '25'
+    AND `WORKSTATIONID` <> '0000000000'
+    AND `ZZ_UPD_TIMESTAMP` <> '0'
+)
+
+SELECT
+  `MANDT`,
+  `RETAILSTOREID`,
+  `BUSINESSDAYDATE`,
+  `RECORDQUALIFIER`,
+  `WORKSTATIONID`,
+  `ARCHIVED`,
+  `ZZ_UPD_TIMESTAMP`,
+  `ZZ_CUSTTYPE`,
+  `ZZ_RX_CNT_NS`,
+  `ZZ_RX_CNT_REFILL`,
+  `ZZ_RX_CNT_GE84_NS`,
+  `ZZ_RX_CNT_GE84_RE`,
+  `ZZ_RX_MCRX_GE84_NS`,
+  `ZZ_RX_MCRX_GE84_RE`
+FROM Filtered_TLOGF_X
+```
+
+CONVERSION_NOTES:
+- The artifact was interpreted semantically as Calculation View XML, not as plain SQL.
+- `Projection_1` is a generic projection-node name. Per the naming rule, it was replaced in the generated SQL with the functional CTE name `Filtered_TLOGF_X` because the node is a projection over `/POSDW/TLOGF_X` with explicit filters.
+- The final SQL preserves row-level projection behavior because `dataCategory="DIMENSION"` and `outputViewType="Projection"` do not imply aggregation.
+- No HANA-specific functions required conversion.
+- The source object `SAPABAP1`."/POSDW/TLOGF_X"` cannot be used directly as a BigQuery object name without a target mapping. A placeholder BigQuery table reference `PROJECT.DATASET._POSDW_TLOGF_X` was used.
+- Filter literals were preserved as string literals (`'25'`, `'0000000000'`, `'0'`) because the XML does not provide datatype metadata, and the instructions prohibit changing literal typing without evidence.
+- BigQuery NULL behavior should be validated for the `<>` predicates if source columns can contain NULL, because rows with NULL in those columns will not satisfy the predicate in standard SQL. The HANA XML expresses exclusion filters, but datatype/nullability details are not provided here.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET._POSDW_TLOGF_X` is a placeholder representing the BigQuery table mapped from HANA source table `SAPABAP1`."/POSDW/TLOGF_X"`.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project/dataset/table mapping for `SAPABAP1`."/POSDW/TLOGF_X"` is not provided.
+- Source datatypes for `RECORDQUALIFIER`, `WORKSTATIONID`, and `ZZ_UPD_TIMESTAMP` are not provided, so literal datatype compatibility must be validated.
+- Exact source NULL-handling equivalence for the exclusion filters should be validated because nullability metadata is not present in the XML.
+
+CONFIDENCE:
+Medium

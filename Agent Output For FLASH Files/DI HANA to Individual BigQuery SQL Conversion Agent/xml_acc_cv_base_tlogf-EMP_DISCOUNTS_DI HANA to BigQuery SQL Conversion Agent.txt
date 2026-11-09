@@ -1,0 +1,157 @@
+SOURCE_ARTIFACT:
+CV_BASE_TLOGF
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_TLOGF
+- Source table: `SAPABAP1./POSDW/TLOGF` (physical BigQuery mapping not provided)
+- Projection node: `Projection_1`
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from `SAPABAP1./POSDW/TLOGF` through `Projection_1`:
+  - `MANDT` -> `MANDT`
+  - `RETAILSTOREID` -> `RETAILSTOREID`
+  - `BUSINESSDAYDATE` -> `BUSINESSDAYDATE`
+  - `RECORDQUALIFIER` -> `RECORDQUALIFIER`
+  - `TRANSTYPECODE` -> `TRANSTYPECODE`
+  - `WORKSTATIONID` -> `WORKSTATIONID`
+  - `SALESAMOUNT` -> `SALESAMOUNT`
+  - `REDUCTIONAMOUNT` -> `REDUCTIONAMOUNT`
+  - `ARCHIVED` -> `ARCHIVED`
+  - `RETAILTYPECODE` -> `RETAILTYPECODE`
+  - `ZZ_UPD_TIMESTAMP` -> `ZZ_UPD_TIMESTAMP`
+  - `DISCTYPECODE` -> `DISCTYPECODE`
+  - `TRANSCURRENCY` -> `TRANSCURRENCY`
+- Filters defined in projection:
+  - `RECORDQUALIFIER IN ('5', '6')`
+  - `TRANSTYPECODE NOT IN ('1107', '1197', '1020')`
+  - `WORKSTATIONID <> '0000000000'`
+  - `ARCHIVED = ''`
+  - `ZZ_UPD_TIMESTAMP <> '0'`
+- Logical model output attributes:
+  - `MANDT`
+  - `RETAILSTOREID`
+  - `BUSINESSDAYDATE`
+  - `RECORDQUALIFIER`
+  - `TRANSTYPECODE`
+  - `WORKSTATIONID`
+  - `ARCHIVED`
+  - `RETAILTYPECODE`
+  - `ZZ_UPD_TIMESTAMP`
+  - `DISCTYPECODE`
+  - `TRANSCURRENCY`
+- Logical model output measures:
+  - `SALESAMOUNT` with aggregationType=`sum`
+  - `REDUCTIONAMOUNT` with aggregationType=`sum`
+- No calculated attributes
+- No calculated measures
+- No joins
+- No parameters/placeholders/variables explicitly defined
+
+SOURCE_LOGIC:
+- The artifact is a SAP HANA Calculation View XML.
+- Root element attributes:
+  - `dataCategory="CUBE"`
+  - `outputViewType="Aggregation"`
+- Therefore, the final output is aggregated output, not row-level output.
+- The view reads from a single base table `SAPABAP1./POSDW/TLOGF`.
+- A single projection node passes through 13 columns with direct mappings from source to output.
+- Projection-level filters restrict rows to:
+  - `RECORDQUALIFIER` included in 5 and 6
+  - `TRANSTYPECODE` excluded from 1107, 1197, 1020
+  - `WORKSTATIONID` excluded when equal to 0000000000
+  - `ARCHIVED` included only when equal to empty string
+  - `ZZ_UPD_TIMESTAMP` excluded when equal to 0
+- No joins, unions, calculated columns, parameters, placeholders, or procedural logic are present in the XML.
+- Because this is a `CUBE` + `Aggregation` view, the final output requires `GROUP BY` on every non-measure output column and `SUM()` on both measures:
+  - Group by 11 non-measure output attributes
+  - Aggregate `SALESAMOUNT` and `REDUCTIONAMOUNT`
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+WITH Filtered_TLOGF AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    RECORDQUALIFIER,
+    TRANSTYPECODE,
+    WORKSTATIONID,
+    SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    ARCHIVED,
+    RETAILTYPECODE,
+    ZZ_UPD_TIMESTAMP,
+    DISCTYPECODE,
+    TRANSCURRENCY
+  FROM `PROJECT.DATASET.TABLE`
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+)
+
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  RECORDQUALIFIER,
+  TRANSTYPECODE,
+  WORKSTATIONID,
+  ARCHIVED,
+  RETAILTYPECODE,
+  ZZ_UPD_TIMESTAMP,
+  DISCTYPECODE,
+  TRANSCURRENCY,
+  SUM(SALESAMOUNT) AS SALESAMOUNT,
+  SUM(REDUCTIONAMOUNT) AS REDUCTIONAMOUNT
+FROM Filtered_TLOGF
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  RECORDQUALIFIER,
+  TRANSTYPECODE,
+  WORKSTATIONID,
+  ARCHIVED,
+  RETAILTYPECODE,
+  ZZ_UPD_TIMESTAMP,
+  DISCTYPECODE,
+  TRANSCURRENCY
+```
+
+CONVERSION_NOTES:
+- `Projection_1` is a generic system-generated projection node name, so it was renamed to the functional CTE name `Filtered_TLOGF` based on the explicit XML logic. No other names were renamed.
+- The source table `SAPABAP1./POSDW/TLOGF` cannot be used directly as a valid BigQuery identifier without an agreed physical mapping, so a placeholder was used: `PROJECT.DATASET.TABLE`.
+- The XML defines a single-node projection only; no join or union logic exists.
+- Because the Calculation View root has `dataCategory="CUBE"` and `outputViewType="Aggregation"`, the final SQL includes:
+  - explicit output attributes
+  - `SUM(SALESAMOUNT)`
+  - `SUM(REDUCTIONAMOUNT)`
+  - `GROUP BY` for every non-measure output column
+- Output column count validated against logical model:
+  - Attributes: 11
+  - Measures: 2
+  - Total final output columns: 13
+- Filter literal datatypes are not explicitly provided in the XML. To preserve source literal semantics, the filter values were kept as quoted string literals exactly as expressed in the XML values.
+- No HANA-specific scalar functions, date functions, placeholders, session variables, or SQLScript constructs were present, so no function translation was required.
+- BigQuery Standard SQL does not support HANA schema/object notation like `SAPABAP1./POSDW/TLOGF` directly; physical object mapping must be supplied externally.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.TABLE` is the BigQuery replacement for source table `SAPABAP1./POSDW/TLOGF`.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project/dataset/table mapping for source object `SAPABAP1./POSDW/TLOGF`
+- Source column datatypes are not provided in the XML, so literal compatibility for:
+  - `RECORDQUALIFIER`
+  - `TRANSTYPECODE`
+  - `WORKSTATIONID`
+  - `ARCHIVED`
+  - `ZZ_UPD_TIMESTAMP`
+  should be validated against the physical BigQuery schema
+
+CONFIDENCE:
+Medium

@@ -1,0 +1,192 @@
+SOURCE_ARTIFACT:
+CV_BASE_FIN_FLASH_SALES_CAR
+
+SOURCE_TYPE:
+Calculation View XML
+
+SOURCE_OBJECTS:
+- Calculation View: CV_BASE_FIN_FLASH_SALES_CAR
+- Source table: CVS_FRIP.FLASH_SALES_VT_CAR
+- Projection node: Projection_1
+- Input parameters / local variables:
+  - IP_UPD_TIMESTAMP_FROM
+  - IP_UPD_TIMESTAMP_TO
+
+SOURCE_COLUMNS_AND_MAPPINGS:
+- Direct source-to-target mappings from CVS_FRIP.FLASH_SALES_VT_CAR through Projection_1:
+  - MANDT -> MANDT
+  - RETAILSTOREID -> RETAILSTOREID
+  - BUSINESSDAYDATE -> BUSINESSDAYDATE
+  - FS_SALESAMOUNT -> FS_SALESAMOUNT
+  - REDUCTIONAMOUNT -> REDUCTIONAMOUNT
+  - RX_SALESAMOUNT -> RX_SALESAMOUNT
+  - CAL_FS_UNITS -> CAL_FS_UNITS
+  - EMP_REDUCTIONAMOUNT -> EMP_REDUCTIONAMOUNT
+  - CAL_RX_CNT_GE84_NS -> CAL_RX_CNT_GE84_NS
+  - CAL_RX_CNT_GE84_RE -> CAL_RX_CNT_GE84_RE
+  - CAL_RX_CNT_NS -> CAL_RX_CNT_NS
+  - CAL_RX_CNT_RE -> CAL_RX_CNT_RE
+  - RX_UPD_TIMESTAMP -> RX_UPD_TIMESTAMP
+  - FS_UPD_TIMESTAMP -> FS_UPD_TIMESTAMP
+  - SCRIPTS_UPD_TIMESTAMP -> SCRIPTS_UPD_TIMESTAMP
+  - ZZ_UPD_TIMESTAMP -> ZZ_UPD_TIMESTAMP
+  - TRANSCURRENCY -> TRANSCURRENCY
+  - CVD_AMOUNT -> CVD_AMOUNT
+  - CAL_CVD_UNITS -> CAL_CVD_UNITS
+- Calculated view attributes in Projection_1:
+  - CAL_UPD_TIMESTAMP_FROM = '$$IP_UPD_TIMESTAMP_FROM$$'
+  - CAL_UPD_TIMESTAMP_TO = '$$IP_UPD_TIMESTAMP_TO$$'
+- Filter in Projection_1:
+  - ZZ_UPD_TIMESTAMP >= CAL_UPD_TIMESTAMP_FROM
+  - ZZ_UPD_TIMESTAMP <= CAL_UPD_TIMESTAMP_TO
+- Output attributes in logical model:
+  - MANDT
+  - RETAILSTOREID
+  - BUSINESSDAYDATE
+  - ZZ_UPD_TIMESTAMP
+  - TRANSCURRENCY
+- Output measures and aggregations in logical model:
+  - FS_SALESAMOUNT -> SUM
+  - REDUCTIONAMOUNT -> SUM
+  - RX_SALESAMOUNT -> SUM
+  - CAL_FS_UNITS -> SUM
+  - EMP_REDUCTIONAMOUNT -> SUM
+  - CAL_RX_CNT_GE84_NS -> SUM
+  - CAL_RX_CNT_GE84_RE -> SUM
+  - CAL_RX_CNT_NS -> SUM
+  - CAL_RX_CNT_RE -> SUM
+  - RX_UPD_TIMESTAMP -> MAX
+  - FS_UPD_TIMESTAMP -> MAX
+  - SCRIPTS_UPD_TIMESTAMP -> MAX
+  - CVD_AMOUNT -> SUM
+  - CAL_CVD_UNITS -> SUM
+
+SOURCE_LOGIC:
+The source artifact is a SAP HANA Calculation View XML with root element Calculation:scenario. The root attributes explicitly specify:
+- dataCategory="CUBE"
+- outputViewType="Aggregation"
+
+Therefore, the final output requires GROUP BY and aggregation.
+
+The view reads from a single base table, CVS_FRIP.FLASH_SALES_VT_CAR, via one projection node. There are no joins, unions, or additional nodes.
+
+Projection_1 passes through 19 source columns unchanged and defines 2 calculated attributes from input parameters:
+- CAL_UPD_TIMESTAMP_FROM from IP_UPD_TIMESTAMP_FROM
+- CAL_UPD_TIMESTAMP_TO from IP_UPD_TIMESTAMP_TO
+
+Projection_1 applies a filter:
+- ZZ_UPD_TIMESTAMP between the two parameter-derived values, inclusive
+
+The logical model defines 5 non-measure output attributes:
+- MANDT
+- RETAILSTOREID
+- BUSINESSDAYDATE
+- ZZ_UPD_TIMESTAMP
+- TRANSCURRENCY
+
+The logical model defines 14 measures with explicit aggregation behavior:
+- SUM for sales, counts, units, discounts, and CVD columns
+- MAX for RX_UPD_TIMESTAMP, FS_UPD_TIMESTAMP, and SCRIPTS_UPD_TIMESTAMP
+
+Because this is a CUBE/Aggregation view, the final SQL must:
+- GROUP BY all 5 non-measure output attributes
+- Aggregate all 14 measures with their specified aggregation functions
+
+CONVERTED_BIGQUERY_SQL:
+```sql
+-- BigQuery Standard SQL
+-- Parameter defaults derived from Calculation View localVariables:
+--   IP_UPD_TIMESTAMP_FROM default = '19000101000000'
+--   IP_UPD_TIMESTAMP_TO   default = '99991231125959'
+
+WITH Filtered_FLASH_SALES_VT_CAR AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    FS_SALESAMOUNT,
+    REDUCTIONAMOUNT,
+    RX_SALESAMOUNT,
+    CAL_FS_UNITS,
+    EMP_REDUCTIONAMOUNT,
+    CAL_RX_CNT_GE84_NS,
+    CAL_RX_CNT_GE84_RE,
+    CAL_RX_CNT_NS,
+    CAL_RX_CNT_RE,
+    RX_UPD_TIMESTAMP,
+    FS_UPD_TIMESTAMP,
+    SCRIPTS_UPD_TIMESTAMP,
+    ZZ_UPD_TIMESTAMP,
+    TRANSCURRENCY,
+    CVD_AMOUNT,
+    CAL_CVD_UNITS
+  FROM `PROJECT.DATASET.FLASH_SALES_VT_CAR`
+  WHERE ZZ_UPD_TIMESTAMP >= @IP_UPD_TIMESTAMP_FROM
+    AND ZZ_UPD_TIMESTAMP <= @IP_UPD_TIMESTAMP_TO
+)
+
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  ZZ_UPD_TIMESTAMP,
+  TRANSCURRENCY,
+  SUM(FS_SALESAMOUNT) AS FS_SALESAMOUNT,
+  SUM(REDUCTIONAMOUNT) AS REDUCTIONAMOUNT,
+  SUM(RX_SALESAMOUNT) AS RX_SALESAMOUNT,
+  SUM(CAL_FS_UNITS) AS CAL_FS_UNITS,
+  SUM(EMP_REDUCTIONAMOUNT) AS EMP_REDUCTIONAMOUNT,
+  SUM(CAL_RX_CNT_GE84_NS) AS CAL_RX_CNT_GE84_NS,
+  SUM(CAL_RX_CNT_GE84_RE) AS CAL_RX_CNT_GE84_RE,
+  SUM(CAL_RX_CNT_NS) AS CAL_RX_CNT_NS,
+  SUM(CAL_RX_CNT_RE) AS CAL_RX_CNT_RE,
+  MAX(RX_UPD_TIMESTAMP) AS RX_UPD_TIMESTAMP,
+  MAX(FS_UPD_TIMESTAMP) AS FS_UPD_TIMESTAMP,
+  MAX(SCRIPTS_UPD_TIMESTAMP) AS SCRIPTS_UPD_TIMESTAMP,
+  SUM(CVD_AMOUNT) AS CVD_AMOUNT,
+  SUM(CAL_CVD_UNITS) AS CAL_CVD_UNITS
+FROM Filtered_FLASH_SALES_VT_CAR
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  ZZ_UPD_TIMESTAMP,
+  TRANSCURRENCY
+```
+
+CONVERSION_NOTES:
+- The source artifact is a Calculation View XML, so the XML was interpreted semantically rather than as SQL text.
+- The generic intermediate node name Projection_1 was not used directly as a CTE name in the output SQL. A functional intermediate CTE name, Filtered_FLASH_SALES_VT_CAR, was used because the node's purpose is reliably established from the XML: projection from FLASH_SALES_VT_CAR plus parameter-based filtering.
+- The original source object name FLASH_SALES_VT_CAR and all output column names were preserved.
+- Because the root XML specifies dataCategory="CUBE" and outputViewType="Aggregation", the final query includes:
+  - GROUP BY on every non-measure output attribute
+  - SUM/MAX aggregation on every measure according to the logical model
+- Output column count validation:
+  - Attributes: 5
+  - Measures: 14
+  - Total final output columns: 19
+  - The generated SQL returns exactly 19 columns.
+- HANA parameter variables IP_UPD_TIMESTAMP_FROM and IP_UPD_TIMESTAMP_TO were represented as BigQuery query parameters:
+  - @IP_UPD_TIMESTAMP_FROM
+  - @IP_UPD_TIMESTAMP_TO
+- The HANA XML defines default values for those parameters:
+  - 19000101000000
+  - 99991231125959
+  These defaults are documented in comments, but actual defaulting behavior in BigQuery depends on the calling layer or scripting wrapper.
+- No joins, unions, calculated measures, restricted measures, or external Calculation View dependencies are present in the provided XML.
+- No CAST or SAFE_CAST was introduced. The filter compares ZZ_UPD_TIMESTAMP directly to the parameters, preserving source-style comparison semantics as closely as possible.
+- The XML declares the calculated parameter attributes as DECIMAL while the variables are defined as NVARCHAR. Because the physical datatype of ZZ_UPD_TIMESTAMP is not provided in the XML, no datatype coercion was added.
+
+ASSUMPTIONS:
+- `PROJECT.DATASET.FLASH_SALES_VT_CAR` is a placeholder for the actual BigQuery table mapped from SAP HANA source table CVS_FRIP.FLASH_SALES_VT_CAR.
+- The BigQuery execution context will supply @IP_UPD_TIMESTAMP_FROM and @IP_UPD_TIMESTAMP_TO, or equivalent defaults will be applied outside this SQL.
+- ZZ_UPD_TIMESTAMP and the parameter values are type-compatible in BigQuery without requiring an explicit cast.
+
+UNRESOLVED_ITEMS:
+- Actual BigQuery project and dataset mapping for source table CVS_FRIP.FLASH_SALES_VT_CAR is not provided.
+- The physical datatype of ZZ_UPD_TIMESTAMP is not provided in the XML.
+- The runtime BigQuery mechanism for applying the HANA default parameter values is not defined in the source artifact.
+- The XML shows parameter-derived calculated attributes as DECIMAL while the variables are declared as NVARCHAR; datatype compatibility requires validation in the target environment.
+
+CONFIDENCE:
+Medium
