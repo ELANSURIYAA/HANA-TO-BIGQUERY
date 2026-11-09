@@ -1,0 +1,220 @@
+/**************************************************************************
+Procedure Name    :  "STP_WSS_FLASH_SALES"
+Version           :  1.0
+Team Responsible  :  CVS FRIP
+Created By        :  Bhavdeep Vashitha
+Created On        :  02/03/2020
+Updated By        :  Upamanyu Mukherjee           
+Updated On        :  5/21/2020 - Include AREA and AREA_DESC
+Objective         :  This procedure will take snapshot of CAR data every Monday at 5am.
+Source            :  _SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FIN_FLASH
+Target            :  "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES"
+***************************************************************************/
+
+PROCEDURE "CVS_FRIP"."CVS_FRIP.Procedure.FI::STP_WSS_FLASH_SALES" () 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY DEFINER 
+	DEFAULT SCHEMA CVS_FRIP
+	AS
+BEGIN
+DECLARE V_CURRENT_DATE DATE := TO_DATE(CURRENT_DATE);
+--Declare and intialize variables
+DECLARE V_ADJ INTEGER;
+DECLARE V_WEEK_ENDING_FROM_DATE NVARCHAR(8);
+DECLARE V_WEEK_ENDING_TO_DATE NVARCHAR(8);
+DECLARE V_UPDATE_TIMESTAMP_FROM DECIMAL(15,0);
+DECLARE V_UPDATE_TIMESTAMP_TO DECIMAL(15,0);
+
+--joes 6/1/2021 earlier modifications to CHD BASE view SAPCAR.CVS_FRIP.Composite/CV_COMP_FLASH_SALES
+--  business week was summed/consolidated to match legacy outbound
+--  there are now seven rows not more as we had seen from go-live
+--  The seven rows represent one day for the business week per store.  FS and RX summed up properly
+--The change here is the v_update_timestamp are assuming local time as we use in Variants
+--  However, updatetimestamp values from validation are stored as GMT
+--GMT is 4 or 5 hours ahead of local time depending on daylight or standard time
+--  What happens with the hard coded 050000 below is we miss validation updatetimestamps
+--  that are GMT times of 070000.  This row should be included in this query as (GMT-4) 070000 is really 3am local time
+--  and well within the 050000 local time range boundry
+--
+--The data found in CV_COMP_FIN_FLASH should be exactly the same coming here from SAPCAR CV_COMP_FLASH_SALES
+--
+--That said what is happening is the CV_COMP_FIN_FLASH view will have zz_updatetimestamps greater than 050000 on occassion
+--  These rows before this fix were being dropped and not included so some stores had only six days of data and not severn
+--  example a zz_updatetimestamp of 070000 is outside the original query that is using 050000 as the end time
+--
+--CAR side Validation timings.  4:05am validation, 5:15am Weekly legacy/FIRP both run, 5:15am next validation
+--  This assures that the 050001 to 050000 will work in the Variant
+--  We now can adjust the 050000 to UTC - 5 (GMT-5) for Eastern Standard Time.  We cover daylight savings time with this as weel
+--  The timestamps from the 5:15am validation would be after 050000
+--Originally this was
+--V_UPDATE_TIMESTAMP_FROM := TO_DECIMAL(REPLACE(TO_CHAR(ADD_DAYS(V_CURRENT_DATE,-9-:V_ADJ)),'-','')||'050001');
+--V_UPDATE_TIMESTAMP_TO := TO_DECIMAL(REPLACE(TO_CHAR(V_CURRENT_DATE),'-','')||'050000');
+--
+--
+--
+--20220209 joes adding two new columns for COVID AB to match the added columns in Legacy file
+--  changes were made on CHD side of the model to get summary data from TLOGF and TLOGF_X and make available for FIRP to use
+--new columns are cvd_amount and cal_cvd_units
+--
+--
+--
+SELECT WEEKDAY(:V_CURRENT_DATE) INTO V_ADJ FROM DUMMY
+;
+V_WEEK_ENDING_FROM_DATE := REPLACE(ADD_DAYS(V_CURRENT_DATE,-8-:V_ADJ),'-','');
+V_WEEK_ENDING_TO_DATE := REPLACE(ADD_DAYS(V_CURRENT_DATE,-2-:V_ADJ),'-','');
+--changed 6/8/2021 after hours of researching and comparing updatetimestamps
+--the 4am validation job only runs typically 5 - 10 minutes.  start 4:05am ends by 4:15am
+--UTC or GMT would be local time   UTC-5  giving us 4am.  I'll move to 4:14am so we have everything
+--and we avoid the timestamps from the 5:15am run.  Close calls but should reduce the huge varinces we see
+--
+--
+--
+--V_UPDATE_TIMESTAMP_FROM := TO_DECIMAL(REPLACE(TO_CHAR(ADD_DAYS(V_CURRENT_DATE,-9-:V_ADJ)),'-','')||'091401');
+--V_UPDATE_TIMESTAMP_TO := TO_DECIMAL(REPLACE(TO_CHAR(V_CURRENT_DATE),'-','')||'091400');
+--changed 7/15/2021 prior changes reduced the variance from hundreds per week down to just eight
+--remaining stores are missing one or two full days of FS amounts
+--found in CAR that these transactions come in with posting dates for the prior week however the POS date
+--is for later on Monday.  After the 5am run completes.  View CV_COMP_FLASH_SALES (CHP) matches Legacy and is all the data we need
+--The updatetimestamp is preventing the few days we need from being included when this query runs to fill the static table
+--So fix is to totally ignore the updatetimestamp range, its not needed and is in the way
+--All the correct data was already calculated and resides on CAR/CHP in view CV_COMP_FLASH_SALES
+--so changing the updatetimestamp range to be very wide 
+--Remember we are not grouping and summarizing the raw data, here its just get data thats already processed and ready to copy
+--Inside the view CV_COMP_FIN_FLASH the updatetimestamp in Optional as well  19000101000000 - 999912315959 are defaults
+
+V_UPDATE_TIMESTAMP_FROM := TO_DECIMAL(REPLACE(TO_CHAR(ADD_DAYS(V_CURRENT_DATE,-9-:V_ADJ)),'-','')||'091401');
+V_UPDATE_TIMESTAMP_TO := TO_DECIMAL(REPLACE(TO_CHAR(V_CURRENT_DATE),'-','')||'230000');
+
+--Delete existing data 
+	DELETE FROM "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES"
+	;
+
+--Load data for prior week
+	 INSERT INTO "CVS_FRIP"."CVS_FRIP.Table::TBL_WSS_FLASH_SALES" (
+		"MANDT",
+		"RETAILSTOREID",
+		"PRCTR",
+		"BUSINESSDAYDATE",
+		"ZZWEEK",
+		"ZRYEAR",
+		"ZRPERIOD",
+		"ZRYRP",
+		"CAL_WEEK_ENDING_DATE",
+		"FS_COMP_WK",
+		"RX_COMP_WK",
+		"EMERG_MKT_IND",
+		"REP_MKT_CODE",
+		"REP_MKT_DESC",
+		"CAL_COMP_FLAG",
+		"DIVISION_CODE",
+		"DIVISION_DESC",
+		"REGION_CODE",
+		"REGION_DESC",
+		"DISTRICT_CODE",
+		"DISTRICT_DESC",
+		--Added for Rx ARD Realignment
+		RX_DIVISION_CODE,
+		RX_AREA_CODE,
+		RX_REGION_CODE,
+		RX_DISTRICT_CODE,
+		--Added for Rx ARD Realignment
+		"ZRWENDDATE",
+		"ZRWSTRTDATE",
+		"CAL_WEEK_NUMBER",
+		"CITY",
+		"STATE",
+		"FS_SALESAMOUNT",
+		"REDUCTIONAMOUNT",
+		"RX_SALESAMOUNT",
+		"CAL_FS_UNITS",
+		"CAL_RX_CNT_GE84_NS",
+		"CAL_RX_CNT_GE84_RE",
+		--"CAL_FS_SALES",
+		"CAL_SCRIPTS_90AS3",
+		"CAL_RX_CNT_NS",
+		"CAL_RX_CNT_RE",
+		"EMP_REDUCTIONAMOUNT",
+		"PROFIT_CENTER_TEXT",
+		"FS_OPEN_DAT",
+		"RX_OPEN_DAT",
+		"RX_UPD_TIMESTAMP",
+		"FS_UPD_TIMESTAMP",
+		"SCRIPTS_UPD_TIMESTAMP",
+		"ZZ_UPD_TIMESTAMP",
+		"SNAPSHOT_TIMESTAMP",
+		"CREATED_BY",
+		"TRANSCURRENCY",
+		AREA_CODE,
+		AREA_DESC,
+        "CVD_AMOUNT",
+		"CAL_CVD_UNITS")
+		SELECT
+		"MANDT",
+		"RETAILSTOREID",
+		"PRCTR",
+		"BUSINESSDAYDATE",
+		"ZZWEEK",
+		"ZRYEAR",
+		"ZRPERIOD",
+		"ZRYRP",
+		"CAL_WEEK_ENDING_DATE",
+		"FS_COMP_WK",
+		"RX_COMP_WK",
+		"EMERG_MKT_IND",
+		"REP_MKT_CODE",
+		"REP_MKT_DESC",
+		"CAL_COMP_FLAG",
+		"DIVISION_CODE",
+		"DIVISION_DESC",
+		"REGION_CODE",
+		"REGION_DESC",
+		"DISTRICT_CODE",
+		"DISTRICT_DESC",
+		--Added for Rx ARD Realignment
+		RX_DIVISION_CODE,
+		RX_AREA_CODE,
+		RX_REGION_CODE,
+		RX_DISTRICT_CODE,
+		--Added for Rx ARD Realignment
+		"ZRWENDDATE",
+		"ZRWSTRTDATE",
+		"CAL_WEEK_NUMBER",
+		"CITY",
+		"STATE",
+		"FS_SALESAMOUNT",
+		"REDUCTIONAMOUNT",
+		"RX_SALESAMOUNT",
+		"CAL_FS_UNITS",
+		"CAL_RX_CNT_GE84_NS",
+		"CAL_RX_CNT_GE84_RE",
+		--"CAL_FS_SALES",
+		"CAL_SCRIPTS_90AS3",
+		"CAL_RX_CNT_NS",
+		"CAL_RX_CNT_RE",
+		"EMP_REDUCTIONAMOUNT",
+		"PROFIT_CENTER_TEXT",
+		"FS_OPEN_DAT",
+		"RX_OPEN_DAT",
+		"RX_UPD_TIMESTAMP",
+		"FS_UPD_TIMESTAMP",
+		"SCRIPTS_UPD_TIMESTAMP",
+		"ZZ_UPD_TIMESTAMP",
+		CURRENT_TIMESTAMP,
+		SESSION_USER,
+		"TRANSCURRENCY",
+		AREA_CODE,
+        AREA_DESC,
+	    "CVD_AMOUNT",
+		"CAL_CVD_UNITS"
+		FROM "_SYS_BIC"."CVS_FRIP.Composite.FI/CV_COMP_FIN_FLASH"
+			(
+	          PLACEHOLDER."$$IP_WEEK_ENDING_TO$$" => :V_WEEK_ENDING_TO_DATE,
+	          PLACEHOLDER."$$IP_WEEK_ENDING_FROM$$" => :V_WEEK_ENDING_FROM_DATE,
+	          PLACEHOLDER."$$IP_UPD_TIMESTAMP_FROM$$" => :V_UPDATE_TIMESTAMP_FROM,
+	          PLACEHOLDER."$$IP_UPD_TIMESTAMP_TO$$" => :V_UPDATE_TIMESTAMP_TO
+			);
+		
+	--Display log
+	select :V_WEEK_ENDING_TO_DATE as "Week Ending Date",:V_WEEK_ENDING_FROM_DATE as "Week Starting Date",:V_UPDATE_TIMESTAMP_FROM "Update Date From",:V_UPDATE_TIMESTAMP_TO "Update Date To" from DUMMY
+	;
+END;
