@@ -1,0 +1,454 @@
+================================================================================
+SAP HANA TO BIGQUERY CONVERSION OUTPUT
+================================================================================
+
+SOURCE_ARTIFACT:
+9-projections-layer.xml
+
+SOURCE_OBJECT:
+CV_COMP_FIN_FLASH_COMBINED_STATIC
+
+SOURCE_TYPE:
+Calculation View XML
+
+ROOT ATTRIBUTES:
+  dataCategory   : CUBE
+  outputViewType : Aggregation
+
+SOURCE_OBJECTS:
+  CV_COMP_FIN_FLASH_STATIC
+  CV_COMP_FIN_BUDGET_STATIC
+  CV_COMP_SKF_BUDGET_STATIC
+  CV_COMP_FORECAST_MJE_STATIC
+  CV_COMP_FIN_ACTUAL_STATIC
+  CV_COMP_SKF_ACTUAL_STATIC
+  CV_COMP_TOPSIDE_ADJUSTMENTS
+
+INPUT PARAMETERS:
+  IP_WEEK_ENDING_FROM NVARCHAR(7)
+  IP_WEEK_ENDING_TO   NVARCHAR(7)
+
+SOURCE_LOGIC:
+  FLASH
+  FS_BUDGET
+  SKF_BUDGET
+  FORECAST_MJE
+  FIN_LY
+  SKF_LY
+  RX_BUDGET
+  FS_TOPSIDE_ADJ
+  RX_TOPSIDE_ADJ
+      -> COMBINED (UNION ALL)
+      -> Aggregation_1
+      -> VARIANCES
+      -> CONV_DRUG
+           -> TOTAL_ASP
+           -> STORE_FLASH
+      -> Join_4 (LEFT OUTER on _BIC_ZIO_SWEEK)
+      -> ADJUSTED_ASP
+      -> Join_5 (LEFT OUTER on PRCTR + _BIC_ZIO_SWEEK)
+      -> BUDGET_ALLOCATION
+      -> EXCLUDE_PREALLOCATED
+      -> COMP_LEVEL_ALLOCATED_BUDGET
+      -> Join_6 (LEFT OUTER on PRCTR/CAL_PROFIT_CENTER + _BIC_ZIO_SWEEK)
+      -> DIFFERENCE_ADJUSTMENT
+      -> logical model output
+
+================================================================================
+CONVERTED_BIGQUERY_SQL:
+================================================================================
+
+-- BigQuery Standard SQL
+DECLARE IP_WEEK_ENDING_FROM STRING DEFAULT NULL;
+DECLARE IP_WEEK_ENDING_TO   STRING DEFAULT NULL;
+
+WITH
+-- External source views. Replace PROJECT.DATASET with the actual BigQuery path.
+FLASH AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_FIN_FLASH_STATIC`
+),
+FS_BUDGET AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_FIN_BUDGET_STATIC`
+  WHERE _BIC_ZIO_SWEEK BETWEEN IP_WEEK_ENDING_FROM AND IP_WEEK_ENDING_TO
+),
+SKF_BUDGET AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_SKF_BUDGET_STATIC`
+  WHERE _BIC_ZIO_SWEEK BETWEEN IP_WEEK_ENDING_FROM AND IP_WEEK_ENDING_TO
+),
+FORECAST_MJE AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_FORECAST_MJE_STATIC`
+),
+FIN_LY AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_FIN_ACTUAL_STATIC`
+  WHERE _BIC_ZIO_SWEEK BETWEEN IP_WEEK_ENDING_FROM AND IP_WEEK_ENDING_TO
+),
+SKF_LY AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_SKF_ACTUAL_STATIC`
+  WHERE _BIC_ZIO_SWEEK BETWEEN IP_WEEK_ENDING_FROM AND IP_WEEK_ENDING_TO
+),
+RX_BUDGET AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_FIN_BUDGET_STATIC`
+  WHERE _BIC_ZIO_SWEEK BETWEEN IP_WEEK_ENDING_FROM AND IP_WEEK_ENDING_TO
+),
+FS_TOPSIDE_ADJ AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_TOPSIDE_ADJUSTMENTS`
+),
+RX_TOPSIDE_ADJ AS (
+  SELECT * FROM `PROJECT.DATASET.CV_COMP_TOPSIDE_ADJUSTMENTS`
+),
+
+-- IMPORTANT: Each branch must expose the same ordered schema using the exact
+-- COMBINED input mappings from the XML. Typed NULL/0 placeholders must be used
+-- for measures not supplied by a branch. SELECT * is not valid for the UNION.
+-- The branch alignment is intentionally shown as an implementation placeholder
+-- because the external BigQuery source schemas and types were not supplied.
+COMBINED AS (
+  SELECT * FROM FLASH
+  UNION ALL SELECT * FROM FS_BUDGET
+  UNION ALL SELECT * FROM FORECAST_MJE
+  UNION ALL SELECT * FROM FIN_LY
+  UNION ALL SELECT * FROM SKF_LY
+  UNION ALL SELECT * FROM SKF_BUDGET
+  UNION ALL SELECT * FROM FS_TOPSIDE_ADJ
+  UNION ALL SELECT * FROM RX_TOPSIDE_ADJ
+  UNION ALL SELECT * FROM RX_BUDGET
+),
+
+-- Mirrors the XML Aggregation_1 node. Replace ATTRIBUTE_LIST and the abbreviated
+-- measure list with the complete view attributes/aggregation types from the XML.
+Aggregation_1 AS (
+  SELECT
+    MANDT,
+    PRCTR,
+    ZZWEEK,
+    _BIC_ZIO_SWEEK,
+    SEGMENT,
+    CAL_COMP_FLAG,
+    BUDGET_COMP_FLAG,
+    FS_RX_FLAG,
+    FS_RX_FLAG_EXT,
+    EMERG_MKT_IND,
+    SUM(FS_SALESAMOUNT) AS FS_SALESAMOUNT,
+    SUM(RX_SALESAMOUNT) AS RX_SALESAMOUNT,
+    SUM(REDUCTIONAMOUNT) AS REDUCTIONAMOUNT,
+    SUM(EMP_REDUCTIONAMOUNT) AS EMP_REDUCTIONAMOUNT,
+    SUM(CAL_FS_SALES_MJE) AS CAL_FS_SALES_MJE,
+    SUM(CAL_RX_SALES_MJE) AS CAL_RX_SALES_MJE,
+    SUM(SBT) AS SBT,
+    SUM(CAL_SCRIPTS_90AS3_CAR) AS CAL_SCRIPTS_90AS3_CAR,
+    SUM(SKF_MJE_QTY) AS SKF_MJE_QTY,
+    SUM(FIN_BUDGET_AMOUNT) AS FIN_BUDGET_AMOUNT,
+    SUM(SKF_BUDGET_QTY) AS SKF_BUDGET_QTY,
+    SUM(FIN_FCST_AMOUNT) AS FIN_FCST_AMOUNT,
+    SUM(SKF_FCST_QTY) AS SKF_FCST_QTY,
+    SUM(FIN_LY_AMOUNT) AS FIN_LY_AMOUNT,
+    SUM(SKF_LY_QTY) AS SKF_LY_QTY,
+    SUM(RX_BUDGET) AS RX_BUDGET,
+    SUM(CAL_RX_BUDGET) AS CAL_RX_BUDGET,
+    MAX(FS_UPD_TIMESTAMP) AS FS_UPD_TIMESTAMP,
+    MAX(RX_UPD_TIMESTAMP) AS RX_UPD_TIMESTAMP
+  FROM COMBINED
+  GROUP BY
+    MANDT, PRCTR, ZZWEEK, _BIC_ZIO_SWEEK, SEGMENT,
+    CAL_COMP_FLAG, BUDGET_COMP_FLAG, FS_RX_FLAG,
+    FS_RX_FLAG_EXT, EMERG_MKT_IND
+),
+
+VARIANCES AS (
+  SELECT
+    a.*,
+    FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT
+      + CAL_FS_SALES_MJE + SBT AS CAL_FS_SALES,
+    RX_SALESAMOUNT + CAL_RX_SALES_MJE AS CAL_RX_SALES,
+    CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY AS CAL_SCRIPTS_90AS3,
+    FS_SALESAMOUNT - FIN_BUDGET_AMOUNT AS CAL_FS_BUD_VAR,
+    IF(FS_RX_FLAG = 'FS', FS_SALESAMOUNT - FIN_FCST_AMOUNT, 0)
+      AS CAL_FS_FORECAST_VAR,
+    IF(FS_RX_FLAG = 'FS', FS_SALESAMOUNT - FIN_LY_AMOUNT, 0)
+      AS CAL_FS_LY_VAR,
+    (RX_SALESAMOUNT + CAL_RX_SALES_MJE) - CAL_RX_BUDGET
+      AS CAL_RX_BUD_VAR,
+    (CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY) - SKF_FCST_QTY
+      AS CAL_SKF_FORECAST_VAR,
+    (CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY) - SKF_BUDGET_QTY
+      AS CAL_SKF_BUD_VAR,
+    (CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY) - SKF_LY_QTY
+      AS CAL_SKF_LY_VAR,
+    (FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT
+      + CAL_FS_SALES_MJE + SBT) - FIN_BUDGET_AMOUNT
+      AS CAL_FS_BUD_CORP_VAR,
+    IF(FS_RX_FLAG = 'FS',
+      (FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT
+       + CAL_FS_SALES_MJE + SBT) - FIN_FCST_AMOUNT, 0)
+      AS CAL_FS_FORECAST_CORP_VAR,
+    IF(FS_RX_FLAG = 'FS',
+      (FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT
+       + CAL_FS_SALES_MJE + SBT) - FIN_LY_AMOUNT, 0)
+      AS CAL_FS_LY_CORP_VAR,
+    IF(FS_RX_FLAG_EXT = 'RX',
+      (RX_SALESAMOUNT + CAL_RX_SALES_MJE) - FIN_FCST_AMOUNT, 0)
+      AS CAL_RX_FORECAST_VAR,
+    IF(FS_RX_FLAG_EXT = 'RX',
+      (RX_SALESAMOUNT + CAL_RX_SALES_MJE) - FIN_LY_AMOUNT, 0)
+      AS CAL_RX_LY_VAR,
+    IF(BUDGET_COMP_FLAG = '1', FIN_BUDGET_AMOUNT, 0)
+      AS CAL_COMP_FS_BUDGET_AMOUNT,
+    IF(CAL_COMP_FLAG = '1',
+      FS_SALESAMOUNT - REDUCTIONAMOUNT - EMP_REDUCTIONAMOUNT
+      + CAL_FS_SALES_MJE + SBT, 0)
+      AS CAL_COMP_CORPFS_SALES_AMOUNT,
+    IF(CAL_COMP_FLAG = '1', FS_SALESAMOUNT, 0)
+      AS CAL_COMP_FS_SALESAMOUNT,
+    IF(CAL_COMP_FLAG = '1', RX_SALESAMOUNT + CAL_RX_SALES_MJE, 0)
+      AS CAL_COMP_RX_SALESAMOUNT,
+    IF(BUDGET_COMP_FLAG = '1', SKF_BUDGET_QTY, 0)
+      AS CAL_COMP_BUDGET_90AS3,
+    IF(CAL_COMP_FLAG = '1', CAL_SCRIPTS_90AS3_CAR + SKF_MJE_QTY, 0)
+      AS CAL_COMP_FLASH_90AS3,
+    IF(CAL_COMP_FLAG = '1', FIN_FCST_AMOUNT, 0)
+      AS CAL_COMP_FORECAST_AMOUNT,
+    IF(CAL_COMP_FLAG = '1', SKF_FCST_QTY, 0)
+      AS CAL_COMP_FORECAST_90AS3,
+    IF(CAL_COMP_FLAG = '1', FIN_LY_AMOUNT, 0)
+      AS CAL_COMP_LY_AMOUNT,
+    IF(CAL_COMP_FLAG = '1', SKF_LY_QTY, 0)
+      AS CAL_COMP_LY_90AS3
+  FROM Aggregation_1 a
+),
+
+CONV_DRUG AS (
+  SELECT *
+  FROM VARIANCES
+  WHERE SEGMENT IS NULL OR UPPER(SEGMENT) = 'CONVDRUG'
+),
+
+-- TOTAL_ASP is aggregated at week level in the XML.
+TOTAL_ASP AS (
+  SELECT
+    _BIC_ZIO_SWEEK,
+    SUM(CAL_RX_BUDGET) AS CAL_RX_BUDGET,
+    SUM(SKF_BUDGET_QTY) AS SKF_BUDGET_QTY,
+    SUM(CAL_RX_SALES) AS CAL_RX_SALES,
+    SUM(CAL_SCRIPTS_90AS3) AS CAL_SCRIPTS_90AS3,
+    IF(SUM(SKF_BUDGET_QTY) = 0, 0,
+       ROUND(SAFE_DIVIDE(SUM(CAL_RX_BUDGET), SUM(SKF_BUDGET_QTY)), 2))
+      AS CAL_TOTAL_BUDGET_ASP,
+    IF(SUM(CAL_SCRIPTS_90AS3) = 0, 0,
+       ROUND(SAFE_DIVIDE(SUM(CAL_RX_SALES), SUM(CAL_SCRIPTS_90AS3)), 2))
+      AS CAL_TOTAL_FLASH_ASP,
+    IF(
+      IF(SUM(SKF_BUDGET_QTY) = 0, 0,
+         ROUND(SAFE_DIVIDE(SUM(CAL_RX_BUDGET), SUM(SKF_BUDGET_QTY)), 2)) = 0,
+      0,
+      ROUND(
+        SAFE_DIVIDE(
+          IF(SUM(CAL_SCRIPTS_90AS3) = 0, 0,
+             ROUND(SAFE_DIVIDE(SUM(CAL_RX_SALES), SUM(CAL_SCRIPTS_90AS3)), 2)),
+          IF(SUM(SKF_BUDGET_QTY) = 0, 0,
+             ROUND(SAFE_DIVIDE(SUM(CAL_RX_BUDGET), SUM(SKF_BUDGET_QTY)), 2))
+        ) - 1,
+        4
+      )
+    ) AS CAL_ASP_CHANGE_PERCT
+  FROM CONV_DRUG
+  GROUP BY _BIC_ZIO_SWEEK
+),
+
+-- STORE_FLASH is aggregated at PRCTR + week grain in the XML.
+STORE_FLASH AS (
+  SELECT
+    PRCTR,
+    _BIC_ZIO_SWEEK,
+    SUM(CAL_RX_SALES) AS CAL_RX_SALES,
+    SUM(CAL_SCRIPTS_90AS3) AS CAL_SCRIPTS_90AS3,
+    IF(SUM(CAL_SCRIPTS_90AS3) = 0, 0,
+       ROUND(SAFE_DIVIDE(SUM(CAL_RX_SALES), SUM(CAL_SCRIPTS_90AS3)), 2))
+      AS CAL_STORE_FLASH_ASP
+  FROM CONV_DRUG
+  WHERE CAL_RX_BUDGET = 0 OR CAL_RX_BUDGET IS NULL
+  GROUP BY PRCTR, _BIC_ZIO_SWEEK
+),
+
+-- Join_4: XML joinType=leftOuter; key=_BIC_ZIO_SWEEK.
+Join_4 AS (
+  SELECT
+    s.*,
+    t.CAL_TOTAL_BUDGET_ASP,
+    t.CAL_TOTAL_FLASH_ASP,
+    t.CAL_ASP_CHANGE_PERCT
+  FROM STORE_FLASH s
+  LEFT JOIN TOTAL_ASP t
+    USING (_BIC_ZIO_SWEEK)
+),
+
+ADJUSTED_ASP AS (
+  SELECT
+    j.*,
+    IF(CAL_ASP_CHANGE_PERCT = -1, 0,
+       ROUND(SAFE_DIVIDE(CAL_STORE_FLASH_ASP,
+                         1 + CAL_ASP_CHANGE_PERCT), 2))
+      AS CAL_ASP_ADJ_AMOUNT
+  FROM Join_4 j
+),
+
+-- Join_5: XML joinType=leftOuter; keys=PRCTR + _BIC_ZIO_SWEEK.
+Join_5 AS (
+  SELECT
+    v.*,
+    a.CAL_STORE_FLASH_ASP,
+    a.CAL_TOTAL_BUDGET_ASP,
+    a.CAL_TOTAL_FLASH_ASP,
+    a.CAL_ASP_CHANGE_PERCT,
+    a.CAL_ASP_ADJ_AMOUNT
+  FROM VARIANCES v
+  LEFT JOIN ADJUSTED_ASP a
+    USING (PRCTR, _BIC_ZIO_SWEEK)
+),
+
+BUDGET_ALLOCATION AS (
+  SELECT
+    j.*,
+    IF(RX_BUDGET = 0 OR RX_BUDGET IS NULL,
+       ROUND(SKF_BUDGET_QTY * CAL_ASP_ADJ_AMOUNT, 2),
+       RX_BUDGET)
+      AS CAL_RX_BUDGET_ALLOCATED
+  FROM Join_5 j
+),
+
+EXCLUDE_PREALLOCATED AS (
+  SELECT
+    BUDGET_COMP_FLAG,
+    _BIC_ZIO_SWEEK,
+    CAL_RX_BUDGET_ALLOCATED AS CAL_RX_BUDGET_COMP_LEVEL
+  FROM BUDGET_ALLOCATION
+  WHERE BUDGET_COMP_FLAG IS NOT NULL
+    AND (RX_BUDGET = 0 OR RX_BUDGET IS NULL)
+),
+
+COMP_LEVEL_ALLOCATED_BUDGET AS (
+  SELECT
+    IF(BUDGET_COMP_FLAG = '1', '0000502656', '0000502657')
+      AS CAL_PROFIT_CENTER,
+    _BIC_ZIO_SWEEK,
+    SUM(CAL_RX_BUDGET_COMP_LEVEL) AS CAL_RX_BUDGET_COMP_LEVEL
+  FROM EXCLUDE_PREALLOCATED
+  GROUP BY CAL_PROFIT_CENTER, _BIC_ZIO_SWEEK
+),
+
+-- Join_6: XML joinType=leftOuter. Its second input maps
+-- CAL_PROFIT_CENTER to target PRCTR; keys are PRCTR + _BIC_ZIO_SWEEK.
+Join_6 AS (
+  SELECT
+    b.*,
+    c.CAL_RX_BUDGET_COMP_LEVEL
+  FROM BUDGET_ALLOCATION b
+  LEFT JOIN COMP_LEVEL_ALLOCATED_BUDGET c
+    ON b.PRCTR = c.CAL_PROFIT_CENTER
+   AND b._BIC_ZIO_SWEEK = c._BIC_ZIO_SWEEK
+),
+
+DIFFERENCE_ADJUSTMENT AS (
+  SELECT
+    j.* EXCEPT (CAL_RX_BUDGET),
+    IF(
+      PRCTR IN ('0000502656', '0000502657')
+      AND BUDGET_COMP_FLAG IN ('0', '1'),
+      RX_BUDGET - COALESCE(CAL_RX_BUDGET_COMP_LEVEL, 0),
+      CAL_RX_BUDGET_ALLOCATED
+    ) AS CAL_RX_BUDGET_FINAL,
+    IF(
+      BUDGET_COMP_FLAG = '1',
+      IF(
+        PRCTR IN ('0000502656', '0000502657')
+        AND BUDGET_COMP_FLAG IN ('0', '1'),
+        RX_BUDGET - COALESCE(CAL_RX_BUDGET_COMP_LEVEL, 0),
+        CAL_RX_BUDGET_ALLOCATED
+      ),
+      0
+    ) AS CAL_COMP_RX_BUDGET_AMOUNT
+  FROM Join_6 j
+)
+
+-- The XML's logical model sits above DIFFERENCE_ADJUSTMENT. The final projection
+-- must expose the exact logical-model attributes and measures. Calculated
+-- measures must be applied to the already aggregated node outputs, not by
+-- generically summing ratio/percentage columns.
+SELECT
+  d.*,
+  CASE CAL_COMP_FLAG
+    WHEN '1' THEN 'Comp'
+    WHEN '0' THEN 'Non-Comp'
+    ELSE ''
+  END AS CAL_COMP_FLAG_DESC,
+  IF(EMERG_MKT_IND = 'Y', 'Yes',
+     IF(EMERG_MKT_IND = 'N', 'No', '')) AS EMERG_MKT_IND_DESC,
+  CAL_COMP_FS_SALESAMOUNT - CAL_COMP_FS_BUDGET_AMOUNT
+    AS CAL_COMP_FS_VAR_BUDGET,
+  IF(FS_RX_FLAG = 'FS',
+     CAL_COMP_FS_SALESAMOUNT - CAL_COMP_FORECAST_AMOUNT, 0)
+    AS CAL_COMP_FS_VAR_FCST,
+  IF(FS_RX_FLAG = 'FS',
+     CAL_COMP_FS_SALESAMOUNT - CAL_COMP_LY_AMOUNT, 0)
+    AS CAL_COMP_FS_VAR_LY,
+  CAL_COMP_RX_SALESAMOUNT - CAL_COMP_RX_BUDGET_AMOUNT
+    AS CAL_COMP_RX_VAR_BUDGET,
+  IF(FS_RX_FLAG_EXT = 'RX',
+     CAL_COMP_RX_SALESAMOUNT - CAL_COMP_FORECAST_AMOUNT, 0)
+    AS CAL_COMP_RX_VAR_FCST,
+  IF(FS_RX_FLAG_EXT = 'RX',
+     CAL_COMP_RX_SALESAMOUNT - CAL_COMP_LY_AMOUNT, 0)
+    AS CAL_COMP_RX_VAR_LY,
+  CAL_COMP_FLASH_90AS3 - CAL_COMP_FORECAST_90AS3
+    AS CAL_COMP_FLASH_VAR_FCST,
+  CAL_COMP_FLASH_90AS3 - CAL_COMP_BUDGET_90AS3
+    AS CAL_COMP_FLASH_VAR_BUDGET,
+  CAL_COMP_FLASH_90AS3 - CAL_COMP_LY_90AS3
+    AS CAL_COMP_FLASH_VAR_LY,
+  CAL_COMP_CORPFS_SALES_AMOUNT - CAL_COMP_FS_BUDGET_AMOUNT
+    AS CAL_COMP_CORPFS_VAR_BUDGET,
+  IF(FS_RX_FLAG = 'FS',
+     CAL_COMP_CORPFS_SALES_AMOUNT - CAL_COMP_FORECAST_AMOUNT, 0)
+    AS CAL_COMP_CORPFS_VAR_FCST,
+  IF(FS_RX_FLAG = 'FS',
+     CAL_COMP_CORPFS_SALES_AMOUNT - CAL_COMP_LY_AMOUNT, 0)
+    AS CAL_COMP_CORPFS_VAR_LY
+FROM DIFFERENCE_ADJUSTMENT d;
+
+================================================================================
+CONVERSION_NOTES:
+================================================================================
+1. The XML root id is CV_COMP_FIN_FLASH_COMBINED_STATIC.
+2. COMBINED is a UnionView, not a multi-source join.
+3. Aggregation_1 occurs before VARIANCES and ASP calculations.
+4. Join_4 is LEFT OUTER on _BIC_ZIO_SWEEK.
+5. Join_5 is LEFT OUTER on PRCTR and _BIC_ZIO_SWEEK.
+6. Join_6 is LEFT OUTER on PRCTR/CAL_PROFIT_CENTER and _BIC_ZIO_SWEEK.
+7. CAL_RX_BUDGET_COMP_LEVEL is derived and aggregated internally.
+8. ASP ratios are calculated at their XML-defined grains and are not summed in
+   a generic final GROUP BY.
+9. The query uses SAFE_DIVIDE for BigQuery divide-by-zero protection while
+   preserving the XML IF-zero behavior.
+10. The previous duplicate CAL_RX_BUDGET_FINAL alias has been removed.
+
+================================================================================
+UNRESOLVED_ITEMS:
+================================================================================
+1. Actual BigQuery project/dataset names.
+2. Exact BigQuery schemas and datatypes of the seven external source views.
+3. Exact typed column alignment for all nine COMBINED UnionView branches.
+4. BigQuery implementation of SFN_PRIOR_FISCAL_WEEK defaults.
+5. Full Aggregation_1 attribute and measure list if a completely executable,
+   schema-validated query is required.
+6. Exact BigQuery date/timestamp physical datatypes for final formatting.
+
+================================================================================
+CONFIDENCE:
+================================================================================
+High for node order, UnionView placement, aggregation placement, join types,
+join keys, and the major calculated-column flow.
+Medium for execution readiness because external BigQuery schemas, branch column
+types, object paths, and scalar-function implementation were not supplied.
+
+================================================================================
+END OF CONVERSION OUTPUT
+================================================================================
