@@ -1,0 +1,906 @@
+-- =============================================================================
+-- VT_CAR Flash Sales Consolidated BigQuery SQL
+-- Final Consumer: xml_acc_FLASH_SALES_VT_CAR (CV_BASE_FIN_FLASH_SALES_CAR)
+-- Dependency Chain:
+--   xml_acc_cv_base_NAVIX              -> CV_BASE_NAVIX
+--   xml_acc_cv_base_tlogf-EMP_DISCOUNT -> CV_BASE_TLOGF
+--   xml_acc_cv_base_SCRIPTS-tlogf_x    -> CV_BASE_TLOGF_X
+--   xml_acc_cv_base_parameters-FS_DISCOUNT_TYPES -> CV_BASE_PARAMETERS
+--   xml_acc_cv_base_tlogf_COVID_sales  -> CV_BASE_TLOGF_COVID
+--   xml_acc_cv_comp_flash_sales-VT-table-CV -> CV_COMP_FLASH_SALES
+--   xml_acc_FLASH_SALES_VT_CAR         -> CV_BASE_FIN_FLASH_SALES_CAR (final consumer)
+--
+-- Runtime Parameters:
+--   @ip_upd_timestamp_from  STRING  Lower bound for ZZ_UPD_TIMESTAMP filter
+--                                   (default documented: '19000101000000')
+--   @ip_upd_timestamp_to    STRING  Upper bound for ZZ_UPD_TIMESTAMP filter
+--                                   (default documented: '99991231125959')
+--
+-- ISSUES TO FIX (see Consolidation Description for full details):
+--   1. Physical BigQuery table mappings for /POSDW/NAVIX, /POSDW/TLOGF,
+--      /POSDW/TLOGF_X, ZTFIRP_FLASH_PRM, and FLASH_SALES_VT_CAR are NOT
+--      present in Columns_Mapping_v3.csv. Placeholder names are used.
+--      REQUIRES VALIDATION: MISSING TABLE MAPPING for all five tables.
+--   2. Column-level mappings for all columns of the above five tables are
+--      absent from Columns_Mapping_v3.csv.
+--      REQUIRES VALIDATION: MISSING COLUMN MAPPING for all referenced columns.
+--   3. ZZ_UPD_TIMESTAMP datatype is unresolved (STRING vs NUMERIC vs TIMESTAMP).
+--      Filter comparison types require validation.
+--   4. RECORDQUALIFIER filter value '25' in TLOGF_X: numeric vs string type
+--      requires validation.
+--   5. RECORDQUALIFIER IN ('5','6') and TRANSTYPECODE NOT IN ('1107','1197','1020')
+--      literal types require validation against BigQuery schema.
+-- =============================================================================
+
+-- Parameter documentation:
+--   @ip_upd_timestamp_from : STRING  - Supplied at runtime; lower bound for ZZ_UPD_TIMESTAMP
+--   @ip_upd_timestamp_to   : STRING  - Supplied at runtime; upper bound for ZZ_UPD_TIMESTAMP
+
+WITH
+
+-- =====================================================================
+-- CTE 1: NAVIX
+-- Logic: Projects MANDT, RETAILSTOREID, BUSINESSDAYDATE, CURRENCY from
+--        the /POSDW/NAVIX base table. Implements CV_BASE_NAVIX logic.
+--        No filters, joins, aggregations, or calculations.
+-- Source: `PROJECT.DATASET.POSDW_NAVIX`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- =====================================================================
+NAVIX AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CURRENCY
+  FROM `PROJECT.DATASET.POSDW_NAVIX`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/NAVIX not in Columns_Mapping_v3
+  -- REQUIRES VALIDATION: MISSING COLUMN MAPPING - all columns of /POSDW/NAVIX
+),
+
+-- =====================================================================
+-- CTE 2: FS_SALES
+-- Logic: Filters /POSDW/TLOGF to RECORDQUALIFIER = '5' (sales records),
+--        excludes specific TRANSTYPECODE values, WORKSTATIONID '0000000000',
+--        ARCHIVED = '', and ZZ_UPD_TIMESTAMP = '0'. Projects FS sales columns.
+--        Implements the FS_SALES branch of CV_COMP_FLASH_SALES consuming
+--        CV_BASE_TLOGF logic.
+-- Source: `PROJECT.DATASET.POSDW_TLOGF`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: RECORDQUALIFIER = '5', TRANSTYPECODE NOT IN ('1107','1197','1020'),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '', ZZ_UPD_TIMESTAMP <> '0'
+-- =====================================================================
+FS_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    SALESAMOUNT AS fs_salesamount,
+    RETAILTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP AS fs_upd_timestamp
+  FROM `PROJECT.DATASET.POSDW_TLOGF`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/TLOGF not in Columns_Mapping_v3
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND RECORDQUALIFIER = '5'
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+),
+
+-- =====================================================================
+-- CTE 3: FS_DISCOUNT
+-- Logic: Filters /POSDW/TLOGF to RECORDQUALIFIER = '6' (discount records),
+--        applies same base filters as CV_BASE_TLOGF. Projects FS discount columns.
+--        Implements the FS_DISCOUNT branch of CV_COMP_FLASH_SALES.
+-- Source: `PROJECT.DATASET.POSDW_TLOGF`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: RECORDQUALIFIER = '6', TRANSTYPECODE NOT IN ('1107','1197','1020'),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '', ZZ_UPD_TIMESTAMP <> '0'
+-- =====================================================================
+FS_DISCOUNT AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    REDUCTIONAMOUNT,
+    RETAILTYPECODE,
+    DISCTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/TLOGF not in Columns_Mapping_v3
+  WHERE RECORDQUALIFIER = '6'
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+),
+
+-- =====================================================================
+-- CTE 4: RX_SALES
+-- Logic: Filters /POSDW/TLOGF to RECORDQUALIFIER = '5' for RX sales.
+--        Applies same base filters as CV_BASE_TLOGF. Projects RX sales columns.
+--        Implements the RX_SALES branch of CV_COMP_FLASH_SALES.
+-- Source: `PROJECT.DATASET.POSDW_TLOGF`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: RECORDQUALIFIER = '5', TRANSTYPECODE NOT IN ('1107','1197','1020'),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '', ZZ_UPD_TIMESTAMP <> '0'
+-- =====================================================================
+RX_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    SALESAMOUNT AS rx_salesamount,
+    RETAILTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP AS rx_upd_timestamp
+  FROM `PROJECT.DATASET.POSDW_TLOGF`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/TLOGF not in Columns_Mapping_v3
+  WHERE RECORDQUALIFIER = '5'
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+),
+
+-- =====================================================================
+-- CTE 5: EMP_DISCOUNT
+-- Logic: Filters /POSDW/TLOGF to RECORDQUALIFIER = '6' for employee discounts.
+--        Applies same base filters as CV_BASE_TLOGF. Projects employee discount columns.
+--        Implements the EMP_DISCOUNT branch of CV_COMP_FLASH_SALES consuming
+--        CV_BASE_TLOGF (the EMP_DISCOUNT alias in the composite view).
+-- Source: `PROJECT.DATASET.POSDW_TLOGF`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: RECORDQUALIFIER = '6', TRANSTYPECODE NOT IN ('1107','1197','1020'),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '', ZZ_UPD_TIMESTAMP <> '0'
+-- =====================================================================
+EMP_DISCOUNT AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    REDUCTIONAMOUNT AS emp_reductionamount,
+    RETAILTYPECODE,
+    DISCTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP
+  FROM `PROJECT.DATASET.POSDW_TLOGF`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/TLOGF not in Columns_Mapping_v3
+  WHERE RECORDQUALIFIER = '6'
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+),
+
+-- =====================================================================
+-- CTE 6: SCRIPTS
+-- Logic: Filters /POSDW/TLOGF_X to RECORDQUALIFIER = 25, excludes
+--        WORKSTATIONID = '0000000000' and ZZ_UPD_TIMESTAMP = 0.
+--        Projects script/RX counter columns. Implements CV_BASE_TLOGF_X logic
+--        for the SCRIPTS branch of CV_COMP_FLASH_SALES.
+-- Source: `PROJECT.DATASET.POSDW_TLOGF_X`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: RECORDQUALIFIER = 25, WORKSTATIONID <> '0000000000',
+--          ZZ_UPD_TIMESTAMP <> 0
+-- =====================================================================
+SCRIPTS AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_RX_CNT_NS,
+    ZZ_RX_CNT_REFILL,
+    ZZ_RX_CNT_GE84_NS,
+    ZZ_RX_CNT_GE84_RE,
+    ZZ_RX_MCRX_GE84_NS,
+    ZZ_RX_MCRX_GE84_RE,
+    ZZ_CUSTTYPE,
+    ZZ_UPD_TIMESTAMP,
+    WORKSTATIONID
+  FROM `PROJECT.DATASET.POSDW_TLOGF_X`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/TLOGF_X not in Columns_Mapping_v3
+  WHERE RECORDQUALIFIER = 25
+    AND WORKSTATIONID <> '0000000000'
+    AND ZZ_UPD_TIMESTAMP <> 0
+),
+
+-- =====================================================================
+-- CTE 7: NAVIX_2
+-- Logic: Projects MANDT, RETAILSTOREID, BUSINESSDAYDATE, CURRENCY from
+--        /POSDW/NAVIX for use in the SCRIPTS join (Join_1 in composite view).
+--        Reuses same source as NAVIX CTE.
+-- Source: `PROJECT.DATASET.POSDW_NAVIX`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- =====================================================================
+NAVIX_2 AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CURRENCY
+  FROM `PROJECT.DATASET.POSDW_NAVIX`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/NAVIX not in Columns_Mapping_v3
+),
+
+-- =====================================================================
+-- CTE 8: Joined_Scripts_With_Currency
+-- Logic: Inner joins SCRIPTS with NAVIX_2 on MANDT, RETAILSTOREID,
+--        BUSINESSDAYDATE to attach CURRENCY to script records.
+--        Implements Join_1 from CV_COMP_FLASH_SALES.
+-- Source: SCRIPTS, NAVIX_2
+-- Join: INNER JOIN SCRIPTS s ON NAVIX_2 n2 ON s.MANDT=n2.MANDT,
+--       s.RETAILSTOREID=n2.RETAILSTOREID, s.BUSINESSDAYDATE=n2.BUSINESSDAYDATE
+-- =====================================================================
+Joined_Scripts_With_Currency AS (
+  SELECT
+    s.MANDT,
+    s.RETAILSTOREID,
+    s.BUSINESSDAYDATE,
+    s.ZZ_RX_CNT_NS,
+    s.ZZ_RX_CNT_REFILL,
+    s.ZZ_RX_CNT_GE84_NS,
+    s.ZZ_RX_CNT_GE84_RE,
+    s.ZZ_RX_MCRX_GE84_NS,
+    s.ZZ_RX_MCRX_GE84_RE,
+    s.ZZ_CUSTTYPE,
+    n2.CURRENCY,
+    s.ZZ_UPD_TIMESTAMP,
+    s.WORKSTATIONID
+  FROM SCRIPTS s
+  INNER JOIN NAVIX_2 n2
+    ON s.MANDT = n2.MANDT
+   AND s.RETAILSTOREID = n2.RETAILSTOREID
+   AND s.BUSINESSDAYDATE = n2.BUSINESSDAYDATE
+),
+
+-- =====================================================================
+-- CTE 9: SCRIPT_KPIs
+-- Logic: Derives calculated KPI columns from script/RX data joined with currency.
+--        Implements SCRIPT_KPIs node from CV_COMP_FLASH_SALES:
+--        - CAL_FS_UNITS: 1 if ZZ_CUSTTYPE IN ('F','M','R'), -1 if IN ('X','Y','Z'), else 0
+--        - CAL_RX_CNT_GE84_NS: 0 if empty string, else CAST to INT64
+--        - CAL_RX_CNT_GE84_RE: 0 if empty string, else CAST to INT64
+--        - CAL_RX_CNT_NS: 0 if empty string, else CAST to INT64
+--        - CAL_RX_CNT_RE: 0 if ZZ_RX_CNT_REFILL empty, else CAST to INT64
+--        - CAL_CVD_UNITS: 1 if WORKSTATIONID='0000000555' AND ZZ_CUSTTYPE='C',
+--                         -1 if WORKSTATIONID='0000000555' AND ZZ_CUSTTYPE='W', else 0
+-- Source: Joined_Scripts_With_Currency
+-- Calculation: CAL_FS_UNITS, CAL_RX_CNT_GE84_NS, CAL_RX_CNT_GE84_RE,
+--              CAL_RX_CNT_NS, CAL_RX_CNT_RE, CAL_CVD_UNITS
+-- =====================================================================
+SCRIPT_KPIs AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_RX_CNT_NS,
+    ZZ_RX_CNT_REFILL,
+    ZZ_RX_CNT_GE84_NS,
+    ZZ_RX_CNT_GE84_RE,
+    ZZ_RX_MCRX_GE84_NS,
+    ZZ_RX_MCRX_GE84_RE,
+    ZZ_CUSTTYPE,
+    CURRENCY,
+    ZZ_UPD_TIMESTAMP AS scripts_upd_timestamp,
+    WORKSTATIONID,
+    CASE
+      WHEN ZZ_CUSTTYPE IN ('F', 'M', 'R') THEN 1
+      WHEN ZZ_CUSTTYPE IN ('X', 'Y', 'Z') THEN -1
+      ELSE 0
+    END AS cal_fs_units,
+    CASE
+      WHEN ZZ_RX_CNT_GE84_NS = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_GE84_NS AS INT64)
+    END AS cal_rx_cnt_ge84_ns,
+    CASE
+      WHEN ZZ_RX_CNT_GE84_RE = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_GE84_RE AS INT64)
+    END AS cal_rx_cnt_ge84_re,
+    CASE
+      WHEN ZZ_RX_CNT_NS = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_NS AS INT64)
+    END AS cal_rx_cnt_ns,
+    CASE
+      WHEN ZZ_RX_CNT_REFILL = '' THEN 0
+      ELSE CAST(ZZ_RX_CNT_REFILL AS INT64)
+    END AS cal_rx_cnt_re,
+    CASE
+      WHEN WORKSTATIONID = '0000000555' AND ZZ_CUSTTYPE = 'C' THEN 1
+      WHEN WORKSTATIONID = '0000000555' AND ZZ_CUSTTYPE = 'W' THEN -1
+      ELSE 0
+    END AS cal_cvd_units
+  FROM Joined_Scripts_With_Currency
+),
+
+-- =====================================================================
+-- CTE 10: FS_RETAIL_TYPES
+-- Logic: Filters ZTFIRP_FLASH_PRM to PARAM_NAME = 'FS_RETAIL_TYPE_CODE'
+--        to produce the FS retail type code list. Implements FS_RETAIL_TYPES
+--        node from CV_COMP_FLASH_SALES consuming CV_BASE_PARAMETERS.
+-- Source: `PROJECT.DATASET.ZTFIRP_FLASH_PRM`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: PARAM_NAME = 'FS_RETAIL_TYPE_CODE'
+-- =====================================================================
+FS_RETAIL_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS low_char
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - ZTFIRP_FLASH_PRM not in Columns_Mapping_v3
+  WHERE PARAM_NAME = 'FS_RETAIL_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 11: Joined_FS_Sales_With_Retail_Types
+-- Logic: Inner joins FS_SALES with FS_RETAIL_TYPES on RETAILTYPECODE = low_char
+--        to keep only FS sales rows with valid retail type codes.
+--        Implements Join_2 from CV_COMP_FLASH_SALES.
+-- Source: FS_SALES, FS_RETAIL_TYPES
+-- Join: INNER JOIN FS_SALES f ON FS_RETAIL_TYPES t ON f.RETAILTYPECODE = t.low_char
+-- =====================================================================
+Joined_FS_Sales_With_Retail_Types AS (
+  SELECT
+    f.MANDT,
+    f.RETAILSTOREID,
+    f.BUSINESSDAYDATE,
+    f.fs_salesamount,
+    f.RETAILTYPECODE,
+    f.TRANSCURRENCY,
+    f.fs_upd_timestamp
+  FROM FS_SALES f
+  INNER JOIN FS_RETAIL_TYPES t
+    ON f.RETAILTYPECODE = t.low_char
+),
+
+-- =====================================================================
+-- CTE 12: EMP_DISC_TYPES
+-- Logic: Filters ZTFIRP_FLASH_PRM to PARAM_NAME = 'EMP_DISC_TYPE_CODE'
+--        to produce the employee discount type code list. Implements
+--        EMP_DISC_TYPES node from CV_COMP_FLASH_SALES consuming CV_BASE_PARAMETERS.
+-- Source: `PROJECT.DATASET.ZTFIRP_FLASH_PRM`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: PARAM_NAME = 'EMP_DISC_TYPE_CODE'
+-- =====================================================================
+EMP_DISC_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS low_char
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - ZTFIRP_FLASH_PRM not in Columns_Mapping_v3
+  WHERE PARAM_NAME = 'EMP_DISC_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 13: Joined_Employee_Discount_With_Discount_Types
+-- Logic: Inner joins EMP_DISCOUNT with EMP_DISC_TYPES on DISCTYPECODE = low_char
+--        to keep only employee discount rows with valid discount type codes.
+--        Implements Join_3 from CV_COMP_FLASH_SALES.
+-- Source: EMP_DISCOUNT, EMP_DISC_TYPES
+-- Join: INNER JOIN EMP_DISCOUNT e ON EMP_DISC_TYPES t ON e.DISCTYPECODE = t.low_char
+-- =====================================================================
+Joined_Employee_Discount_With_Discount_Types AS (
+  SELECT
+    e.MANDT,
+    e.RETAILSTOREID,
+    e.BUSINESSDAYDATE,
+    e.emp_reductionamount,
+    e.DISCTYPECODE,
+    e.TRANSCURRENCY,
+    e.ZZ_UPD_TIMESTAMP AS emp_disc_upd_timestamp
+  FROM EMP_DISCOUNT e
+  INNER JOIN EMP_DISC_TYPES t
+    ON e.DISCTYPECODE = t.low_char
+),
+
+-- =====================================================================
+-- CTE 14: RX_RETAIL_TYPES
+-- Logic: Filters ZTFIRP_FLASH_PRM to PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+--        to produce the RX retail type code list. Implements RX_RETAIL_TYPES
+--        node from CV_COMP_FLASH_SALES consuming CV_BASE_PARAMETERS.
+-- Source: `PROJECT.DATASET.ZTFIRP_FLASH_PRM`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+-- =====================================================================
+RX_RETAIL_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS low_char
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - ZTFIRP_FLASH_PRM not in Columns_Mapping_v3
+  WHERE PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 15: Joined_RX_Sales_With_Retail_Types
+-- Logic: Inner joins RX_SALES with RX_RETAIL_TYPES on RETAILTYPECODE = low_char
+--        to keep only RX sales rows with valid retail type codes.
+--        Implements Join_4 from CV_COMP_FLASH_SALES.
+-- Source: RX_SALES, RX_RETAIL_TYPES
+-- Join: INNER JOIN RX_SALES r ON RX_RETAIL_TYPES t ON r.RETAILTYPECODE = t.low_char
+-- =====================================================================
+Joined_RX_Sales_With_Retail_Types AS (
+  SELECT
+    r.MANDT,
+    r.RETAILSTOREID,
+    r.BUSINESSDAYDATE,
+    r.rx_salesamount,
+    r.RETAILTYPECODE,
+    r.TRANSCURRENCY,
+    r.rx_upd_timestamp
+  FROM RX_SALES r
+  INNER JOIN RX_RETAIL_TYPES t
+    ON r.RETAILTYPECODE = t.low_char
+),
+
+-- =====================================================================
+-- CTE 16: FS_DISC_TYPES
+-- Logic: Filters ZTFIRP_FLASH_PRM to PARAM_NAME = 'FS_DISC_TYPE_CODE'
+--        to produce the FS discount type code list. Implements FS_DISC_TYPES
+--        node from CV_COMP_FLASH_SALES consuming CV_BASE_PARAMETERS.
+-- Source: `PROJECT.DATASET.ZTFIRP_FLASH_PRM`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: PARAM_NAME = 'FS_DISC_TYPE_CODE'
+-- =====================================================================
+FS_DISC_TYPES AS (
+  SELECT
+    PARAM_VALUE_LOW AS low_char
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - ZTFIRP_FLASH_PRM not in Columns_Mapping_v3
+  WHERE PARAM_NAME = 'FS_DISC_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 17: Joined_FS_Discount_With_Discount_Types
+-- Logic: Inner joins FS_DISCOUNT with FS_DISC_TYPES on DISCTYPECODE = low_char
+--        to keep only FS discount rows with valid discount type codes.
+--        Implements Join_5 from CV_COMP_FLASH_SALES.
+-- Source: FS_DISCOUNT, FS_DISC_TYPES
+-- Join: INNER JOIN FS_DISCOUNT f ON FS_DISC_TYPES t ON f.DISCTYPECODE = t.low_char
+-- =====================================================================
+Joined_FS_Discount_With_Discount_Types AS (
+  SELECT
+    f.MANDT,
+    f.RETAILSTOREID,
+    f.BUSINESSDAYDATE,
+    f.REDUCTIONAMOUNT,
+    f.DISCTYPECODE,
+    f.TRANSCURRENCY,
+    f.ZZ_UPD_TIMESTAMP AS fs_disc_upd_timestamp
+  FROM FS_DISCOUNT f
+  INNER JOIN FS_DISC_TYPES t
+    ON f.DISCTYPECODE = t.low_char
+),
+
+-- =====================================================================
+-- CTE 18: COVID_SALES
+-- Logic: Filters /POSDW/TLOGF to RECORDQUALIFIER IN ('5','6'), excludes
+--        specific TRANSTYPECODE values, WORKSTATIONID '0000000000',
+--        ARCHIVED = '', ZZ_UPD_TIMESTAMP = '0', and ITEMID = 'A01-433556'.
+--        Projects COVID sales columns. Implements CV_BASE_TLOGF_COVID logic
+--        for the COVID_SALES branch of CV_COMP_FLASH_SALES.
+-- Source: `PROJECT.DATASET.POSDW_TLOGF`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: RECORDQUALIFIER IN ('5','6'), TRANSTYPECODE NOT IN ('1107','1197','1020'),
+--          WORKSTATIONID <> '0000000000', ARCHIVED = '', ZZ_UPD_TIMESTAMP <> '0',
+--          ITEMID = 'A01-433556'
+-- =====================================================================
+COVID_SALES AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    SALESAMOUNT AS cvd_amount,
+    RETAILTYPECODE,
+    TRANSCURRENCY,
+    ZZ_UPD_TIMESTAMP AS cvd_upd_timestamp
+  FROM `PROJECT.DATASET.POSDW_TLOGF`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - /POSDW/TLOGF not in Columns_Mapping_v3
+  WHERE RECORDQUALIFIER IN ('5', '6')
+    AND TRANSTYPECODE NOT IN ('1107', '1197', '1020')
+    AND WORKSTATIONID <> '0000000000'
+    AND ARCHIVED = ''
+    AND ZZ_UPD_TIMESTAMP <> '0'
+    AND ITEMID = 'A01-433556'
+),
+
+-- =====================================================================
+-- CTE 19: RX_RETAIL_TYPES_COVID
+-- Logic: Filters ZTFIRP_FLASH_PRM to PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+--        for the COVID sales branch. Implements RX_RETAIL_TYPES_COVID node
+--        from CV_COMP_FLASH_SALES consuming CV_BASE_PARAMETERS.
+-- Source: `PROJECT.DATASET.ZTFIRP_FLASH_PRM`  [REQUIRES VALIDATION: MISSING TABLE MAPPING]
+-- Filters: PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+-- =====================================================================
+RX_RETAIL_TYPES_COVID AS (
+  SELECT
+    PARAM_VALUE_LOW AS low_char
+  FROM `PROJECT.DATASET.ZTFIRP_FLASH_PRM`
+  -- REQUIRES VALIDATION: MISSING TABLE MAPPING - ZTFIRP_FLASH_PRM not in Columns_Mapping_v3
+  WHERE PARAM_NAME = 'RX_RETAIL_TYPE_CODE'
+),
+
+-- =====================================================================
+-- CTE 20: Joined_COVID_Sales_With_RX_Retail_Types
+-- Logic: Inner joins COVID_SALES with RX_RETAIL_TYPES_COVID on
+--        RETAILTYPECODE = low_char to keep only COVID sales rows with
+--        valid RX retail type codes. Implements Join_6 from CV_COMP_FLASH_SALES.
+-- Source: COVID_SALES, RX_RETAIL_TYPES_COVID
+-- Join: INNER JOIN COVID_SALES c ON RX_RETAIL_TYPES_COVID t ON c.RETAILTYPECODE = t.low_char
+-- =====================================================================
+Joined_COVID_Sales_With_RX_Retail_Types AS (
+  SELECT
+    c.MANDT,
+    c.RETAILSTOREID,
+    c.BUSINESSDAYDATE,
+    c.cvd_amount,
+    c.RETAILTYPECODE,
+    c.TRANSCURRENCY,
+    c.cvd_upd_timestamp
+  FROM COVID_SALES c
+  INNER JOIN RX_RETAIL_TYPES_COVID t
+    ON c.RETAILTYPECODE = t.low_char
+),
+
+-- =====================================================================
+-- CTE 21: Combined_Flash_Sales_Inputs
+-- Logic: Unions six branches into a single row set for aggregation.
+--        Implements Union_1 from CV_COMP_FLASH_SALES. Each branch contributes
+--        its specific metric(s) and NULLs for all others:
+--        Branch 1: SCRIPT_KPIs - script/RX counters, cal_fs_units, cal_cvd_units
+--        Branch 2: Joined_FS_Sales_With_Retail_Types - fs_salesamount
+--        Branch 3: Joined_Employee_Discount_With_Discount_Types - emp_reductionamount
+--        Branch 4: Joined_RX_Sales_With_Retail_Types - rx_salesamount
+--        Branch 5: Joined_FS_Discount_With_Discount_Types - reductionamount
+--        Branch 6: Joined_COVID_Sales_With_RX_Retail_Types - cvd_amount
+-- Source: All six joined/projected CTEs above
+-- =====================================================================
+Combined_Flash_Sales_Inputs AS (
+  -- Branch 1: Script KPIs
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    ZZ_RX_CNT_NS,
+    ZZ_RX_CNT_REFILL,
+    ZZ_RX_CNT_GE84_NS,
+    ZZ_RX_CNT_GE84_RE,
+    ZZ_RX_MCRX_GE84_NS,
+    ZZ_RX_MCRX_GE84_RE,
+    cal_fs_units,
+    cal_rx_cnt_ge84_ns,
+    cal_rx_cnt_ge84_re,
+    CAST(NULL AS NUMERIC) AS fs_salesamount,
+    CAST(NULL AS NUMERIC) AS emp_reductionamount,
+    CAST(NULL AS NUMERIC) AS rx_salesamount,
+    CAST(NULL AS NUMERIC) AS reductionamount,
+    cal_rx_cnt_ns,
+    cal_rx_cnt_re,
+    CURRENCY AS transcurrency,
+    CAST(NULL AS STRING) AS fs_upd_timestamp,
+    CAST(NULL AS STRING) AS rx_upd_timestamp,
+    scripts_upd_timestamp,
+    scripts_upd_timestamp AS zz_upd_timestamp,
+    CAST(NULL AS NUMERIC) AS cvd_amount,
+    cal_cvd_units
+  FROM SCRIPT_KPIs
+
+  UNION ALL
+
+  -- Branch 2: FS Sales
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64) AS cal_fs_units,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_re,
+    fs_salesamount,
+    CAST(NULL AS NUMERIC) AS emp_reductionamount,
+    CAST(NULL AS NUMERIC) AS rx_salesamount,
+    CAST(NULL AS NUMERIC) AS reductionamount,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_re,
+    TRANSCURRENCY AS transcurrency,
+    fs_upd_timestamp,
+    CAST(NULL AS STRING) AS rx_upd_timestamp,
+    CAST(NULL AS STRING) AS scripts_upd_timestamp,
+    fs_upd_timestamp AS zz_upd_timestamp,
+    CAST(NULL AS NUMERIC) AS cvd_amount,
+    CAST(NULL AS INT64) AS cal_cvd_units
+  FROM Joined_FS_Sales_With_Retail_Types
+
+  UNION ALL
+
+  -- Branch 3: Employee Discount
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64) AS cal_fs_units,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_re,
+    CAST(NULL AS NUMERIC) AS fs_salesamount,
+    emp_reductionamount,
+    CAST(NULL AS NUMERIC) AS rx_salesamount,
+    CAST(NULL AS NUMERIC) AS reductionamount,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_re,
+    TRANSCURRENCY AS transcurrency,
+    CAST(NULL AS STRING) AS fs_upd_timestamp,
+    CAST(NULL AS STRING) AS rx_upd_timestamp,
+    CAST(NULL AS STRING) AS scripts_upd_timestamp,
+    emp_disc_upd_timestamp AS zz_upd_timestamp,
+    CAST(NULL AS NUMERIC) AS cvd_amount,
+    CAST(NULL AS INT64) AS cal_cvd_units
+  FROM Joined_Employee_Discount_With_Discount_Types
+
+  UNION ALL
+
+  -- Branch 4: RX Sales
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64) AS cal_fs_units,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_re,
+    CAST(NULL AS NUMERIC) AS fs_salesamount,
+    CAST(NULL AS NUMERIC) AS emp_reductionamount,
+    rx_salesamount,
+    CAST(NULL AS NUMERIC) AS reductionamount,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_re,
+    TRANSCURRENCY AS transcurrency,
+    CAST(NULL AS STRING) AS fs_upd_timestamp,
+    rx_upd_timestamp,
+    CAST(NULL AS STRING) AS scripts_upd_timestamp,
+    rx_upd_timestamp AS zz_upd_timestamp,
+    CAST(NULL AS NUMERIC) AS cvd_amount,
+    CAST(NULL AS INT64) AS cal_cvd_units
+  FROM Joined_RX_Sales_With_Retail_Types
+
+  UNION ALL
+
+  -- Branch 5: FS Discount
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64) AS cal_fs_units,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_re,
+    CAST(NULL AS NUMERIC) AS fs_salesamount,
+    CAST(NULL AS NUMERIC) AS emp_reductionamount,
+    CAST(NULL AS NUMERIC) AS rx_salesamount,
+    REDUCTIONAMOUNT,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_re,
+    TRANSCURRENCY AS transcurrency,
+    CAST(NULL AS STRING) AS fs_upd_timestamp,
+    CAST(NULL AS STRING) AS rx_upd_timestamp,
+    CAST(NULL AS STRING) AS scripts_upd_timestamp,
+    fs_disc_upd_timestamp AS zz_upd_timestamp,
+    CAST(NULL AS NUMERIC) AS cvd_amount,
+    CAST(NULL AS INT64) AS cal_cvd_units
+  FROM Joined_FS_Discount_With_Discount_Types
+
+  UNION ALL
+
+  -- Branch 6: COVID Sales
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_REFILL,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_CNT_GE84_RE,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_NS,
+    CAST(NULL AS STRING) AS ZZ_RX_MCRX_GE84_RE,
+    CAST(NULL AS INT64) AS cal_fs_units,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ge84_re,
+    CAST(NULL AS NUMERIC) AS fs_salesamount,
+    CAST(NULL AS NUMERIC) AS emp_reductionamount,
+    CAST(NULL AS NUMERIC) AS rx_salesamount,
+    CAST(NULL AS NUMERIC) AS reductionamount,
+    CAST(NULL AS INT64) AS cal_rx_cnt_ns,
+    CAST(NULL AS INT64) AS cal_rx_cnt_re,
+    TRANSCURRENCY AS transcurrency,
+    CAST(NULL AS STRING) AS fs_upd_timestamp,
+    CAST(NULL AS STRING) AS rx_upd_timestamp,
+    CAST(NULL AS STRING) AS scripts_upd_timestamp,
+    cvd_upd_timestamp AS zz_upd_timestamp,
+    cvd_amount,
+    CAST(NULL AS INT64) AS cal_cvd_units
+  FROM Joined_COVID_Sales_With_RX_Retail_Types
+),
+
+-- =====================================================================
+-- CTE 22: COMBINE_DATA
+-- Logic: Aggregates the unioned six-branch dataset by the grain keys
+--        MANDT, RETAILSTOREID, BUSINESSDAYDATE, TRANSCURRENCY, ZZ_UPD_TIMESTAMP.
+--        Implements COMBINE_DATA aggregation node from CV_COMP_FLASH_SALES.
+--        SUM for sales/discount/unit/count measures.
+--        COUNT for raw ZZ_RX_* string fields (non-null count).
+--        MAX for timestamp fields.
+-- Source: Combined_Flash_Sales_Inputs
+-- Aggregation: GROUP BY MANDT, RETAILSTOREID, BUSINESSDAYDATE, TRANSCURRENCY,
+--              ZZ_UPD_TIMESTAMP; SUM/COUNT/MAX per measure
+-- =====================================================================
+COMBINE_DATA AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    transcurrency,
+    zz_upd_timestamp,
+    SUM(fs_salesamount)       AS fs_salesamount,
+    SUM(reductionamount)      AS reductionamount,
+    SUM(rx_salesamount)       AS rx_salesamount,
+    COUNT(ZZ_RX_CNT_NS)       AS zz_rx_cnt_ns,
+    COUNT(ZZ_RX_CNT_REFILL)   AS zz_rx_cnt_refill,
+    COUNT(ZZ_RX_CNT_GE84_NS)  AS zz_rx_cnt_ge84_ns,
+    COUNT(ZZ_RX_CNT_GE84_RE)  AS zz_rx_cnt_ge84_re,
+    COUNT(ZZ_RX_MCRX_GE84_NS) AS zz_rx_mcrx_ge84_ns,
+    COUNT(ZZ_RX_MCRX_GE84_RE) AS zz_rx_mcrx_ge84_re,
+    SUM(cal_fs_units)          AS cal_fs_units,
+    SUM(emp_reductionamount)   AS emp_reductionamount,
+    SUM(cal_rx_cnt_ge84_ns)    AS cal_rx_cnt_ge84_ns,
+    SUM(cal_rx_cnt_ge84_re)    AS cal_rx_cnt_ge84_re,
+    SUM(cal_rx_cnt_ns)         AS cal_rx_cnt_ns,
+    SUM(cal_rx_cnt_re)         AS cal_rx_cnt_re,
+    MAX(fs_upd_timestamp)      AS fs_upd_timestamp,
+    MAX(rx_upd_timestamp)      AS rx_upd_timestamp,
+    MAX(scripts_upd_timestamp) AS scripts_upd_timestamp,
+    SUM(cvd_amount)            AS cvd_amount,
+    SUM(cal_cvd_units)         AS cal_cvd_units
+  FROM Combined_Flash_Sales_Inputs
+  GROUP BY
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    transcurrency,
+    zz_upd_timestamp
+),
+
+-- =====================================================================
+-- CTE 23: MERGED
+-- Logic: Inner joins NAVIX (base retail-day grain) with COMBINE_DATA on
+--        MANDT, RETAILSTOREID, BUSINESSDAYDATE to produce the final
+--        pre-aggregation dataset. Implements MERGED node from CV_COMP_FLASH_SALES.
+--        This is the output of the intermediate composite view
+--        (CV_COMP_FLASH_SALES / xml_acc_cv_comp_flash_sales-VT-table-CV).
+-- Source: NAVIX, COMBINE_DATA
+-- Join: INNER JOIN NAVIX n ON COMBINE_DATA c ON n.MANDT=c.MANDT,
+--       n.RETAILSTOREID=c.RETAILSTOREID, n.BUSINESSDAYDATE=c.BUSINESSDAYDATE
+-- =====================================================================
+MERGED AS (
+  SELECT
+    n.MANDT,
+    n.RETAILSTOREID,
+    n.BUSINESSDAYDATE,
+    c.fs_salesamount,
+    c.reductionamount,
+    c.rx_salesamount,
+    c.zz_rx_cnt_ns,
+    c.zz_rx_cnt_refill,
+    c.zz_rx_cnt_ge84_ns,
+    c.zz_rx_cnt_ge84_re,
+    c.zz_rx_mcrx_ge84_ns,
+    c.zz_rx_mcrx_ge84_re,
+    c.cal_fs_units,
+    c.emp_reductionamount,
+    c.cal_rx_cnt_ge84_ns,
+    c.cal_rx_cnt_ge84_re,
+    c.cal_rx_cnt_ns,
+    c.cal_rx_cnt_re,
+    c.transcurrency,
+    c.rx_upd_timestamp,
+    c.fs_upd_timestamp,
+    c.scripts_upd_timestamp,
+    c.zz_upd_timestamp,
+    c.cvd_amount,
+    c.cal_cvd_units
+  FROM NAVIX n
+  INNER JOIN COMBINE_DATA c
+    ON n.MANDT = c.MANDT
+   AND n.RETAILSTOREID = c.RETAILSTOREID
+   AND n.BUSINESSDAYDATE = c.BUSINESSDAYDATE
+),
+
+-- =====================================================================
+-- CTE 24: Filtered_FLASH_SALES_VT_CAR
+-- Logic: Applies the final-consumer filter from CV_BASE_FIN_FLASH_SALES_CAR
+--        (xml_acc_FLASH_SALES_VT_CAR). Filters the MERGED composite result
+--        by ZZ_UPD_TIMESTAMP between the two runtime parameters
+--        @ip_upd_timestamp_from and @ip_upd_timestamp_to (inclusive).
+--        This replaces the Projection_1 node of the final consumer that
+--        reads from FLASH_SALES_VT_CAR; since the composite view logic is
+--        fully inlined, the filter is applied directly on MERGED output.
+--        REQUIRES VALIDATION: The final consumer reads from CVS_FRIP.FLASH_SALES_VT_CAR
+--        which is a physical reporting/staging table not present in Columns_Mapping_v3.
+--        This consolidation inlines the composite view logic in place of that table.
+-- Source: MERGED
+-- Filters: zz_upd_timestamp >= @ip_upd_timestamp_from
+--          AND zz_upd_timestamp <= @ip_upd_timestamp_to
+-- =====================================================================
+Filtered_FLASH_SALES_VT_CAR AS (
+  SELECT
+    MANDT,
+    RETAILSTOREID,
+    BUSINESSDAYDATE,
+    fs_salesamount,
+    reductionamount,
+    rx_salesamount,
+    cal_fs_units,
+    emp_reductionamount,
+    cal_rx_cnt_ge84_ns,
+    cal_rx_cnt_ge84_re,
+    cal_rx_cnt_ns,
+    cal_rx_cnt_re,
+    rx_upd_timestamp,
+    fs_upd_timestamp,
+    scripts_upd_timestamp,
+    zz_upd_timestamp,
+    transcurrency,
+    cvd_amount,
+    cal_cvd_units
+  FROM MERGED
+  WHERE zz_upd_timestamp >= @ip_upd_timestamp_from
+    AND zz_upd_timestamp <= @ip_upd_timestamp_to
+    -- REQUIRES VALIDATION: zz_upd_timestamp datatype vs parameter type alignment
+)
+
+-- =====================================================================
+-- Final SELECT
+-- Logic: Aggregates the filtered flash sales data by the final-consumer
+--        logical model grain: MANDT, RETAILSTOREID, BUSINESSDAYDATE,
+--        ZZ_UPD_TIMESTAMP, TRANSCURRENCY.
+--        Applies SUM aggregation to all sales/discount/unit/count measures
+--        and MAX aggregation to all timestamp measures.
+--        Implements the CUBE/Aggregation output of CV_BASE_FIN_FLASH_SALES_CAR
+--        (xml_acc_FLASH_SALES_VT_CAR).
+-- Source: Filtered_FLASH_SALES_VT_CAR
+-- Aggregation: GROUP BY MANDT, RETAILSTOREID, BUSINESSDAYDATE,
+--              ZZ_UPD_TIMESTAMP, TRANSCURRENCY
+-- =====================================================================
+SELECT
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  zz_upd_timestamp,
+  transcurrency,
+  SUM(fs_salesamount)       AS fs_salesamount,
+  SUM(reductionamount)      AS reductionamount,
+  SUM(rx_salesamount)       AS rx_salesamount,
+  SUM(cal_fs_units)         AS cal_fs_units,
+  SUM(emp_reductionamount)  AS emp_reductionamount,
+  SUM(cal_rx_cnt_ge84_ns)   AS cal_rx_cnt_ge84_ns,
+  SUM(cal_rx_cnt_ge84_re)   AS cal_rx_cnt_ge84_re,
+  SUM(cal_rx_cnt_ns)        AS cal_rx_cnt_ns,
+  SUM(cal_rx_cnt_re)        AS cal_rx_cnt_re,
+  MAX(rx_upd_timestamp)     AS rx_upd_timestamp,
+  MAX(fs_upd_timestamp)     AS fs_upd_timestamp,
+  MAX(scripts_upd_timestamp) AS scripts_upd_timestamp,
+  SUM(cvd_amount)           AS cvd_amount,
+  SUM(cal_cvd_units)        AS cal_cvd_units
+FROM Filtered_FLASH_SALES_VT_CAR
+GROUP BY
+  MANDT,
+  RETAILSTOREID,
+  BUSINESSDAYDATE,
+  zz_upd_timestamp,
+  transcurrency;
