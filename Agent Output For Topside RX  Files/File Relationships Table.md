@@ -1,0 +1,4 @@
+| Source File | Target File | Dependency Type | Score | Reason |
+|-------------|-------------|-----------------|-------|--------|
+| xml_acc_cv_base_topside_adjustments_car_RX.txt | xml_acc_cv_comp_topside_adjustments_RX.txt | Calculation View Dependency | 90 | Explicit XML data source node reference `/CVS_FRIP.Base.FI/calculationviews/CV_BASE_TOPSIDE_ADJUSTMENTS_CAR` found in composite view XML confirming direct consumption of the base CAR topside adjustments calculation view |
+| xml_acc_cv_base_md_srpact_s4_RX.txt | xml_acc_cv_comp_topside_adjustments_RX.txt | Calculation View Dependency | 90 | Explicit XML data source node reference `/CVS_FRIP.Base.Master/calculationviews/CV_BASE_MD_SRPACT_S4` found in composite view XML confirming direct consumption of the SRP Actuals S4 master data calculation view |
